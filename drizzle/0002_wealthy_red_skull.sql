@@ -1,0 +1,1 @@
+ALTER TABLE `photos` ADD `layout_json` text DEFAULT '{}' NOT NULL;

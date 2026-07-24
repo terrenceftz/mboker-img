@@ -15,6 +15,19 @@ export type PhotoVariants = {
   avif?: ResponsivePhotoVariant[];
 };
 
+export type StoredResponsiveSize = Partial<
+  Record<'default' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl', string>
+>;
+
+export type StoredPhotoLayout = {
+  cols?: StoredResponsiveSize;
+  offset?: StoredResponsiveSize;
+  align?: 'start' | 'center' | 'end';
+  class?: string;
+  hasBackground?: boolean;
+  padding?: string;
+};
+
 export const categories = sqliteTable('categories', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   title: text('title').notNull(),
@@ -69,6 +82,7 @@ export const photos = sqliteTable('photos', {
   align: text('align', { enum: ['start', 'center', 'end'] }).notNull().default('center'),
   hasBackground: integer('has_background', { mode: 'boolean' }).notNull().default(false),
   padding: text('padding').notNull().default(''),
+  layoutJson: text('layout_json', { mode: 'json' }).$type<StoredPhotoLayout>().notNull().default({}),
   ...timestamps(),
 });
 
