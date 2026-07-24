@@ -1,0 +1,157 @@
+---
+import Noise from "../functions/Noise.astro";
+interface Props {
+  loading?: string;
+  showHero?: boolean;
+}
+
+const { loading = "TINK GALLERY", showHero = false } = Astro.props;
+---
+
+<div class="preloader">
+
+  <div class="loading-block upperone">
+    <Noise />
+    {showHero ? (
+      <img
+        src="/hero.gif"
+        class="preloader-hero"
+        alt=""
+        aria-hidden="true"
+        style="opacity: 0; visibility: hidden; transform: translateY(-32px);"
+      />
+    ) : (
+      <div class="preloader-title preloader-splitting" data-splitting>
+        {loading}
+      </div>
+    )}
+  </div>
+  <div class="loading-block downone"></div>
+  <div class="loading-block downtwo"></div>
+</div>
+
+<style lang="scss"  is:global>
+  /*
+---- loading 效果 ----
+*/
+  :root{
+    --loading-color: #0e100f;
+    --loading-bg:#fff;
+    --loading-block-01:#fcf2ea;
+
+    --loading-block-02:#ff5a19;
+  }
+  :root.dark{
+    --loading-color: #f7f7f8;
+    --loading-bg:#0e100f;
+    --loading-block-01:var(--color-900);
+  }
+  .loading-block {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+  }
+  .upperone {
+    background-color:var(--loading-bg);
+    z-index: var(--z-preloader);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: 100;
+  }
+  .downone {
+    background-color: var(--loading-block-01);
+    z-index: calc(var(--z-preloader) - 1);
+  }
+  .downtwo {
+    background-color: var(--loading-block-02);
+    z-index: calc(var(--z-preloader) - 2);
+  }
+
+  .preloader-title {
+    font-size: 28px;
+    opacity: 0;
+    font-weight: normal;
+    color: var(--color-100);
+    @media screen and (max-width: 767px) {
+      font-size: 20px;
+    }
+  }
+  .preloader-hero {
+    width: 160px;
+    height: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-28px);
+    will-change: transform, opacity;
+    animation: preloader-hero-in 1.5s cubic-bezier(.16, 1, .3, 1) .5s both;
+  }
+  .preloader-hero.is-leaving {
+    animation: preloader-hero-out 1s cubic-bezier(.7, 0, .84, 0) .5s both;
+  }
+  @keyframes preloader-hero-in {
+    from {
+      opacity: 0;
+      visibility: visible;
+      transform: translateY(-32px);
+      filter: blur(10px);
+    }
+    to {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+  @keyframes preloader-hero-out {
+    from {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+    to {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-16px);
+      filter: blur(48px);
+    }
+  }
+  .preloader-splitting .splitting .char,
+  .preloader-splitting.splitting .char {
+    padding: 0 3px;
+  }
+  @keyframes preloader-pic {
+    from {
+      transform: translateY(0) rotate(0deg);
+      filter: blur(4px);
+      opacity: 0;
+    }
+    to{
+      transform: translateY(50px) rotate(-10deg);
+      filter: blur(0px);
+      opacity: 1;
+    }
+  }
+
+  .preloader-pic{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom:0;
+    top:0;
+    margin:0 auto;
+    top:50%;
+    text-align: center;
+    &__img{
+      height: 100%;
+      width:100%;
+      object-fit: cover;
+      width:200px;
+      height:250px;
+    }
+  }
+</style>

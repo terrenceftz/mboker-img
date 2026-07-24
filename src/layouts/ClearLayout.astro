@@ -1,0 +1,29 @@
+---
+import Preloader from "../functions/Preloader.astro";
+import Header from "../components/Header.astro";
+import Menu from "../components/Menu.astro";
+import Footer from "../components/Footer.astro";
+import MainHead from "../components/MainHead.astro";
+import SiteRuntime from "../components/SiteRuntime.astro";
+import ClientScripts from "../components/ClientScripts.astro";
+import PreloaderRuntime from "../components/PreloaderRuntime.astro";
+import Cursor from "../functions/Cursor.astro";
+import Contact2 from "../components/Contact2.astro";
+import Noise from "../functions/Noise.astro";
+import { siteConfig } from "../config/site";
+interface Props { page?: string; title?: string; keywords?: string; description?: string; loading?: string; }
+const { page, title, keywords, description, loading } = Astro.props;
+---
+<!doctype html>
+<html lang={siteConfig.locale} class={page}>
+  <head><MainHead title={title} description={description} keywords={keywords} /></head>
+  <body>
+    <Preloader loading={loading} /><Noise /><Cursor /><Header /><Menu />
+    <main><slot /><Contact2 /><Footer /></main>
+    <script>
+      const light = localStorage.theme === "light" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: light)").matches);
+      document.documentElement.classList.toggle("light", light);
+    </script>
+    <SiteRuntime /><PreloaderRuntime /><ClientScripts />
+  </body>
+</html>

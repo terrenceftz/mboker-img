@@ -1,0 +1,51 @@
+<div class="mousePoint"></div>
+<canvas id="myCanvas"></canvas>
+
+<script>
+  import paper from "paper";
+
+  const centerDot = document.querySelector<HTMLElement>(".mousePoint");
+  const canvas = document.querySelector<HTMLCanvasElement>("#myCanvas");
+  if (centerDot && canvas && window.matchMedia("(min-width: 768px)").matches) {
+    document.querySelectorAll("[data-bigdot=\"true\"]").forEach((element) => {
+      element.addEventListener("mouseenter", () => centerDot.classList.add("bigDot"));
+      element.addEventListener("mouseleave", () => centerDot.classList.remove("bigDot"));
+    });
+
+    paper.setup(canvas);
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      paper.view.viewSize = new paper.Size(window.innerWidth, window.innerHeight);
+      paper.view.update();
+    };
+    resizeCanvas();
+
+    const circle = new paper.Path.Circle(new paper.Point(0, 0), 20);
+    circle.strokeColor = new paper.Color("#606060");
+    circle.strokeWidth = 1;
+    const tool = new paper.Tool();
+    let lastX = 0;
+    let lastY = 0;
+    let mouseX = 0;
+    let mouseY = 0;
+    tool.onMouseMove = (event: paper.ToolEvent) => { mouseX = event.point.x; mouseY = event.point.y; };
+    paper.view.onFrame = () => {
+      lastX += (mouseX - lastX) * 0.2;
+      lastY += (mouseY - lastY) * 0.2;
+      circle.position = new paper.Point(lastX, lastY);
+      const { width, height } = centerDot.getBoundingClientRect();
+      centerDot.style.transform = `translateX(${mouseX - width / 2}px) translateY(${mouseY - height / 2}px)`;
+    };
+    window.addEventListener("resize", resizeCanvas, { passive: true });
+  }
+</script>
+
+<style>
+  html, body { cursor: none; }
+  /* Above the menu, below the preloader; it never intercepts input. */
+  #myCanvas { height: 100%; width: 100%; box-sizing: border-box; position: fixed; top: 0; left: 0; z-index: var(--z-cursor); pointer-events: none; }
+  .mousePoint { height: 8px; width: 8px; background-color: var(--color-50); position: fixed; top: 0; left: 0; border-radius: 50%; z-index: calc(var(--z-cursor) + 1); pointer-events: none; }
+  .mousePoint.bigDot { transition: all 0.35s ease-in-out; }
+  @media only screen and (max-width: 767px) { #myCanvas, .mousePoint { display: none; } html, body { cursor: auto; } }
+</style>

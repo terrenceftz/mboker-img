@@ -1,0 +1,48 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Next from "../../components/PostNext.astro";
+import PostComm from "./PostComm.astro";
+import PostInfo from "./PostInfo.astro";
+import PostGallery from "./PostGallery.astro";
+const next='日落收集者';
+const nextUrl='/collection/sunset';
+const PostTitle = "阿勒泰之旅";
+---
+
+<Layout
+  page="altay",
+  title="阿勒泰之旅！| Tink 的个人网站",
+  description="阿勒泰之旅",
+  keywords="阿勒泰之旅"
+  loading="My Altay"
+>
+  <PostComm />
+  <div id="post">
+    <div class="postion-relative">
+      <div class="project">
+        <div class="container">
+          <div class="row p-0 project-content">
+            <div class="col-md-7">
+              <h1 class="project-content__title heading-01 post-title__01" data-splitting>{PostTitle}</h1>
+              <div class="project-content__info d-md-none">
+                  <PostInfo />
+              </div>
+                <PostGallery />
+            </div>
+            <div class="col-md-5 project-content_info d-none d-md-block">
+                <PostInfo />
+            </div>
+          </div>
+        </div>
+      </div>
+      <Next
+          post={next}
+          href={nextUrl}
+        />
+    </div>
+  </div>
+</Layout>
+
+<style lang="scss">
+
+</style>

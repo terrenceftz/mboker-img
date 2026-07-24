@@ -1,0 +1,61 @@
+---
+/**
+ * GalleryNav 组件 - 画廊导航
+ * 显示下一篇作品集链接
+ */
+import ArrowIcon from '../ArrowIcon.astro';
+
+interface Props {
+  /** 下一篇作品集标题 */
+  title: string;
+  /** 链接地址 */
+  href: string;
+}
+
+const { title, href } = Astro.props;
+---
+
+<div class="gallery-nav">
+  <a href={href} class="gallery-nav__link">
+    <span class="gallery-nav__label">Next</span>
+    <span class="gallery-nav__title">{title}</span>
+    <ArrowIcon />
+  </a>
+</div>
+
+<style>
+  .gallery-nav {
+    padding: 80px 0;
+    text-align: center;
+  }
+
+  .gallery-nav__link {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
+    color: var(--color-0);
+    transition: all 0.3s ease;
+  }
+
+  .gallery-nav__label {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--color-300);
+  }
+
+  .gallery-nav__title {
+    font-size: clamp(24px, 5vw, 48px);
+    font-weight: 600;
+  }
+
+  .gallery-nav__link:hover {
+    color: var(--color-primary-main, #5865f2);
+  }
+
+  .gallery-nav__link:hover .gallery-nav__title {
+    text-decoration: underline;
+  }
+</style>

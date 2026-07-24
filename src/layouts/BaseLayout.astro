@@ -1,0 +1,100 @@
+---
+/**
+ * BaseLayout - 基础布局组件
+ * 合并了原有的 Layout.astro, PageLayout.astro, RootLayout.astro
+ *
+ * 使用方式：
+ * <BaseLayout title="页面标题" description="页面描述">
+ *   <slot name="header" />  <!-- 可选自定义 header -->
+ *   <!-- 页面内容 -->
+ * </BaseLayout>
+ */
+import Header from '../components/Header.astro';
+import Menu from '../components/Menu.astro';
+import Footer from '../components/Footer.astro';
+import MainHead from '../components/MainHead.astro';
+import Contact from '../components/Contact.astro';
+import Noise from '../functions/Noise.astro';
+import Preloader from '../functions/Preloader.astro';
+import Cursor from '../functions/Cursor.astro';
+import ClientScripts from '../components/ClientScripts.astro';
+import SiteRuntime from '../components/SiteRuntime.astro';
+import PreloaderRuntime from '../components/PreloaderRuntime.astro';
+import { siteConfig } from '../config/site';
+
+interface Props {
+  /** 页面标识类名 */
+  page?: string;
+  /** 页面标题 */
+  title?: string;
+  /** 页面关键词 */
+  keywords?: string;
+  /** 页面描述 */
+  description?: string;
+  /** Preloader 加载文本 */
+  loading?: string;
+  /** 是否显示 Contact 组件 */
+  showContact?: boolean;
+  /** 是否显示 Preloader */
+  showPreloader?: boolean;
+  /** 是否显示自定义光标 */
+  showCursor?: boolean;
+  /** 是否显示噪点效果 */
+  showNoise?: boolean;
+}
+
+const {
+  page,
+  title,
+  keywords,
+  description,
+  loading,
+  showContact = true,
+  showPreloader = true,
+  showCursor = true,
+  showNoise = true,
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang={siteConfig.locale} class={page}>
+  <head>
+    <MainHead title={title} description={description} keywords={keywords} />
+  </head>
+  <body>
+    <!-- 噪点效果 -->
+    {showNoise && <Noise />}
+
+    <!-- Preloader -->
+    {showPreloader && <Preloader loading={loading} />}
+
+    <!-- 自定义光标 -->
+    {showCursor && <Cursor />}
+
+    <div class="wrapper position-relative">
+      <!-- Header -->
+      <slot name="header">
+        <Header transition:persist />
+      </slot>
+
+      <!-- Menu -->
+      <Menu />
+
+      <!-- 主内容 -->
+      <main>
+        <slot />
+
+        <!-- Contact -->
+        {showContact && <Contact />}
+
+        <!-- Footer -->
+        <Footer />
+      </main>
+    </div>
+
+    <!-- 客户端脚本 -->
+    <ClientScripts />
+    <SiteRuntime />
+    {showPreloader && <PreloaderRuntime />}
+  </body>
+</html>

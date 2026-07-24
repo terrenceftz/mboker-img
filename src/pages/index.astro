@@ -1,0 +1,221 @@
+---
+import Layout from "../layouts/Layout.astro";
+import IndexCard from "../components/IndexCard.astro";
+import Category from "../components/Category.astro";
+const pageTitle = "DaTong - Ricocc";
+---
+
+<Layout
+  page="home",
+  title="Tink 的世界！在努力学习摄影的 Tink | Tink 摄影师的个人网站",
+  description="欢迎来到 Tink 的摄影学习日记，记录城市、自然与旅途中的影像故事。",
+  keywords="Tink,Photo,摄影，摄影学习日记,努力学习摄影,摄影师的个人网站,,606设计工作室,606 STUDIO"
+  loading="Tink Gallery"
+>
+  <div class="container">
+    <div class="hero">
+      <div class="hero-header col-12 col-md-10 offset-md-2 p-0">
+        <div class="hero-heading">
+          <h1 class="hero-title" >
+            <div class="splitting-title hero-splitting-title" data-splitting>
+              影像故事
+            </div>
+           <div class="hero-line">
+            <svg width="608" height="123" viewBox="0 0 608 123" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 74.3544C38.0681 78.5223 110.282 73.1765 143.353 63.9346C178.418 54.1491 212.939 42.5515 247.46 30.9538C266.759 24.5208 286.058 12.5607 305.358 6.12763C298.381 1.68791 288.686 4.67792 283.068 10.658C277.451 16.638 274.914 24.8832 272.83 32.8566C265.672 59.7667 260.87 87.3111 258.514 115.037C270.927 93.1099 287.508 73.5389 307.079 57.5922C308.71 68.4649 308.891 79.5189 307.713 90.3917C312.969 91.3884 317.771 87.4017 321.304 83.415C324.838 79.4283 328.553 74.898 333.717 73.9919C338.973 73.0859 345.043 79.0659 341.963 83.415C349.664 85.4084 357.728 82.5996 365.067 79.6095C372.406 76.6195 380.289 73.4483 388.081 74.8074C395.874 76.1665 403.122 84.1399 400.495 91.6602C413.27 84.0493 428.492 80.425 443.351 81.6029C430.395 101.446 408.74 115.309 385.273 118.752C383.007 119.114 380.38 119.205 378.749 117.574C376.303 115.127 378.115 110.959 380.108 108.151C391.706 91.8414 408.287 79.7908 425.411 69.4616C475.245 39.4708 532.418 21.8026 590.497 18.6313C596.295 18.2689 604.178 20.081 603.997 25.8799C603.906 29.2323 600.826 31.5881 598.017 33.4002C579.352 45.4509 558.784 54.7833 537.401 60.854C532.237 62.3037 525.441 62.9379 522.813 58.317" stroke-width="6.4935" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+
+           </div>
+          </h1>
+          <div class="user" data-splitting>
+            (Tink)
+          </div>
+      </div>
+        <p class="text col-10 col-sm-9 col-md-8  col-lg-7 col-xl-5  col-xxl-4 p-0 hero-text" data-splitting>
+          每座城市都有其独特之处，人、事物、历史构成了一个繁复多彩的世界。我尝试将镜头对准身边心动的片刻，以自己的视角记录城市的魅力和瞬间的感知。
+        </p>
+      </div>
+      <div class="hero-banner">
+        <div class="side-img col-12 col-sm-4 col-md-2 p-0">
+          <picture class="gsap-picture side-picture col-5 col-sm-12 p-0">
+             <img src="/hero02.jpg" alt="" class="side-picture__img" />
+          </picture>
+        </div>
+        <div class="col-12 col-sm-10 col-md-10 col-lg-8 p-0">
+          <div class="hero-01">
+            <picture class="gsap-picture picture as__5-3">
+              <img src="/hero01.jpg" alt=""  class="picture__img hero-01"/>
+            </picture>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <IndexCard />
+  <Category />
+</Layout>
+
+
+<style lang="scss">
+  .hero {
+    margin-top: 120px;
+    @media only screen and (min-width: 767px) {
+      margin-top: 160px;
+    }
+    @media only screen and (min-width: 1200px) {
+      margin-top: 180px;
+    }
+    &-banner {
+      position: relative;
+      padding-top: 12vw;
+      @media only screen and (min-width: 601px) {
+        padding-top: 120px;
+      }
+      @media only screen and (min-width: 1200px) {
+        padding-top: 160px;
+      }
+    }
+    &-header {
+      p {
+          font-size: 1rem;
+        @media (min-width: 992px) {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+  .hero-title {
+    margin-bottom: 4rem;
+    font-size: 108px;
+    line-height: 1;
+    filter: blur(0);
+    opacity: 1;
+    cursor: pointer;
+    @media only screen and (max-width: 1025px) {
+      font-size: 88px;
+    }
+    @media only screen and (max-width: 600px) {
+      font-size: 15vw;
+    }
+    @media only screen and (max-width: 468px) {
+      font-size: 15vw;
+    }
+  }
+  .hero-title-2{
+    opacity: 1;
+    position: relative;
+    line-height: 1;
+    display: inline-block;
+    margin-left: 8px;
+  }
+  .hero-title__motion{
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 110%;
+    width: 0%;
+    background-color: #000;
+    transition: all 0.65s ease-in-out;
+    cursor: pointer;
+  }
+  .hero-title:hover .hero-title__motion{
+    width: 102%;
+  }
+  .hero-heading{
+    display: flex;
+    align-items: flex-start;
+    .user{
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1;
+      text-align: left;
+      margin-left: 20px;
+      display: inline-block;
+      margin-top: 10px;
+      @media (min-width: 467px) {
+        font-size: 16px;
+        margin-left: 10px;
+      }
+      @media (min-width: 767px) {
+        font-size: 24px;
+      }
+    }
+  }
+  .text {
+    line-height: 1.6;
+  }
+  .side-img {
+    position: relative;
+    margin-top:2rem;
+    width:100%;
+    display: flex;
+    justify-content: flex-end;
+    text-align: right;
+    margin-bottom:15vw;
+    img {
+      max-width: 90%;
+    }
+    @media only screen and (min-width: 601px) {
+      position: absolute;
+      top: -6.5vw;
+      right: 0;
+      text-align: right;
+      margin:0;
+      img {
+      max-width: 80%;
+      }
+    }
+  }
+  .side-picture{
+    position:relative;
+    display:inline-block;
+    overflow:hidden;
+    width:100%;
+    min-height:144px;
+    @media only screen and (min-width: 601px) {
+        height:15vw;
+    }
+  }
+  .side-picture__img{
+      transition: all 0.5s ease-in-out;
+      @media only screen and (min-width: 601px) {
+          height: 100%;
+          -o-object-fit: cover;
+          object-fit: cover;
+          -o-object-position: center;
+          object-position: center;
+      }
+  }
+  .hero-splitting{
+    filter: blur(0);
+    opacity: 1;
+  }
+  .hero02 {
+    margin-top: 180px;
+  }
+  .hero-line{
+    position: absolute;
+    right: -20%;
+    top:20%;
+    z-index:1;
+    svg{
+      max-width:120%;
+      height: auto;
+    }
+    @media (min-width: 601px) {
+      right: -45%;
+      top:2%;
+      z-index:1;
+      svg{
+        max-width:95%;
+        height: auto;
+      }
+    }
+  }
+  .hero-01{
+    @media (min-width: 601px) {
+      margin-top:20px;
+    }
+  }
+
+</style>

@@ -1,0 +1,142 @@
+---
+/**
+ * GalleryItem 组件 - 单张图片
+ * 接收 GalleryImage 配置，渲染单张图片及其布局
+ */
+import { Image } from 'astro:assets';
+import type { GalleryImage, ResponsiveSize } from '@/data/gallery';
+
+interface Props {
+  /** 图片配置 */
+  image: GalleryImage;
+  /** 图片索引 */
+  index: number;
+  /** 图片总数 */
+  total: number;
+}
+
+const { image, index } = Astro.props;
+
+/**
+ * 生成响应式栅格宽度 class
+ */
+function generateColClasses(cols: ResponsiveSize): string {
+  const classes: string[] = [];
+
+  if (cols.default) classes.push(`col-${cols.default}`);
+  if (cols.sm) classes.push(`col-sm-${cols.sm}`);
+  if (cols.md) classes.push(`col-md-${cols.md}`);
+  if (cols.lg) classes.push(`col-lg-${cols.lg}`);
+  if (cols.xl) classes.push(`col-xl-${cols.xl}`);
+  if (cols.xxl) classes.push(`col-xxl-${cols.xxl}`);
+
+  return classes.join(' ');
+}
+
+/**
+ * 生成响应式栅格偏移 class
+ */
+function generateOffsetClasses(offset?: ResponsiveSize): string {
+  if (!offset) return '';
+
+  const classes: string[] = [];
+
+  if (offset.default) classes.push(`offset-${offset.default}`);
+  if (offset.sm) classes.push(`offset-sm-${offset.sm}`);
+  if (offset.md) classes.push(`offset-md-${offset.md}`);
+  if (offset.lg) classes.push(`offset-lg-${offset.lg}`);
+  if (offset.xl) classes.push(`offset-xl-${offset.xl}`);
+  if (offset.xxl) classes.push(`offset-xxl-${offset.xxl}`);
+
+  return classes.join(' ');
+}
+
+// 获取布局配置
+const layout = image.layout || {};
+const cols = layout.cols || { default: '12' };
+
+// 生成 class
+const colClasses = generateColClasses(cols);
+const offsetClasses = generateOffsetClasses(layout.offset);
+const alignClass = layout.align ? `justify-content-${layout.align}` : '';
+const bgClass = layout.hasBackground ? 'pg-bg pg-pad' : '';
+
+// 懒加载：前3张图片立即加载，其余懒加载
+const loading = index < 3 ? 'eager' : 'lazy';
+---
+
+<div
+  class:list={[
+    'collection-item',
+    'gallery-item',
+    colClasses,
+    offsetClasses,
+    alignClass,
+    bgClass,
+    layout.class,
+  ]}
+  data-gallery-item
+  data-index={index}
+>
+  <div class="collection__figure">
+    <Image
+      src={image.src}
+      alt={image.alt}
+      class="collection__img"
+      loading={loading}
+    />
+  </div>
+</div>
+
+<style>
+  .collection-item {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10vh;
+  }
+
+  @media (min-width: 767px) {
+    .collection-item {
+      margin-bottom: 12vw;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .collection-item {
+      margin-bottom: 12vw;
+    }
+  }
+
+  .collection__figure {
+    position: relative;
+    width: 100%;
+  }
+
+  .collection__img {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* 背景样式 */
+  .pg-bg {
+    background: var(--project-color, #f1f2f3);
+  }
+
+  .pg-pad {
+    padding: 80px 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+  }
+
+  @media (max-width: 767px) {
+    .pg-pad {
+      padding: 40px 0;
+    }
+  }
+</style>

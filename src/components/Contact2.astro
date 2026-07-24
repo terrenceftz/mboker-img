@@ -1,0 +1,138 @@
+---
+const year = new Date().getFullYear();
+---
+
+<section class="contact">
+    <div class="contact-container container gsap-contact">
+        <div class="row">
+            <div class="contact-content position-relative">
+            </div>
+            <div  class="row contact-link contact-art">
+                <span class="contact-creative">
+                    <div class="contact-art__link">（探索创造性设计）</div>
+                    <div class="motion-svg__headline">
+                        <svg class="creative-line" width="202" height="42" viewBox="0 0 202 42" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                            <path id="svg-creative" d="M9.78378 6.98747C23.0716 4.99165 60.3243 1 103.027 1C163.838 1 201 8.31802 201 18.9624C201 29.6068 159.108 40.2512 103.027 40.9165C40.8689 41.6536 1 37.5901 1 25.6152C1 13.6402 67.8919 -6.73049 116.541 5.24445" stroke-linecap="round" stroke-dasharray="1 1"/>
+                        </svg>
+                    </div>
+                </span>
+                <a href="mailto:ricocc@qq.com" class="contact-link__title link-underlined link-underlined--strong contact-art__link-2">
+                    hello@ricoui.com
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<style lang="scss">
+.contact{
+    position: relative;
+    margin:0 auto 0;
+    padding-top:80px;
+
+    @media (min-width: 768px){
+        padding-top:160px;
+    }
+    @media (min-width: 1200px){
+        padding-top:240px;
+    }
+
+}
+.link{
+    font-size: 32px;
+    font-weight: 600;
+    margin-top: 4rem;
+    padding: 0;
+    @media (min-width: 767px) {
+        font-size: 48px;
+    }
+
+    @media (min-width: 992px) {
+        margin-top: 48px;
+        font-size: 60px;
+    }
+}
+.info-item{
+    font-size: 1rem;
+    margin:20px 0;
+    color: var(--color-0);
+    div{
+        padding:0 10px;
+    }
+    &__value{
+        font-weight: 600;
+    }
+}
+.contact-info{
+    margin-top: 2rem;
+}
+.contact-img{
+    margin-top: 3rem;
+    aspect-ratio: 4 / 5;
+}
+.contact-link{
+    position: relative;
+    margin-bottom:16px;
+    color: var(--color-0);
+    margin-left: var(--pad-inner);
+    display: flex;
+    flex-direction: column;
+    font-size:20vw;
+    margin-top:40px;
+    @media (min-width: 768px) {
+        position: absolute;
+        left: 5px;
+        bottom: 0;
+    }
+
+    span{
+        font-weight: bold;
+        font-size: var(--text);
+        text-align: left;
+        display: block;
+        margin-bottom: 20px;
+    }
+    a{
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        color: var(--color-0);
+        font-size: 7.5vw;
+        @media (min-width: 768px) {
+            font-size: 40px;
+        }
+        @media (min-width: 1208px) {
+            font-size: 60px;
+        }
+    }
+    img{
+        height: 28px;
+        margin-left: 8px;
+        margin-bottom: 4px;
+        transform: rotate(-45deg);
+        @media (min-width: 768px) {
+            height: 36px;
+            margin-left: 12px;
+            margin-bottom: 0px;
+        }
+        @media (min-width: 1200px) {
+            height: 48px;
+            margin-left: 16px;
+            margin-bottom: -4px;
+        }
+    }
+}
+.contact-creative{
+    position: relative;
+}
+.creative-line{
+    position: absolute;
+    left:-4px;
+    top:-4px;
+    svg{
+        max-width: 98%;
+    }
+}
+</style>

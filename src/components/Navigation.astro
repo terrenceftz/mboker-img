@@ -1,0 +1,23 @@
+---
+import ThemeIcon from "./ThemeIcon.astro";
+import { navigationItems, siteConfig } from "../config/site";
+const categoriesNav = navigationItems.find((item) => item.id === "categories")!;
+const aboutNav = navigationItems.find((item) => item.id === "about")!;
+---
+<section class="site-header container">
+  <div class="row">
+    <div class="col-2 col-sm-2 col-lg-1 text-left"><div class="title-link"><a href="/" data-bigdot="true" class="logo">{siteConfig.shortName}</a></div></div>
+    <div class="nav-links offset-1 col-1 d-lg-block offset-lg-5 offset-xl-6 col-lg-1 text-right"><ThemeIcon /></div>
+    <div class="nav-links nav-primary offset-1 offset-lg-0 col-4 col-sm-4 col-lg-3 col-xl-2">
+      <button type="button" class="nav-category js-menuOpen link-solid" data-bigdot="true" aria-label={categoriesNav.label} aria-controls="site-menu" aria-expanded="false">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 18 18" fill="white" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M10 8V2H8V8H2V10H8V16H10V10H16V8H10Z" /></svg>
+        {categoriesNav.label}
+      </button>
+    </div>
+    <div class="nav-about col-3 col-lg-2 site-header__aside text-right"><a href={aboutNav.href} class="link-solid" data-bigdot="true">{aboutNav.label}</a></div>
+  </div>
+</section>
+
+<style lang="scss">
+.logo{font-size:20px;font-weight:bold} section.site-header{padding-top:20px;position:fixed;left:0;top:0;width:100%;z-index:var(--z-header);height:62px;mix-blend-mode:difference;opacity:1;filter:blur(0)} section.site-header a{color:var(--color-white);&:hover{text-decoration:none}} .nav-links{padding:0 10px!important;align-items:center;display:flex}.nav-ico{margin-right:4px}.nav-category{display:inline-flex;align-items:center;line-height:20px;color:var(--color-white);background:none;border:0;padding:0;font:inherit;cursor:pointer}.nav-about{display:flex;align-items:center;justify-content:flex-end}
+</style>

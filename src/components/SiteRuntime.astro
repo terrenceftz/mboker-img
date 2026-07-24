@@ -1,0 +1,97 @@
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import Lenis from "lenis";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const lenis = new Lenis({ lerp: 0.1 });
+  document.documentElement.dataset.siteRuntime = "true";
+  window.siteLenis = lenis;
+  if (document.querySelector(".preloader")) lenis.stop();
+  const updateLenis = (time: number) => lenis.raf(time * 1000);
+
+  lenis.on("scroll", ScrollTrigger.update);
+  gsap.ticker.add(updateLenis);
+  gsap.ticker.lagSmoothing(0);
+
+  const refreshScrollMeasurements = () => {
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+  };
+
+  const waitForImages = async () => {
+    const pendingImages = Array.from(document.images).filter(
+      (image) => !image.complete && image.loading !== "lazy",
+    );
+
+    await Promise.allSettled(
+      pendingImages.map(
+        (image) =>
+          new Promise<void>((resolve) => {
+            image.addEventListener("load", () => resolve(), { once: true });
+            image.addEventListener("error", () => resolve(), { once: true });
+          }),
+      ),
+    );
+  };
+
+  const stabilizePage = async () => {
+    await Promise.allSettled([document.fonts?.ready, waitForImages()]);
+    lenis.resize();
+    refreshScrollMeasurements();
+    document.documentElement.dataset.siteReady = "true";
+    document.dispatchEvent(new CustomEvent("site:ready"));
+  };
+
+  // Lazy images land during scroll and push everything below them down.
+  // Re-sync trigger positions on each load, or triggers fire off-screen
+  // and the sections appear without ever animating.
+  let lazyRefreshQueued = false;
+  const queueLazyRefresh = () => {
+    if (lazyRefreshQueued) return;
+    lazyRefreshQueued = true;
+    requestAnimationFrame(() => {
+      lazyRefreshQueued = false;
+      lenis.resize();
+      ScrollTrigger.refresh();
+    });
+  };
+  Array.from(document.images)
+    .filter((image) => image.loading === "lazy" && !image.complete)
+    .forEach((image) => {
+      image.addEventListener("load", queueLazyRefresh, { once: true });
+      image.addEventListener("error", queueLazyRefresh, { once: true });
+    });
+
+  if (document.readyState === "complete") {
+    void stabilizePage();
+  } else {
+    window.addEventListener("load", stabilizePage, { once: true });
+  }
+
+  window.addEventListener("resize", refreshScrollMeasurements, {
+    passive: true,
+  });
+</script>
+
+<style is:global>
+  html.lenis {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis.lenis-scrolling iframe {
+    pointer-events: none;
+  }
+</style>

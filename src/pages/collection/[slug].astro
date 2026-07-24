@@ -1,0 +1,80 @@
+---
+/**
+ * 作品集动态路由页面
+ * 根据 slug 动态渲染作品集
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Gallery from '@/components/gallery/Gallery.astro';
+import GalleryNav from '@/components/gallery/GalleryNav.astro';
+import CollectionComm from './CollectionComm.astro';
+import { allGalleries, getAdjacentGalleries } from '@/data/gallery';
+
+// 生成静态路径
+export function getStaticPaths() {
+  return allGalleries.map((gallery) => ({
+    params: { slug: gallery.slug },
+    props: { gallery },
+  }));
+}
+
+// 获取当前作品集
+const { gallery } = Astro.props;
+
+// 获取相邻作品集
+const { next } = getAdjacentGalleries(gallery.slug);
+
+// SEO 配置
+const title = gallery.seo?.title || `${gallery.title} | Tink Photo`;
+const description = gallery.seo?.description || gallery.description;
+const keywords = gallery.seo?.keywords?.join(', ') || gallery.tags?.join(', ') || '';
+---
+
+<BaseLayout
+  page={gallery.slug}
+  title={title}
+  description={description}
+  keywords={keywords}
+  loading={gallery.titleEn}
+>
+  <CollectionComm />
+  <div id="collection">
+    <div class="position-relative">
+      <div class="collection">
+        <div class="container">
+          <div class="row p-0 main">
+            <div class="position-relative m-auto text-center w-100">
+              <h1 class="collection-title heading-01 collection-title__01" data-splitting>
+                {gallery.titleEn}
+              </h1>
+              <div>
+                <Gallery gallery={gallery} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {next && (
+        <GalleryNav
+          title={next.title}
+          href={`/collection/${next.slug}`}
+        />
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style lang="scss">
+.main {
+  margin: 120px auto 0;
+  @media (min-width: 767px) {
+    margin: 12vw auto 0;
+  }
+}
+
+.collection-title {
+  margin-bottom: 60px;
+  @media (min-width: 767px) {
+    margin-bottom: 8vw;
+  }
+}
+</style>

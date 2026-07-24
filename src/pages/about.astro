@@ -1,0 +1,365 @@
+---
+import ClearLayout from "../layouts/ClearLayout.astro";
+import { Image } from "astro:assets";
+import ImgTink from "../assets/images/about.jpg";
+import { siteConfig, type ProfileItem } from "../config/site";
+
+const { author } = siteConfig;
+const profile: readonly ProfileItem[] = author.profile;
+---
+<ClearLayout
+  page="about"
+  title={`关于 ${author.name} - 联系我 | ${siteConfig.seo.title}`}
+  description={`关于摄影师 ${author.name}，以及摄影创作、合作方式与联系方式。`}
+  keywords={siteConfig.seo.keywords}
+  loading="About Me"
+>
+  <div id="post">
+    <div class="postion-relative">
+      <div class="project">
+        <div class="container">
+          <div class="row p-0 project-content">
+            <div class="col-md-7">
+              <div class="project-content__info d-md-none"></div>
+              <div class="project-gallery">
+                <div class="project-gallery__item  col-9 col-md-7 col-lg-5">
+                  <div class="project-gallery__figure">
+                    <Image
+                    src={ImgTink}
+                    alt={author.name}
+                    class="project-gallery__img"
+                  />
+                  </div>
+
+                </div>
+                <div class="project-gradient">
+                  <div class="who-gradient-wrapper" >
+                    <div class="who-shapes-wrapper">
+                      <div class="who-shape-2"></div>
+                      <div class="who-shape-1"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-5 project-content_info  d-md-block">
+              <div class="project-content__info__inner ">
+                <div class="project-detail">
+                  <div class="project-detail__list">
+                    {profile.map((item) => (
+                      <div class="project-detail__item item-grid-5 item-grid-5--start">
+                        <div class="project-detail__label text-right">{item.label}</div>
+                        {item.href ? (
+                          <a
+                            href={item.href}
+                            target={item.external ? "_blank" : undefined}
+                            class="project-detail__value text-left"
+                          >{item.value}</a>
+                        ) : (
+                          <div class="project-detail__value text-left">{item.value}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ClearLayout>
+
+
+
+
+
+<style lang="scss">
+  :root{
+    --gallery-bg: #FBF2E9;
+  }
+  :root.dark{
+    --gallery-bg: hsla(30, 69%, 95%, 0.15);
+  }
+  #post {
+    padding-top: 70px;
+    padding-bottom:80px;
+    @media (min-width: 992px) {
+      padding-top: 80px;
+      padding-bottom:120px;
+    }
+  }
+
+  img {
+    width: 100%;
+  }
+  .item-grid-5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: 1fr;
+    grid-column-gap: 20px;
+    grid-row-gap: 0;
+  }
+  .item-grid-5--start{
+    -webkit-box-align: start;
+    -ms-flex-align: start;
+    align-items: start;
+  }
+  .item-grid-5--end {
+    -webkit-box-align: end;
+    -ms-flex-align: end;
+    align-items: end;
+  }
+  .item-grid-5--center{
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+  }
+
+  .project-content {
+    margin-top: 6vh;
+  }
+  .project-content__info__inner {
+    padding-top: 80px;
+    position: sticky;
+    top: 0px;
+    @media screen and (max-width: 1024px) {
+      padding-top: 6vw;
+    }
+    @media screen and (max-width: 767px) {
+      padding-top: 10vh;
+    }
+  }
+  .project-content__next{
+    font-size: clamp(20px,8vw,48px);
+    font-weight: 600;
+    strong{
+      display: block;
+      font-size: clamp(40px,14.666vw,96px);
+      font-weight: bold;
+      color: var(--color-0);
+    }
+  }
+  .project-detail__item{
+    margin-bottom:40px;
+    @media screen and (max-width: 767px) {
+      margin-bottom:20px;
+    }
+  }
+  .project-detail__label {
+    font-size: var( --text-size);
+    font-weight: 600;
+    line-height: 32px;
+  }
+  .project-detail__value {
+    grid-column: span 4;
+    font-weight: 600;
+    font-size: var(--text-size);
+    line-height: 32px;
+    @media screen and (min-width: 1200px) {
+      font-size: var(--text-size);
+    }
+  }
+  .project-gallery {
+    position:relative;
+    display: flex;
+    justify-content:center;
+    align-item:center;
+    width:100%;
+    box-sizing:border-box;
+    background:#FBF2E9;
+    margin-top: 2vh;
+    overflow: hidden;
+    @media (min-width: 1200px) {
+      // padding-top: 150px;
+    }
+  }
+  .project-gallery__item {
+    position: relative;
+    height: auto;
+  }
+  .project-gallery__figure{
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: auto;
+    margin:120px auto;
+    display:block;
+    z-index: 9;
+    padding:0;
+    padding-bottom:133.333%;
+  }
+  .project-gallery__img{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    display: block;
+    left: 0;
+    top: 0;
+    transition: all 0.5s ease-in-out;
+    object-fit:cover;
+  }
+
+
+  // Gradient motion
+  .project-gradient{
+    position: static;
+    z-index: 0;
+  }
+  .who-shapes-wrapper {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  position: static;
+}
+
+.who-gradient-wrapper {
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  max-height: 50%;
+  max-width: 50%;
+  -webkit-text-fill-color: inherit;
+  background-color: rgba(27, 27, 27, 0);
+  background-clip: content-box;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 12.5%;
+  display: block;
+  position: absolute;
+  top: 0%;
+  bottom: 0;
+  left: 0%;
+  right: 0;
+  overflow: visible;
+  font-size: 1.2vw;
+  @media (min-width: 767px) {
+    font-size:10px;
+    font-size: 0.8vw;
+  }
+}
+
+.who-shape-1 {
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  max-height: 32em;
+  max-width: 32em;
+  filter: blur(10px);
+  background-color: #ff9831;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  position: absolute;
+  top: 3em;
+  bottom: auto;
+  left: auto;
+  right: 2em;
+  animation: moveShape-1 6s ease-in-out infinite;
+}
+.who-shape-2 {
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  max-height: 34em;
+  max-width: 34em;
+  filter: blur(60px);
+  background-color: #fe330a;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  position: absolute;
+  top: 6em;
+  bottom: auto;
+  left: auto;
+  right: 4em;
+  animation: moveShape-2 5s ease-in-out infinite;
+  animation-delay: 125ms;
+}
+@keyframes moveShape-1 {
+  0% {
+    transform: translate(0, 0)  scale(1) rotate(0deg);
+    filter: blur(10px);
+  }
+  50% {
+    transform: translate(50px,-25px) scale(1.08,0.95) rotate(30deg);
+    filter: blur(15px);
+  }
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    filter: blur(10px);
+  }
+}
+@keyframes moveShape-2 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    filter: blur(40px);
+  }
+  50% {
+    transform: translate(50px,-25px) scale(1.06,1.02) rotate(-20deg);
+    filter: blur(60px);
+  }
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    filter: blur(40px);
+  }
+}
+
+@media screen and (max-width: 991px) {
+  .who-gradient-wrapper {
+    max-height: 40em;
+    max-width: 40em;
+    margin-top: 25%;
+    margin-left: 10%;
+  }
+
+  .who-shape-1 {
+    max-width: 32em;
+    display: block;
+  }
+
+  .who-shape-2 {
+    max-width: 34em;
+    filter: blur(50px);
+    display: block;
+  }
+}
+@media screen and (max-width:767px) {
+  .who-gradient-wrapper {
+    max-height: 90vw;
+    max-width: 90vw;
+    width:100vw;
+    height:100vw;
+    margin:0 auto;
+    margin-top: 15vh;
+  }
+
+  .who-shape-1 {
+    max-width:  70vw;
+    max-height: 70vw;
+    display: block;
+    margin:0 auto;
+    left: -5vw;
+  }
+
+  .who-shape-2 {
+    max-width:  70vw;
+    max-height: 70vw;
+    display: block;
+    margin:0 auto;
+    left: -5vw;
+  }
+}
+
+</style>

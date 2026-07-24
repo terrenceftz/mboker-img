@@ -1,0 +1,70 @@
+---
+interface Props {
+    href: string;
+    image: string;
+    title: string;
+    body: string;
+    width?: string;
+    height?: string;
+    class?: string;
+}
+
+const { href, image, title, body, width, height } = Astro.props;
+---
+<div class="g-card-item">
+    <a href={href}>
+        <div class="img">
+            <img width="{width}" height="{height}" src={image} class="card-img" alt="ProjectImage">
+        </div>
+	<h3 class="card-title">
+	    {title}
+	</h3>
+	<p class="card-txt">
+	    {body}
+        </p>
+    </a>
+</div>
+<style>
+    .g-card {
+        list-style: none;
+        display: flex;
+        background-size: 400%;
+        padding: 20px;
+    }
+
+    .g-card > a {
+        width: 100%;
+        text-decoration: none;
+        line-height: 1.4;
+        border-radius: 8px;
+        color: #fdebf3;
+    }
+
+    .img {
+        text-align: center;
+    }
+
+    img {
+        border-radius: 16px;
+    }
+
+    h3 {
+        margin: 0;
+        font-family: 'Josefin Sans', sans-serif;
+        font-size: 1.5rem;
+        font-weight: normal;
+        text-align: center;
+    }
+
+    p {
+        font-size: 1em;
+        line-height: 1.5;
+        text-indent: 0;
+        text-align: center;
+        margin: 0.5rem 0 0;
+    }
+
+    .g-card:hover {
+        transform: scale(1.05);
+    }
+</style>

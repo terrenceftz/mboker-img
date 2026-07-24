@@ -1,0 +1,335 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Next from "../../components/PostNext.astro";
+import CollectionComm from "./CollectionComm.astro";
+import { categoryById } from "../../config/site";
+
+const next='阿勒泰';
+const nextUrl = categoryById.altay.href;
+const PostTitle = "城市漫游";
+const Count = "24";
+// 导入 Image 组件和图像
+import { Image } from "astro:assets";
+import Img01 from "../../assets/images/city/001.jpg";
+import Img02 from "../../assets/images/city/002.jpg";
+import Img03 from "../../assets/images/city/003.jpg";
+import Img04 from "../../assets/images/city/004.jpg";
+import Img05 from "../../assets/images/city/005.jpg";
+import Img06 from "../../assets/images/city/006.jpg";
+import Img07 from "../../assets/images/city/007.jpg";
+import Img08 from "../../assets/images/city/008.jpg";
+import Img09 from "../../assets/images/city/009.jpg";
+import Img10 from "../../assets/images/city/010.jpg";
+import Img11 from "../../assets/images/city/011.jpg";
+import Img1101 from "../../assets/images/city/011-1.jpg";
+import Img1102 from "../../assets/images/city/011-2.jpg";
+import Img12 from "../../assets/images/city/012.jpg";
+import Img13 from "../../assets/images/city/013.jpg";
+import Img14 from "../../assets/images/city/014.jpg";
+import Img15 from "../../assets/images/city/015.jpg";
+import Img16 from "../../assets/images/city/016.jpg";
+import Img17 from "../../assets/images/city/017.jpg";
+import Img18 from "../../assets/images/city/018.jpg";
+import Img19 from "../../assets/images/city/019.jpg";
+import Img20 from "../../assets/images/city/020.jpg";
+import Img21 from "../../assets/images/city/021.jpg";
+import Img22 from "../../assets/images/city/022.jpg";
+
+---
+
+<Layout
+page="city",
+title="城市漫游 | Tink 的摄影网站",
+description="城市漫游",
+keywords="城市漫游"
+loading="City Walk"
+>
+  <CollectionComm />
+  <div id="collection">
+    <div class="postion-relative">
+      <div class="collection">
+        <div class="container">
+          <div class="row p-0 main">
+            <div class="postion-relative m-auto text-center w-100">
+              <h1 class="collection-title heading-01 collection-title__01" data-splitting>
+                {PostTitle}
+              </h1>
+              <div>
+                <div class="collection-gallery">
+                  <div class=" p-0">
+                    <div class="collection-item justify-content-center">
+                      <div class="collection__figure col-12 col-sm-10 col-md-8  p-0">
+                        <Image
+                          src={Img01}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+                    <div class="collection-item justify-content-center justify-content-sm-start">
+                      <div class="collection__figure col-12 col-sm-9  col-md-7    p-0">
+                        <Image
+                          src={Img02}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+                    <div class="collection-item justify-content-center justify-content-sm-end   ">
+                      <div class="collection__figure col-12 col-sm-9  col-md-6   offset-rg-1 p-0">
+                        <Image
+                          src={Img03}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+                    <div class="collection-item justify-content-center">
+                      <div class="collection__figure col-12 col-sm-9  col-md-6 p-0">
+                        <Image
+                          src={Img04}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center justify-content-sm-start   ">
+                      <div class="collection__figure col-12 col-sm-9  col-md-6  offset-md-1 p-0">
+                        <Image
+                          src={Img05}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center justify-content-sm-end">
+                      <div class="collection__figure col-12 col-sm-9  col-md-6   offset-rg-1 p-0">
+                        <Image
+                          src={Img06}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center justify-content-sm-start">
+                      <div class="collection__figure col-12 col-sm-9  col-md-6  offset-md-1 p-0">
+                        <Image
+                          src={Img07}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+
+                    <div class="collection-item justify-content-center ">
+                      <div class="collection__figure col-12 col-sm-9  col-md-8  p-0">
+                        <Image
+                          src={Img08}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center">
+                      <div class="collection__figure col-10 col-sm-8  col-md-4  p-0">
+                        <Image
+                          src={Img09}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+
+                    <div class="collection-item-double flex-wrap flex-sm-nowrap justify-content-center justify-content-sm-between">
+                      <div class="collection-item col-10  col-sm-5 col-md-4 col-lg-4  p-0">
+                        <div class="collection__figure ">
+                          <Image
+                            src={Img11}
+                            alt="City Walk"
+                            class="collection__img"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="collection-item col-12 col-sm-5  col-md-6 col-lg-5 p-0 offset-rg-1">
+                        <div class="collection__figure ">
+                          <Image
+                            src={Img10}
+                            alt="City Walk"
+                            class="collection__img"
+                          />
+                        </div>
+                      </div>
+
+                    </div>
+
+
+                    <div class="collection-item-double flex-wrap flex-sm-nowrap justify-content-center justify-content-sm-between">
+                      <div class="collection-item col-10  col-sm-4 col-md-4 col-lg-3 p-0 offset-lg-1">
+                        <div class="collection__figure ">
+                          <Image
+                            src={Img1101}
+                            alt="City Walk"
+                            class="collection__img"
+                          />
+                        </div>
+                      </div>
+                      <div class="collection-item col-10  col-sm-6 col-md-6 col-lg-4  offset-rg-1 p-0">
+                        <div class="collection__figure ">
+                          <Image
+                            src={Img1102}
+                            alt="City Walk"
+                            class="collection__img"
+                          />
+                        </div>
+                      </div>
+
+                    </div>
+
+
+                    <div class="collection-item justify-content-center">
+                      <div class="collection__figure p-0 col-12 col-sm-8 col-md-6 col-lg-7">
+                        <Image
+                          src={Img12}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center justify-content-sm-start">
+                      <div class="collection__figure p-0 col-10 col-sm-6 col-md-4 col-lg-4 offset-sm-3">
+                        <Image
+                          src={Img13}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item-double flex-wrap flex-sm-nowrap justify-content-center justify-content-sm-between">
+                      <div class="collection-item col-10 col-sm-5 col-md-5 col-lg-4 p-0 offset-lg-1">
+                        <div class="collection__figure ">
+                          <Image
+                            src={Img14}
+                            alt="City Walk"
+                            class="collection__img"
+                          />
+                        </div>
+                      </div>
+                      <div class="collection-item col-10 col-sm-4 col-md-4 col-lg-3  p-0">
+                        <div class="collection__figure ">
+                          <Image
+                            src={Img15}
+                            alt="City Walk"
+                            class="collection__img"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center">
+                      <div class="collection__figure p-0 col-12 col-sm-8 col-md-6 col-lg-6">
+                        <Image
+                          src={Img16}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center justify-content-sm-start">
+                      <div class="collection__figure p-0 col-10 col-sm-6 col-md-6 col-lg-4">
+                        <Image
+                          src={Img17}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center">
+                      <div class="collection__figure p-0 col-12 col-sm-8 col-md-6 col-lg-7">
+                        <Image
+                          src={Img18}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center justify-content-sm-end">
+                      <div class="collection__figure p-0 col-12 col-sm-8 col-md-6 col-lg-7">
+                        <Image
+                          src={Img19}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center justify-content-sm-start">
+                      <div class="collection__figure p-0 col-12 col-sm-8 col-md-6 col-lg-6">
+                        <Image
+                          src={Img20}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center">
+                      <div class="collection__figure p-0 col-12 col-sm-8 col-md-6 col-lg-6">
+                        <Image
+                          src={Img21}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="collection-item justify-content-center">
+                      <div class="collection__figure p-0 col-12 col-sm-8 col-md-6 col-lg-7">
+                        <Image
+                          src={Img22}
+                          alt="City Walk"
+                          class="collection__img"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <Next
+          post={next}
+          href={nextUrl}
+        />
+    </div>
+  </div>
+</Layout>
+
+<style lang="scss">
+.main{
+  margin:120px auto 0;
+  @media (min-width: 767px) {
+    margin:12vw auto 0;
+  }
+
+}
+.collection-title{
+  margin-bottom:60px;
+  @media (min-width: 767px) {
+    margin-bottom:8vw;
+  }
+}
+</style>

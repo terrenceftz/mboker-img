@@ -1,0 +1,31 @@
+---
+/**
+ * Gallery 组件 - 画廊容器
+ * 接收 GalleryConfig 配置，渲染整个画廊
+ */
+import GalleryItem from './GalleryItem.astro';
+import type { GalleryConfig } from '@/data/gallery';
+
+interface Props {
+  /** 作品集配置 */
+  gallery: GalleryConfig;
+  /** 是否显示标题 */
+  showTitle?: boolean;
+  /** 自定义容器类名 */
+  containerClass?: string;
+}
+
+const { gallery, showTitle = false, containerClass = '' } = Astro.props;
+---
+
+<div class:list={['collection-gallery', containerClass]} data-gallery={gallery.id}>
+  <div class="gallery-container p-0">
+    {gallery.images.map((image, index) => (
+      <GalleryItem
+        image={image}
+        index={index}
+        total={gallery.images.length}
+      />
+    ))}
+  </div>
+</div>

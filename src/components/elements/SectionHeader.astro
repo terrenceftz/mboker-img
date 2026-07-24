@@ -1,0 +1,30 @@
+---
+const {title, description, titleClass='', descClass=''} = Astro.props;
+---
+<div class="section-part">
+    <div class="container">
+        <div class="row">
+            <div class="section-header m-auto">
+                <h1 class={`text-center ${titleClass}`}>
+                    {title}
+                </h1>
+                {description &&  <p class={`desc section-desc text-center ${descClass}`}>
+                      {description}</p>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .section-desc{
+        margin:2rem auto;
+        text-align: center;
+        color:var(--color-200);
+    }
+    h1{
+        font-size: 4rem;
+    }
+</style>

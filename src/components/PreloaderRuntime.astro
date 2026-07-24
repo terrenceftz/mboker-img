@@ -1,0 +1,63 @@
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import { splitOnce } from "../scripts/animation/runtime.js";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const preloader = document.querySelector(".preloader");
+  const title = preloader?.querySelector(".preloader-title");
+  const hero = preloader?.querySelector(".preloader-hero");
+  let pageReady = false;
+  let heroIntroComplete = !hero;
+  let revealStarted = false;
+  if (title) {
+    splitOnce(title);
+    gsap.set(title, { opacity: 1 });
+    gsap.set(title.querySelectorAll(".char"), { opacity: 0, x: 16, filter: "blur(4px)" });
+  }
+  if (hero) {
+    const finishHeroIntro = () => {
+      heroIntroComplete = true;
+      reveal();
+    };
+    hero.addEventListener("animationend", (event) => {
+      if ((event as AnimationEvent).animationName === "preloader-hero-in") {
+        finishHeroIntro();
+      }
+    });
+    // Covers an unusually slow script that attaches after the CSS animation.
+    window.setTimeout(finishHeroIntro, 1500);
+  }
+
+  const complete = () => {
+    if (!preloader || document.documentElement.dataset.preloaderComplete === "true") return;
+    document.documentElement.dataset.preloaderComplete = "true";
+    document.dispatchEvent(new CustomEvent("preloader:complete"));
+    window.siteLenis?.start();
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+    preloader.remove();
+  };
+
+  const reveal = () => {
+    if (!preloader) return;
+    if (hero && (!pageReady || !heroIntroComplete)) return;
+    if (revealStarted) return;
+    revealStarted = true;
+    const chars = title?.querySelectorAll(".char") ?? [];
+    const timeline = gsap.timeline({ onComplete: complete });
+    if (chars.length) timeline.to(chars, { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.75, stagger: { amount: 0.7 }, ease: "power1.out" });
+    if (hero) hero.classList.add("is-leaving");
+    timeline.to(".upperone", { yPercent: -100, duration: 0.7, ease: "power2.inOut" }, hero ? "+=1" : "+=0.2")
+      .to(".downone", { yPercent: -100, duration: 0.7, ease: "power2.inOut" }, "<0.08")
+      .to(".downtwo", { yPercent: -100, duration: 0.7, ease: "power2.inOut" }, "<0.08");
+  };
+
+  const markPageReady = () => {
+    pageReady = true;
+    reveal();
+  };
+
+  if (document.documentElement.dataset.siteReady === "true") markPageReady();
+  else document.addEventListener("site:ready", markPageReady, { once: true });
+</script>

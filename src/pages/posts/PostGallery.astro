@@ -1,0 +1,136 @@
+---
+// 导入 Image 组件和图像
+import { Image } from 'astro:assets';
+
+import postImg01 from "../../assets/images/altay/001.jpg";
+import postImg02 from "../../assets/images/altay/002.jpg";
+import postImg03 from "../../assets/images/altay/003.jpg";
+import postImg04 from "../../assets/images/altay/004.jpg";
+import postImg05 from "../../assets/images/altay/005.jpg";
+import postImg06 from "../../assets/images/altay/006.jpg";
+import postImg07 from "../../assets/images/altay/007.jpg";
+import postImg08 from "../../assets/images/altay/008.jpg";
+import postImg09 from "../../assets/images/altay/009.jpg";
+import postImg10 from "../../assets/images/altay/010.jpg";
+import postImg11 from "../../assets/images/altay/011.jpg";
+import postImg12 from "../../assets/images/altay/012.jpg";
+import postImg13 from "../../assets/images/altay/013.jpg";
+import postImg14 from "../../assets/images/altay/014.jpg";
+import postImg15 from "../../assets/images/altay/015.jpg";
+import postImg16 from "../../assets/images/altay/016.jpg";
+import postImg17 from "../../assets/images/altay/017.jpg";
+
+---
+
+
+<div class="project-gallery">
+  <div class="project-gallery__item ">
+    <div class="project-gallery__figure ">
+      <Image src={postImg16} alt="阿勒泰之旅"   class="project-gallery__img"/>
+    </div>
+  </div>
+  <div class="project-gallery__item pg-bg pg-pad">
+    <div class="project-gallery__figure col col-md-8">
+      <Image src={postImg15} alt="阿勒泰之旅"   class="project-gallery__img"/>
+    </div>
+  </div>
+
+  <div class="project-gallery__item">
+    <div class="project-gallery__figure ">
+      <Image src={postImg17} alt="阿勒泰之旅"   class="project-gallery__img"/>
+    </div>
+  </div>
+  
+    <div class="project-gallery__item">
+      <div class="project-gallery__figure">
+        <Image src={postImg01} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item">
+      <div class="project-gallery__figure">
+        <Image src={postImg02} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item ">
+      <div class="project-gallery__figure">
+        <Image src={postImg03} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item pg-bg pg-pad">
+      <div class="project-gallery__figure col col-md-8">
+        <Image src={postImg04} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item pg-bg pg-pad">
+      <div class="project-gallery__figure col col-md-8">
+        <Image src={postImg05} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item pg-bg pg-pad">
+      <div class="project-gallery__figure col col-md-8">
+        <Image src={postImg06} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item">
+      <div class="project-gallery__figure">
+        <Image src={postImg07} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item">
+      <div class="project-gallery__figure">
+        <Image src={postImg08} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item pg-bg pg-pad">
+      <div class="project-gallery__figure col col-md-8">
+        <Image src={postImg09} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item pg-bg pg-pad">
+      <div class="project-gallery__figure col col-md-8">
+        <Image src={postImg10} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item">
+      <div class="project-gallery__figure">
+        <Image src={postImg11} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item">
+      <div class="project-gallery__figure">
+        <Image src={postImg12} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item">
+      <div class="project-gallery__figure">
+        <Image src={postImg13} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+    <div class="project-gallery__item">
+      <div class="project-gallery__figure">
+        <Image src={postImg14} alt="阿勒泰之旅"   class="project-gallery__img"/>
+      </div>
+    </div>
+
+</div>
+
+<style>
+:root{
+  --project-color:#f1f2f3;
+}
+:root.dark{
+  --project-color:#181c24;
+}
+
+@media(min-width: 767px) {
+  .pg-pad{
+    padding:80px 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+  }
+  .pg-bg{
+    background: var(--project-color);
+  }
+}
+</style>

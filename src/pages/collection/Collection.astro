@@ -1,0 +1,89 @@
+---
+// 导入 Image 组件和图像
+import { Image } from "astro:assets";
+import Img01 from "../../assets/images/sunset/000.jpg";
+import Img02 from "../../assets/images/sunset/002.jpg";
+import Img03 from "../../assets/images/sunset/003.jpg";
+import Img04 from "../../assets/images/sunset/004.jpg";
+import Img05 from "../../assets/images/sunset/005.jpg";
+import Img06 from "../../assets/images/sunset/006.jpg";
+import Img07 from "../../assets/images/sunset/007.jpg";
+import Img08 from "../../assets/images/sunset/008.jpg";
+---
+
+<div class="collection-gallery">
+    <div class=" p-0">
+      <div class="collection-item justify-content-center">
+        <div class="collection__figure col-12 col-sm-10 p-0">
+          <Image
+            src={Img01}
+            alt="Sunset"
+            class="collection__img"
+          />
+        </div>
+      </div>
+      <div class="collection-item justify-content-center justify-content-sm-start">
+        <div class="collection__figure col-8 col-sm-6 col-lg-4 p-0">
+          <Image
+            src={Img02}
+            alt="Sunset"
+            class="collection__img"
+          />
+        </div>
+      </div>
+      <div class="collection-item justify-content-center">
+        <div class="collection__figure p-0 col-8 col-sm-6 col-md-6 col-lg-4 offset-md-1">
+          <Image
+            src={Img03}
+            alt="Sunset"
+            class="collection__img"
+          />
+        </div>
+      </div>
+      <div class="collection-item justify-content-center justify-content-sm-end">
+        <div class="collection__figure p-0 col-10 col-md-8 col-lg-6">
+          <Image
+            src={Img04}
+            alt="Sunset"
+            class="collection__img"
+          />
+        </div>
+      </div>
+      <div class="collection-item justify-content-center justify-content-sm-start">
+        <div class="collection__figure p-0 col-8 col-md-6 col-lg-4 offset-sm-1 offset-md-3">
+          <Image
+            src={Img05}
+            alt="Sunset"
+            class="collection__img"
+          />
+        </div>
+      </div>
+      <div class="collection-item justify-content-center justify-content-sm-start">
+        <div class="collection__figure p-0 col-10 col-md-6 col-lg-4">
+          <Image
+            src={Img06}
+            alt="Sunset"
+            class="collection__img"
+          />
+        </div>
+      </div>
+      <div class="collection-item justify-content-center justify-content-sm-end">
+        <div class="collection__figure p-0 col-10 col-md-8 col-lg-6 ">
+          <Image
+            src={Img07}
+            alt="Sunset"
+            class="collection__img"
+          />
+        </div>
+      </div>
+      <div class="collection-item justify-content-center justify-content-sm-start">
+        <div class="collection__figure p-0 col-8 col-md-6 col-lg-4 offset-1">
+          <Image
+            src={Img08}
+            alt="Sunset"
+            class="collection__img"
+          />
+        </div>
+      </div>
+    </div>
+</div>

@@ -1,0 +1,57 @@
+---
+
+import { getCollection } from 'astro:content';
+import SectionHeader from "@/elements/SectionHeader.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PostPreview from "@/elements/PostPreview.astro"
+const posts = (await getCollection("blog")).sort(
+  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf(),
+);
+---
+
+<BaseLayout
+    page="blog"
+    title="Blog | Tink Photo Gallery"
+    description="Explore the latest posts from Tink."
+    keywords="Tink, blog, photography"
+    showContact={false}
+    showPreloader={false}
+>
+<div class="blog" id="blog">
+    <main class="blog-container">
+        <SectionHeader
+            title="博客"
+            description="记录下文字和想法"
+        />
+        <section class="blog-main border-top-dashed">
+            <div class="blog-content">
+                <div class="posts-list">
+                    {
+                        posts.map((post) => (
+                            <PostPreview
+                                slug={post.id}
+                                title={post.data.title}
+                                description={post.data.description}
+                                date={post.data.publishDate}
+                         />
+                        ))
+                    }
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+</BaseLayout>
+
+<style>
+    .blog-container {
+        width:100%;
+        max-width:65rem;
+        margin:7.5rem auto;
+        min-height: calc(100vh - 88px);
+    }
+    .blog-main{
+        display:block;
+        margin:4rem auto;
+    }
+</style>

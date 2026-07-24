@@ -1,0 +1,425 @@
+---
+// interface Props {
+//     href: string;
+//     image: string;
+//     title: string;
+//     body: string;
+// }
+// 导入 Image 组件和图像
+import { Image } from "astro:assets";
+import Img01 from "../assets/images/home/01altay.jpg";
+import Img02 from "../assets/images/home/02nature.jpg";
+import Img03 from "../assets/images/home/03city.jpg";
+import Img04 from "../assets/images/home/04sunset.jpg";
+import Img05 from "../assets/images/home/05city.jpg";
+import Img06 from "../assets/images/home/06altay.jpg";
+import Img07 from "../assets/images/home/07moment.jpg";
+import Img08 from "../assets/images/home/08moment.jpg";
+import Img09 from "../assets/images/home/09nature.jpg";
+import { categoryById } from "../config/site";
+
+// const { href, image, title, body } = Astro.props;
+const urlSunset = categoryById.sunset.href;
+const urlMoment = categoryById.moment.href;
+const urlNature = categoryById.nature.href;
+const urlCity = categoryById.city.href;
+const urlAltay = categoryById.altay.href;
+---
+<section class="container index-gallery">
+  <div class="index-grid">
+    <div class="index-grid__inner">
+      <div class="index-card">
+        <div class="index-card__inner">
+          <a href={urlAltay}>
+              <picture class="gsap-picture">
+                  <Image
+                    src={Img01}
+                    alt="Altay"
+                    class="index-card__img"
+                  />
+              </picture>
+          </a>
+          <div class="index-card__info">
+            <div class="index-card__content">
+              <div class="index-card__index lead ls">
+                <a href={urlAltay} class="link-solid" data-splitting>
+                  → (阿勒泰)
+                </a>
+              </div>
+              <h3 class="index-card__title display display--2" data-splitting>日常 </h3>
+              <div class="lead ls" data-splitting> / 2023.11</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="index-card">
+        <div class="index-card__inner">
+          <a href={urlNature}>
+            <picture class="gsap-picture">
+              <Image
+                src={Img02}
+                alt="Altay"
+                class="index-card__img"
+              />
+            </picture>
+          </a>
+          <div class="index-card__info">
+            <div class="index-card__content">
+              <div class="index-card__index lead ls">
+                <a href={urlNature} class="link-solid" data-splitting>
+                  → (自然)
+                </a>
+              </div>
+              <h3 class="index-card__title display display--2" data-splitting>九寨沟</h3>
+              <div class="lead ls" data-splitting>/ 2023.11</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="index-card">
+        <div class="index-card__inner">
+          <a href={urlCity}>
+            <picture class="gsap-picture">
+              <Image
+                src={Img03}
+                alt="Altay"
+                class="index-card__img"
+              />
+            </picture>
+          </a>
+          <div class="index-card__info">
+            <div class="index-card__content">
+                <div class="index-card__index lead ls">
+                  <a href={urlCity} class="link-solid" data-splitting >
+                    → (城市)
+                  </a>
+                </div>
+                <h3 class="index-card__title display display--2" data-splitting>云冈石窟</h3>
+                <div class="lead ls" data-splitting>/ 2023.09</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="index-card">
+        <div class="index-card__inner">
+          <a href={urlSunset}>
+            <picture class="gsap-picture">
+              <Image
+                src={Img04}
+                alt="Altay"
+                class="index-card__img"
+              />
+            </picture>
+          </a>
+          <div class="index-card__info">
+            <div class="index-card__content">
+              <div class="index-card__index lead ls">
+                <a href={urlSunset} class="link-solid" data-splitting>
+                  → (日落)
+                </a>
+              </div>
+              <h3 class="index-card__title display display--2" data-splitting>海边的日落</h3>
+              <div class="lead ls" data-splitting>/ 2023.09</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="index-card">
+        <div class="index-card__inner">
+          <a href={urlCity}>
+            <picture class="gsap-picture">
+              <Image
+                src={Img05}
+                alt="Altay"
+                class="index-card__img"
+              />
+            </picture>
+          </a>
+          <div class="index-card__info">
+            <div class="index-card__content">
+            <div class="index-card__index lead ls">
+              <a href={urlCity} class="link-solid" data-splitting>
+                → (城市)
+              </a>
+            </div>
+            <h3 class="index-card__title display display--2" data-splitting>应县木塔</h3>
+            <div class="lead ls" data-splitting>/ 2023.09</div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <div class="index-card">
+        <div class="index-card__inner">
+          <a href={urlAltay}>
+            <picture class="gsap-picture">
+              <Image
+                src={Img06}
+                alt="Altay"
+                class="index-card__img"
+              />
+            </picture>
+          </a>
+          <div class="index-card__info">
+            <div class="index-card__content">
+            <div class="index-card__index lead ls">
+              <a href={urlAltay} class="link-solid" data-splitting>
+                → (阿勒泰)
+              </a>
+            </div>
+            <h3 class="index-card__title display display--2" data-splitting>树与人</h3>
+            <div class="lead ls" data-splitting>/ 2023.11</div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <div class="index-card">
+        <div class="index-card__inner">
+          <a href={urlMoment}>
+            <picture class="gsap-picture">
+              <Image
+                src={Img07}
+                alt="Altay"
+                class="index-card__img"
+              />
+            </picture>
+          </a>
+          <div class="index-card__info">
+            <div class="index-card__content">
+            <div class="index-card__index lead ls">
+              <a href={urlMoment} class="link-solid" data-splitting >
+                → (瞬间)
+              </a>
+            </div>
+            <h3 class="index-card__title display display--2" data-splitting>转经筒</h3>
+            <div class="lead ls" data-splitting>/ 2023.06</div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <div class="index-card">
+        <div class="index-card__inner">
+          <a href={urlCity}>
+            <picture class="gsap-picture">
+              <Image
+                src={Img08}
+                alt="Altay"
+                class="index-card__img"
+              />
+            </picture>
+          </a>
+          <div class="index-card__info">
+            <div class="index-card__content">
+            <div class="index-card__index lead ls">
+              <a href={urlCity} class="link-solid" data-splitting>
+                → (瞬间)
+              </a>
+            </div>
+            <h3 class="index-card__title display display--2" data-splitting>旅途中</h3>
+            <div class="lead ls" data-splitting>/ 2023.11</div>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="index-card">
+        <div class="index-card__inner">
+          <a href={urlNature}>
+            <picture class="gsap-picture">
+              <Image
+                src={Img09}
+                alt="Altay"
+                class="index-card__img"
+              />
+            </picture>
+          </a>
+          <div class="index-card__info">
+            <div class="index-card__content">
+            <div class="index-card__index lead ls">
+              <a href={urlNature} class="link-solid" data-splitting>
+                → (自然)
+              </a>
+            </div>
+            <h3 class="index-card__title display display--2" data-splitting>纳木措</h3>
+            <div class="lead ls" data-splitting>/ 2023.11</div>
+          </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<style lang="scss" is:global>
+
+  // Index Grid
+  .index-grid {
+    padding-top: 90px;
+  }
+  @media (min-width: 1200px) {
+    .index-grid {
+      padding-top: 180px;
+    }
+  }
+  .index-grid__inner {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 20px;
+  }
+
+  .index-card {
+    margin-bottom: 20px;
+    grid-column: auto/span 12;
+    @media (min-width: 576px) {
+      grid-column: auto/span 6;
+    }
+    .icon{
+      margin-top:-4px;
+      margin-right:-4px;
+    }
+    &__inner {
+      position: relative;
+    }
+    @media (min-width:767px) {
+      margin-bottom: 120px;
+      &:nth-child(9n + 1) {
+        grid-column: 5 / span 7;
+        margin-top:120px;
+      }
+      &:nth-child(9n + 2) {
+        grid-column: 1 / span 3;
+      }
+      &:nth-child(9n + 3) {
+        grid-column: 9 / span 4;
+        margin-top:15vw;
+      }
+      &:nth-child(9n + 4) {
+        grid-column: 2 / span 7;
+      }
+      &:nth-child(9n + 5) {
+        grid-column: 8 / span 4;
+      }
+      &:nth-child(9n + 6) {
+        grid-column: 2 / span 4;
+      }
+      &:nth-child(9n + 7) {
+        grid-column: 4 / span 7;
+      }
+      &:nth-child(9n + 8) {
+        grid-column: 8 / span 4;
+      }
+      &:nth-child(9n + 9) {
+        grid-column: 3 / span 8;
+        margin-bottom: 8vw;
+      }
+    }
+    @media (min-width: 1200px) {
+      margin-bottom: 200px;
+    }
+    &__inner {
+      position: relative;
+    }
+    &__title {
+      margin-bottom: 24px;
+      margin-top: 8px;
+    }
+  }
+
+  .index-card__img,
+  .index-card__img img {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+  }
+  .index-card__info {
+    margin-top: 10px;
+  }
+  @media (min-width: 992px) {
+    //default bottom left
+    .index-card__info {
+      position: absolute;
+      // top: 100%;
+      left: 0;
+      // text-align: left;
+      // margin-top: 20px;
+    }
+    .index-card__title {
+      margin-bottom: 32px;
+      margin-top: 12px;
+    }
+    //left
+    .index-card:nth-child(9n + 1) .index-card__info,
+    .index-card:nth-child(9n + 3) .index-card__info,
+    .index-card:nth-child(9n + 5) .index-card__info,
+    .index-card:nth-child(9n + 8) .index-card__info,
+    {
+      right: auto;
+      left: -20px;
+      bottom:0;
+      -webkit-transform: translateX(-100%);
+      -o-transform: translateX(-100%);
+      transform: translateX(-100%);
+      text-align: right;
+      margin:0;
+
+    }
+    //right 
+    .index-card:nth-child(9n + 2) .index-card__info,
+    .index-card:nth-child(9n + 4) .index-card__info,
+    .index-card:nth-child(9n + 6) .index-card__info,
+    .index-card:nth-child(9n + 7) .index-card__info,
+    .index-card:nth-child(9n + 9) .index-card__info,
+    {
+      right: -20px;
+      bottom:0;
+      left: auto;
+      text-align: left;
+      margin:0;
+      -webkit-transform: translateX(100%);
+      -o-transform: translateX(100%);
+      transform: translateX(100%);
+    }
+    //bottom left
+    // .index-card:nth-child(9n) .index-card__info,
+    // {
+    //   top: 100%;
+    //   left: 0;
+    //   text-align: left;
+    //   margin-top: 20px;
+    // }
+        //bottom right
+    // .index-card:nth-child(9n + 3) .index-card__info,
+    // // .index-card:nth-child(9n + 9) .index-card__info,
+    // {
+    //   top: 100%;
+    //   right: 0;
+    //   text-align: right;
+    //   margin-top: 20px;
+    // }
+
+  }
+  .picture{
+    position:relative;
+    &-wrapper{
+      position:relative;
+      display:inline-block;
+      overflow:hidden;
+      width:100%;
+    }
+    &__img{
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      object-fit:cover;
+      display:block;
+      left: 0;
+      top: 0;
+      transition: all 0.5s ease-in-out;
+    }
+  }
+  .picture-wrapper:hover .picture__img{
+  transform: scale(1.08);
+  }
+</style>

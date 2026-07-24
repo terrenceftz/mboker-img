@@ -1,0 +1,36 @@
+---
+import Header from "../components/Header.astro";
+import Menu from "../components/Menu.astro";
+import Footer from "../components/Footer.astro";
+import MainHead from "../components/MainHead.astro";
+import SiteRuntime from "../components/SiteRuntime.astro";
+import ClientScripts from "../components/ClientScripts.astro";
+import PreloaderRuntime from "../components/PreloaderRuntime.astro";
+import Contact from "../components/Contact.astro";
+import Noise from "../functions/Noise.astro";
+import Preloader from "../functions/Preloader.astro";
+import Cursor from "../functions/Cursor.astro";
+import { siteConfig } from "../config/site";
+
+interface Props { page?: string; title?: string; keywords?: string; description?: string; loading?: string; }
+const { page, title, keywords, description, loading } = Astro.props;
+---
+<!doctype html>
+<html lang={siteConfig.locale} class={page}>
+  <head><MainHead title={title} description={description} keywords={keywords} /></head>
+  <body>
+    <Noise />
+    <Preloader loading={loading} showHero={page === "home"} />
+    <Cursor />
+    <div class="wrapper position-relative">
+      <Header />
+      <Menu />
+      <main><slot /><Contact /><Footer /></main>
+    </div>
+    <script>
+      const dark = localStorage.theme === "dark" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", dark);
+    </script>
+    <SiteRuntime /><PreloaderRuntime /><ClientScripts />
+  </body>
+</html>

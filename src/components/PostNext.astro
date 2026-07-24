@@ -1,0 +1,35 @@
+---
+interface Props {
+    post: string;
+    href: string;
+}
+
+const { post, href } = Astro.props;
+---
+<div class="container project-next">
+    <a href={href} class="project-content__next">
+      下一篇章 —
+      <strong class="link-underlined link-underlined--strong">
+        {post}
+      </strong>
+    </a>
+  </div>
+
+
+<style lang="scss">
+.project-content__next{
+    font-size: clamp(16px,8vw,20px);
+    font-weight: 600;
+    strong{
+        display: block;
+        font-size: clamp(36px,14.666vw,60px);
+        font-weight: bold;
+        color: var(--color-0);
+    }
+}
+@media (max-width: 767px) {
+  .project-next{
+  text-align: right;
+  }
+}
+</style>

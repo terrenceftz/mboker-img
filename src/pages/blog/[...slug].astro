@@ -1,0 +1,234 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from "@/layouts/BaseLayout.astro";
+export async function getStaticPaths() {
+    const posts = await getCollection('blog');
+    return posts.map((post) => ({
+        params: { slug: post.id  },
+        props: { post }
+    }));
+}
+const { post } = Astro.props;
+const { Content } = await render(post);
+export const prerender = true;
+---
+
+<BaseLayout title={post.data.title} description={post.data.description} keywords="" showContact={false} showPreloader={false}>
+	<div class="post">
+		<main class="post-container">
+			<div class="section-header">
+				<div class="row">
+					<div class="section-content m-auto">
+						<div class="section-title">
+							<div class="title-tag">
+								{post.data.tags && post.data.tags.length > 0 ? post.data.tags[0] : ''}
+							</div>
+							<h1 class="title">
+								{post.data.title}
+							</h1>
+						</div>
+					</div>
+
+				</div>
+				<div class="post-line post-line-bottom text-center" >
+					<span class="text-center">Last update: {post.data.publishDate.toISOString().slice(0,10)}</span>
+					{
+						post.data.read &&   <span class="" >•</span>
+					<span >{post.data.read} min read</span>
+					}
+				</div>
+			</div>
+
+
+			<section>
+				<div class="content">
+					<Content />
+				</div>
+			</section>
+
+		</main>
+	</div>
+
+</BaseLayout>
+
+<style>
+	.post-container {
+        width:100%;
+        max-width:65rem;
+        margin:7.5rem auto;
+        min-height: calc(100vh - 88px);
+    }
+    .blog-main{
+        display:block;
+        margin:4rem auto;
+    }
+
+	.section-content{
+		text-align:center
+	}
+	.section-desc{
+		text-align:center
+	}
+	.post-line-top{
+		border-top: 1px dashed var(--color-600);
+		padding-top: .5rem;
+		padding-bottom: 2rem;
+		margin-top: .5rem;
+		font-size: .875rem;
+		white-space: nowrap;
+		color:var(--color-500);
+		font-weight: 400
+	}
+	.post-line-bottom{
+		border-bottom: 1px dashed var(--color-600);
+		padding-bottom: .75rem;
+		margin:1.5rem auto 3rem;
+		font-size: .8rem;
+		white-space: nowrap;
+		color:var(--color-300);
+	}
+	.title-tag{
+		display: inline-block;
+		font-size: 13px;
+		line-height: 1;
+		margin:16px auto 24px;
+		border:1px solid var(--color-300);
+		border-radius: 36px;
+		padding:6px 22px 6px;
+		color: var(--color-300);
+		text-align: center;
+		font-family: var(--font-type);
+		text-transform: uppercase;
+		letter-spacing: 1px;
+	}
+	.title{
+		font-size:4rem;
+		line-height: 1.2;
+		margin: 1rem 0;
+		color: var(--color-100);
+		text-align: center;
+	}
+
+	.details {
+		display: flex;
+		flex-direction: column;
+		padding: 0.5rem;
+		gap: 1.5rem;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.tags {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.description {
+		font-size: var(--text-lg);
+	}
+
+	.content {
+		position:relative;
+		color:var(--color-200);
+		margin:6rem auto 12rem;
+	}
+	.content  :global(pre) {
+		padding: 1.2em;
+		border-radius: 6px;
+	}
+	.content > :global(* + *) {
+		margin-top: 1rem;
+	}
+
+	.content :global(h1),
+	.content :global(h2),
+	.content :global(h3),
+	.content :global(h4),
+	.content :global(h5) {
+		margin: 1.75em 0 1em;
+		color:var(--color-100);
+	}
+	.content :global(h1){
+		font-size: 2.5rem;
+		color:var(--color-100);
+	}
+	.content :global(h2){
+		font-size: 1.75rem;
+		color:var(--color-100);
+	}
+	.content :global(h3){
+		font-size: 1.5rem;
+		color:var(--color-100);
+	}
+	.content :global(h4){
+		font-size: 1.25rem;
+		color:var(--color-200);
+	}
+	.content :global(h5){
+		font-size: 1rem;
+		color:var(--color-300);
+	}
+	.content :global(img) {
+		border-radius: 8px;
+	}
+
+	.content :global(p) {
+		margin:16px 0;
+		line-height:1.75
+	}
+
+	.content :global(blockquote) {
+		font-size: var(--text-m);
+		font-family: var(--font-brand);
+		font-weight: 500;
+		line-height: 1.1;
+		padding-inline-start: 1.5rem;
+		border-inline-start: 0.25rem solid var(--color-200);
+		color: var(--color-400);
+	}
+	.back-link,
+	.content :global(a) {
+		font-weight:500;
+		text-decoration: 1px solid underline transparent;
+		text-underline-offset: 0.25em;
+		transition: color .25s, opacity .25s;
+	}
+	.back-link{
+		display:flex;
+		align-items:center;
+		gap:6px;
+	}
+	.back-link:hover,
+	.back-link:focus,
+	.content :global(a:hover),
+	.content :global(a:focus) {
+		text-decoration-color: currentColor;
+	}
+
+@media(max-width:850px){
+	.title-tag{
+		font-size:12px;
+	}
+}
+@media(max-width:576px){
+	.content :global(p) {
+		line-height:1.8
+	}
+
+}
+
+
+.action-back{
+	display:none;
+}
+@media(min-width:767px){
+	.action-back{
+		position:fixed;
+		display:block;
+		top:74px;
+		left:5%;
+		background:var(--color-999);
+	}
+}
+
+</style>

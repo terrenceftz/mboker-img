@@ -1,0 +1,311 @@
+---
+import ArrowIcon from '../components/ArrowIcon.astro';
+import Noise from "../functions/Noise.astro";
+---
+<div id="site-menu" class="menu" data-state="closed" role="dialog" aria-modal="true" aria-label="主题目录" aria-hidden="true">
+    <Noise />
+    <div class="menu-wrapper">
+        <div class="container-fluid p-0">
+            <div class="row p-0">
+                <div class="col-0 d-none d-md-block col-md-6 col-lg-5 p-0 position-relative">
+                    <div class="menu-cover">
+                        <div class="menu-cover__box">
+                            <img src="/menu/sunset.jpg" alt="" class="menu-cover__pic js-menu-cover__01 js-menu-cover--active">
+                            <img src="/menu/nature.jpg" alt="" class="menu-cover__pic js-menu-cover__03">
+                            <img src="/menu/city.jpg" alt="" class="menu-cover__pic js-menu-cover__04">
+                            <img src="/menu/other.jpg" alt="" class="menu-cover__pic js-menu-cover__02">
+                            <img src="/menu/altay.jpg" alt="" class="menu-cover__pic js-menu-cover__05">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-7 p-0 position-relative">
+                    <div class="menu-main" tabindex="-1">
+                        <div  class="menu-close">
+                            <button type="button" class="js-menuClose" aria-label="关闭主题目录">
+                                <svg class="if-menu-opened active icon-close" xmlns="http://www.w3.org/2000/svg" width="38.891" height="38.891" viewBox="0 0 38.891 38.891">
+                                <g transform="translate(-1835.555 -83.555)">
+                                    <line  x2="53" transform="translate(1836.262 84.262) rotate(45)" fill="none" stroke="#fff" stroke-width="2"></line>
+                                    <line  x2="53" transform="translate(1836.262 121.738) rotate(-45)" fill="none" stroke="#fff" stroke-width="2"></line>
+                                </g>
+                            </svg>
+                            </button>
+
+                        </div>
+                        <div class="menu-nav">
+
+                            <div class="menu-item">
+                                <div class="menu-title">
+                                    <a href="/collection/sunset" class="js-menu-04 menu-item__link link-solid" data-splitting>
+                                        <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
+                                        日落
+                                        <div class="user" data-splitting>
+                                            (收集者)
+                                         </div>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="menu-item">
+                                <div class="menu-title">
+                                    <a href="/collection/nature" class="js-menu-02 menu-item__link link-solid" data-splitting>
+                                        <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
+                                       自然
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="menu-item">
+                                <div class="menu-title">
+                                    <a href="/collection/city" class="js-menu-03 menu-item__link link-solid" data-splitting>
+                                        <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
+                                        城市
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="menu-item">
+                                <div class="menu-title">
+                                    <a href="/collection/moment" class="js-menu-05 menu-item__link link-solid" data-splitting>
+                                    <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
+                                        瞬间
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="menu-item">
+                                <div class="menu-title">
+                                    <a href="/posts/altay" class="js-menu-01 menu-item__link link-solid" data-splitting>
+                                        <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
+                                       阿勒泰<div class="user" data-splitting>(特辑)</div>
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script is:inline>
+  // Functional fallback if the bundled animation module cannot load.
+  (() => {
+    const menu = document.getElementById("site-menu");
+    if (!menu) return;
+
+    const setFallbackState = (open) => {
+      menu.dataset.state = open ? "open" : "closed";
+      menu.classList.toggle("is-menu-open", open);
+      menu.setAttribute("aria-hidden", String(!open));
+      document.querySelectorAll(".js-menuOpen").forEach((button) => {
+        button.setAttribute("aria-expanded", String(open));
+      });
+      document.body.classList.toggle("menu-is-open", open);
+    };
+
+    document.addEventListener("click", (event) => {
+      if (menu.dataset.menuInteractive === "true") return;
+      if (event.target.closest(".js-menuOpen")) setFallbackState(true);
+      if (event.target.closest(".js-menuClose")) setFallbackState(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (menu.dataset.menuInteractive !== "true" && event.key === "Escape") {
+        setFallbackState(false);
+      }
+    });
+  })();
+</script>
+
+<style lang="scss">
+.icon-close:hover{
+}
+.icon-close g line{
+    stroke: var(--color-0);
+}
+.menu{
+    position: fixed;
+    z-index: var(--z-menu);
+    left: 0;
+    right: 0;
+    top:0;
+    bottom:0;
+    background-color: var(--color-999);
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform .5s ease-in, opacity .2s ease-in, visibility 0s linear .5s;
+    &.is-menu-open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: transform .75s ease-out, opacity .2s ease-out, visibility 0s;
+    }
+    // GSAP drives the slide when the animation module is live; CSS transitions
+    // would fight its per-frame transform updates. The closing timeline keeps
+    // the panel visible until the exit lands, so visibility flips instantly.
+    &[data-menu-interactive="true"] {
+      transition: visibility 0s;
+      &.is-menu-open {
+        transition: visibility 0s;
+      }
+    }
+}
+:global(body.menu-is-open) {
+    overflow: hidden;
+}
+.menu-main{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100vh;
+}
+.menu-close{
+    width: 100%;
+    padding:6px;
+    position: absolute;
+    right: 0;
+    top:0;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    padding:40px;
+    @media (min-width: 767px) {
+        margin:40px;
+    }
+}
+.js-menuClose {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+}
+.menu-nav{
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: column;
+}
+.menu-title{
+    position: relative;
+    font-size: 36px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    @media (min-width: 767px) {
+        font-size: 48px;
+    }
+    @media (min-width: 1600px) {
+        font-size: 60px;
+    }
+}
+.menu-item{
+    position: relative;
+    display: flex;
+    padding: 0.5em 0;
+    &__link{
+    position: relative;
+    font-size: 1em;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--color-0);
+    text-align: left;
+    margin:1.5vh 0;
+    display: inline-block;
+    display: flex;
+    }
+    svg{
+        position: absolute;
+        left: -1.2em;
+        top:0;
+        bottom:0;
+        display: inline-block;
+        width:0.8em;
+    }
+}
+.menu-cover{
+    position: absolute;
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;
+    width: 100%;
+    min-height:100vh;
+    overflow: hidden;
+}
+.menu-cover__box{
+    position: relative;
+    height: 100%;
+    &:hover{
+
+    }
+}
+
+.menu-cover__pic{
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+    filter: grayscale(100%);
+    transition: all 1s ease-in-out;
+}
+.menu-cover__box:hover .menu-cover__pic{
+    transition: all 1s ease-in-out;
+    -webkit-filter: grayscale(0%); /* Safari 6.0 - 9.0 */
+     filter: grayscale(0%);
+}
+.menu-item__arrow{
+    width: 0.8em;
+}
+.menu-cover__pic{
+   z-index: 9;
+}
+.js-menu-cover--active{
+    z-index: 99;
+    -webkit-animation: menu-cover--active 1.5s ;
+	animation: menu-cover--active 1.5s ;
+    animation-timing-function: ease-in-out;
+}
+
+@keyframes menu-cover--active {
+	0% {
+         transform: scale(1.1);
+	}
+	to {
+        transform: scale(1);
+	}
+}
+.user{
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1;
+      text-align: left;
+      margin-left: 16px;
+      display: inline-block;
+      margin-top: 16px;
+      &.splitting .char{
+        padding: 0 !important;;
+      }
+      @media (min-width: 467px) {
+        font-size: 16px;
+        margin-left: 10px;
+      }
+      @media (min-width: 767px) {
+        font-size: 24px;
+      }
+}
+
+</style>
