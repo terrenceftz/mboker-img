@@ -1,0 +1,40 @@
+---
+import { count } from 'drizzle-orm';
+import { FileText, FolderTree, Images, Image } from 'lucide-astro';
+
+import PageHeader from '../../components/admin/PageHeader.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../server/db/client';
+import { albums, categories, photos, posts } from '../../server/db/schema';
+
+const db = getDatabase();
+const total = (table: typeof categories | typeof albums | typeof photos | typeof posts) =>
+  db.select({ value: count() }).from(table).get()?.value ?? 0;
+const counts = {
+  categories: total(categories),
+  albums: total(albums),
+  photos: total(photos),
+  posts: total(posts),
+};
+---
+
+<AdminLayout title="仪表盘">
+  <PageHeader title="仪表盘" description="管理摄影内容与站点展示。" />
+
+  <section class="stats-grid" aria-label="内容统计">
+    <div class="stat"><span>图集分类</span><strong>{counts.categories}</strong></div>
+    <div class="stat"><span>图集</span><strong>{counts.albums}</strong></div>
+    <div class="stat"><span>图片</span><strong>{counts.photos}</strong></div>
+    <div class="stat"><span>文章</span><strong>{counts.posts}</strong></div>
+  </section>
+
+  <section class="dashboard-section">
+    <h2>快速操作</h2>
+    <div class="quick-links">
+      <a class="button-secondary" href="/admin/categories/new"><FolderTree size={16} aria-hidden="true" />新建分类</a>
+      <a class="button-secondary" href="/admin/albums/new"><Images size={16} aria-hidden="true" />新建图集</a>
+      <a class="button-secondary" href="/admin/photos"><Image size={16} aria-hidden="true" />添加图片</a>
+      <a class="button-secondary" href="/admin/posts/new"><FileText size={16} aria-hidden="true" />写文章</a>
+    </div>
+  </section>
+</AdminLayout>

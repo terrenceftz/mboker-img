@@ -1,0 +1,119 @@
+---
+import { ArrowDown, ArrowUp, GripVertical, Image, MoreHorizontal, Pencil, Plus } from 'lucide-astro';
+
+import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
+import PageHeader from '../../../components/admin/PageHeader.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../server/db/client';
+import { listAlbumsAdmin } from '../../../server/repositories/albums';
+import { listCategoriesAdmin } from '../../../server/repositories/categories';
+
+const db = getDatabase();
+const categories = listCategoriesAdmin(db);
+const albums = listAlbumsAdmin(db);
+const saved = Astro.url.searchParams.get('saved') === '1';
+---
+
+<AdminLayout title="图集分类">
+  <PageHeader title="图集分类" description="组织公开站点中的摄影图集。">
+    <a class="button" href="/admin/categories/new"><Plus size={16} aria-hidden="true" />新建分类</a>
+  </PageHeader>
+
+  {saved && <p class="notice" role="status">分类已保存。</p>}
+
+  {
+    categories.length ? (
+      <div class="table-shell">
+        <table class="admin-table">
+          <thead><tr><th aria-label="排序"></th><th>封面</th><th>名称</th><th>状态</th><th>图集数</th><th>更新日期</th><th><span class="sr-only">操作</span></th></tr></thead>
+          <tbody data-sortable-categories>
+            {categories.map((category) => (
+              <tr data-id={category.id}>
+                <td><button class="icon-button drag-handle" type="button" title="拖拽排序"><GripVertical size={16} aria-hidden="true" /><span class="sr-only">拖拽排序</span></button></td>
+                <td>
+                  <div class="cover-thumb">
+                    {category.coverUrl ? <img src={category.coverUrl} alt="" loading="lazy" /> : <span class="cover-placeholder"><Image size={15} aria-hidden="true" /></span>}
+                  </div>
+                </td>
+                <td class="title-cell"><strong>{category.title}</strong><small>/{category.slug}</small></td>
+                <td><span class:list={['status', { published: category.status === 'published' }]}>{category.status === 'published' ? '已发布' : '草稿'}</span></td>
+                <td>{albums.filter((album) => album.categoryId === category.id).length}</td>
+                <td>{category.updatedAt.toLocaleDateString('zh-CN')}</td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-button" type="button" data-move="up" title="上移"><ArrowUp size={15} aria-hidden="true" /><span class="sr-only">上移</span></button>
+                    <button class="icon-button" type="button" data-move="down" title="下移"><ArrowDown size={15} aria-hidden="true" /><span class="sr-only">下移</span></button>
+                    <a class="icon-button" href={`/admin/categories/${category.id}`} title="编辑"><Pencil size={15} aria-hidden="true" /><span class="sr-only">编辑</span></a>
+                    <details class="action-menu">
+                      <summary title="更多操作"><MoreHorizontal size={17} aria-hidden="true" /><span class="sr-only">更多操作</span></summary>
+                      <div><button type="button" data-delete-id={category.id} data-delete-name={category.title}>删除分类</button></div>
+                    </details>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div class="empty-state"><p>还没有图集分类。</p><a class="button" href="/admin/categories/new">创建第一个分类</a></div>
+    )
+  }
+  <ConfirmDialog id="delete-category-dialog" title="删除图集分类" />
+
+  <script>
+    import Sortable from 'sortablejs';
+
+    const body = document.querySelector<HTMLTableSectionElement>('[data-sortable-categories]');
+    const persistOrder = async () => {
+      if (!body) return;
+      const ids = Array.from(body.querySelectorAll<HTMLElement>('tr[data-id]')).map((row) => Number(row.dataset.id));
+      const response = await fetch('/api/admin/categories/reorder', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ids }),
+      });
+      if (!response.ok) window.alert('排序保存失败，请刷新后重试。');
+    };
+    if (body) {
+      Sortable.create(body, { animation: 150, handle: '.drag-handle', onEnd: persistOrder });
+      body.addEventListener('click', (event) => {
+        const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-move]');
+        const row = button?.closest<HTMLTableRowElement>('tr[data-id]');
+        if (!button || !row) return;
+        if (button.dataset.move === 'up' && row.previousElementSibling) body.insertBefore(row, row.previousElementSibling);
+        if (button.dataset.move === 'down' && row.nextElementSibling) body.insertBefore(row.nextElementSibling, row);
+        persistOrder();
+      });
+    }
+
+    const dialog = document.querySelector<HTMLDialogElement>('#delete-category-dialog');
+    const name = dialog?.querySelector<HTMLElement>('[data-confirm-name]');
+    const error = dialog?.querySelector<HTMLElement>('[data-dialog-error]');
+    let deleteId = '';
+    let opener: HTMLElement | null = null;
+    document.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-delete-id]');
+      if (!button || !dialog) return;
+      deleteId = button.dataset.deleteId ?? '';
+      opener = button;
+      if (name) name.textContent = button.dataset.deleteName ?? '';
+      if (error) error.hidden = true;
+      dialog.showModal();
+      dialog.querySelector<HTMLButtonElement>('[data-dialog-cancel]')?.focus();
+    });
+    dialog?.querySelector('[data-dialog-cancel]')?.addEventListener('click', () => dialog.close());
+    dialog?.addEventListener('close', () => opener?.focus());
+    dialog?.querySelector('[data-dialog-confirm]')?.addEventListener('click', async () => {
+      const response = await fetch(`/api/admin/categories/${deleteId}`, { method: 'DELETE' });
+      if (response.ok) {
+        dialog.close();
+        window.location.reload();
+        return;
+      }
+      const result = await response.json();
+      if (error) {
+        error.textContent = result.error?.message ?? '删除失败。';
+        error.hidden = false;
+      }
+    });
+  </script>
+</AdminLayout>

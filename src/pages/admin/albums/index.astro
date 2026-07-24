@@ -1,0 +1,130 @@
+---
+import { ArrowDown, ArrowUp, GripVertical, Image, MoreHorizontal, Pencil, Plus } from 'lucide-astro';
+
+import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
+import PageHeader from '../../../components/admin/PageHeader.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../server/db/client';
+import { listAlbumsAdmin } from '../../../server/repositories/albums';
+import { listCategoriesAdmin } from '../../../server/repositories/categories';
+import { listPhotos } from '../../../server/repositories/photos';
+
+const db = getDatabase();
+const categories = listCategoriesAdmin(db);
+const albums = listAlbumsAdmin(db).map((album) => {
+  const albumPhotos = listPhotos(db, album.id);
+  return {
+    ...album,
+    photos: albumPhotos,
+    cover: albumPhotos.find((photo) => photo.id === album.coverPhotoId) ?? albumPhotos[0] ?? null,
+  };
+});
+const groups = categories.map((category) => ({
+  category,
+  albums: albums.filter((album) => album.categoryId === category.id),
+}));
+const saved = Astro.url.searchParams.get('saved') === '1';
+---
+
+<AdminLayout title="图集">
+  <PageHeader title="图集" description="管理图集信息、发布状态与分类内排序。">
+    <a class="button" href="/admin/albums/new"><Plus size={16} aria-hidden="true" />新建图集</a>
+  </PageHeader>
+
+  {saved && <p class="notice" role="status">图集已保存。</p>}
+
+  {
+    albums.length ? groups.map(({ category, albums: categoryAlbums }) => categoryAlbums.length > 0 && (
+      <section class="category-group">
+        <div class="category-group-header"><h2>{category.title}</h2><span>{categoryAlbums.length} 个图集</span></div>
+        <div class="table-shell">
+          <table class="admin-table">
+            <thead><tr><th aria-label="排序"></th><th>封面</th><th>名称</th><th>分类</th><th>状态</th><th>图片数</th><th>更新日期</th><th><span class="sr-only">操作</span></th></tr></thead>
+            <tbody data-sortable-albums data-category-id={category.id}>
+              {categoryAlbums.map((album) => (
+                <tr data-id={album.id}>
+                  <td><button class="icon-button drag-handle" type="button" title="拖拽排序"><GripVertical size={16} aria-hidden="true" /><span class="sr-only">拖拽排序</span></button></td>
+                  <td><div class="cover-thumb">{album.cover ? <img src={album.cover.thumbnailUrl ?? album.cover.originalUrl} alt="" loading="lazy" /> : <span class="cover-placeholder"><Image size={15} aria-hidden="true" /></span>}</div></td>
+                  <td class="title-cell"><strong>{album.title}</strong><small>/{album.slug}</small></td>
+                  <td>{category.title}</td>
+                  <td><span class:list={['status', { published: album.status === 'published' }]}>{album.status === 'published' ? '已发布' : '草稿'}</span></td>
+                  <td>{album.photos.length}</td>
+                  <td>{album.updatedAt.toLocaleDateString('zh-CN')}</td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="icon-button" type="button" data-move="up" title="上移"><ArrowUp size={15} aria-hidden="true" /><span class="sr-only">上移</span></button>
+                      <button class="icon-button" type="button" data-move="down" title="下移"><ArrowDown size={15} aria-hidden="true" /><span class="sr-only">下移</span></button>
+                      <a class="icon-button" href={`/admin/albums/${album.id}`} title="编辑"><Pencil size={15} aria-hidden="true" /><span class="sr-only">编辑</span></a>
+                      <details class="action-menu">
+                        <summary title="更多操作"><MoreHorizontal size={17} aria-hidden="true" /><span class="sr-only">更多操作</span></summary>
+                        <div><button type="button" data-delete-id={album.id} data-delete-name={album.title}>删除图集</button></div>
+                      </details>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )) : (
+      <div class="empty-state"><p>还没有图集。</p><a class="button" href="/admin/albums/new">创建第一个图集</a></div>
+    )
+  }
+  <ConfirmDialog id="delete-album-dialog" title="删除图集" />
+
+  <script>
+    import Sortable from 'sortablejs';
+
+    const persistOrder = async (body: HTMLTableSectionElement) => {
+      const ids = Array.from(body.querySelectorAll<HTMLElement>('tr[data-id]')).map((row) => Number(row.dataset.id));
+      const response = await fetch('/api/admin/albums/reorder', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ categoryId: Number(body.dataset.categoryId), ids }),
+      });
+      if (!response.ok) window.alert('排序保存失败，请刷新后重试。');
+    };
+    document.querySelectorAll<HTMLTableSectionElement>('[data-sortable-albums]').forEach((body) => {
+      Sortable.create(body, { animation: 150, handle: '.drag-handle', onEnd: () => persistOrder(body) });
+      body.addEventListener('click', (event) => {
+        const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-move]');
+        const row = button?.closest<HTMLTableRowElement>('tr[data-id]');
+        if (!button || !row) return;
+        if (button.dataset.move === 'up' && row.previousElementSibling) body.insertBefore(row, row.previousElementSibling);
+        if (button.dataset.move === 'down' && row.nextElementSibling) body.insertBefore(row.nextElementSibling, row);
+        persistOrder(body);
+      });
+    });
+
+    const dialog = document.querySelector<HTMLDialogElement>('#delete-album-dialog');
+    const name = dialog?.querySelector<HTMLElement>('[data-confirm-name]');
+    const error = dialog?.querySelector<HTMLElement>('[data-dialog-error]');
+    let deleteId = '';
+    let opener: HTMLElement | null = null;
+    document.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-delete-id]');
+      if (!button || !dialog) return;
+      deleteId = button.dataset.deleteId ?? '';
+      opener = button;
+      if (name) name.textContent = button.dataset.deleteName ?? '';
+      if (error) error.hidden = true;
+      dialog.showModal();
+      dialog.querySelector<HTMLButtonElement>('[data-dialog-cancel]')?.focus();
+    });
+    dialog?.querySelector('[data-dialog-cancel]')?.addEventListener('click', () => dialog.close());
+    dialog?.addEventListener('close', () => opener?.focus());
+    dialog?.querySelector('[data-dialog-confirm]')?.addEventListener('click', async () => {
+      const response = await fetch(`/api/admin/albums/${deleteId}`, { method: 'DELETE' });
+      if (response.ok) {
+        dialog.close();
+        window.location.reload();
+        return;
+      }
+      const result = await response.json();
+      if (error) {
+        error.textContent = result.error?.message ?? '删除失败。';
+        error.hidden = false;
+      }
+    });
+  </script>
+</AdminLayout>

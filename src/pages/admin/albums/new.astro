@@ -1,0 +1,20 @@
+---
+import AlbumForm from '../../../components/admin/AlbumForm.astro';
+import PageHeader from '../../../components/admin/PageHeader.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../server/db/client';
+import { listCategoriesAdmin } from '../../../server/repositories/categories';
+
+const categories = listCategoriesAdmin(getDatabase());
+---
+
+<AdminLayout title="新建图集">
+  <PageHeader title="新建图集" description="创建图集后即可添加本地或外链图片。" />
+  {
+    categories.length ? (
+      <AlbumForm action="/api/admin/albums" submitLabel="创建图集" categories={categories} />
+    ) : (
+      <div class="empty-state"><p>请先创建一个图集分类。</p><a class="button" href="/admin/categories/new">新建分类</a></div>
+    )
+  }
+</AdminLayout>

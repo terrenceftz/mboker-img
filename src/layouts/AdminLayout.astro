@@ -1,0 +1,44 @@
+---
+import { Menu, X } from 'lucide-astro';
+
+import AdminSidebar from '../components/admin/AdminSidebar.astro';
+import '../styles/admin.scss';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} | Tink. CMS</title>
+  </head>
+  <body>
+    <button class="mobile-menu-button" type="button" aria-controls="admin-sidebar" aria-expanded="false" title="打开导航">
+      <Menu class="menu-open-icon" size={20} aria-hidden="true" />
+      <X class="menu-close-icon" size={20} aria-hidden="true" />
+      <span class="sr-only">切换导航</span>
+    </button>
+    <div class="sidebar-scrim" data-sidebar-scrim></div>
+    <AdminSidebar currentPath={Astro.url.pathname} />
+    <main class="admin-main"><slot /></main>
+
+    <script>
+      const button = document.querySelector<HTMLButtonElement>('.mobile-menu-button');
+      const scrim = document.querySelector<HTMLElement>('[data-sidebar-scrim]');
+      const setOpen = (open: boolean) => {
+        document.body.classList.toggle('sidebar-open', open);
+        button?.setAttribute('aria-expanded', String(open));
+      };
+      button?.addEventListener('click', () => setOpen(!document.body.classList.contains('sidebar-open')));
+      scrim?.addEventListener('click', () => setOpen(false));
+      document.addEventListener('keydown', (event) => event.key === 'Escape' && setOpen(false));
+    </script>
+  </body>
+</html>

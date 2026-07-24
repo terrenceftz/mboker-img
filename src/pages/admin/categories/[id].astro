@@ -1,0 +1,21 @@
+---
+import CategoryForm from '../../../components/admin/CategoryForm.astro';
+import PageHeader from '../../../components/admin/PageHeader.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../server/db/client';
+import { getCategoryById } from '../../../server/repositories/categories';
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id) || id <= 0) return Astro.redirect('/admin/categories');
+let category;
+try {
+  category = getCategoryById(getDatabase(), id);
+} catch {
+  return Astro.redirect('/admin/categories');
+}
+---
+
+<AdminLayout title={`编辑 ${category.title}`}>
+  <PageHeader title="编辑分类" description={category.title} />
+  <CategoryForm action={`/api/admin/categories/${category.id}`} method="PATCH" submitLabel="保存修改" category={category} />
+</AdminLayout>

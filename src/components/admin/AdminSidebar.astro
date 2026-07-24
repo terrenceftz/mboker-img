@@ -1,0 +1,55 @@
+---
+import {
+  FileText,
+  FolderTree,
+  Image,
+  Images,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  UserRound,
+} from 'lucide-astro';
+
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+const items = [
+  { href: '/admin', label: '仪表盘', icon: LayoutDashboard, exact: true },
+  { href: '/admin/categories', label: '图集分类', icon: FolderTree },
+  { href: '/admin/albums', label: '图集', icon: Images },
+  { href: '/admin/photos', label: '图片库', icon: Image },
+  { href: '/admin/posts', label: '文章', icon: FileText },
+  { href: '/admin/about', label: '关于页', icon: UserRound },
+  { href: '/admin/settings', label: '站点设置', icon: Settings },
+];
+---
+
+<aside class="admin-sidebar" id="admin-sidebar" aria-label="后台导航">
+  <div class="sidebar-brand">
+    <a href="/admin">Tink.</a>
+    <span>CMS</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    {
+      items.map(({ href, label, icon: Icon, exact }) => {
+        const active = exact ? currentPath === href : currentPath.startsWith(href);
+        return (
+          <a href={href} class:list={{ active }} aria-current={active ? 'page' : undefined}>
+            <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
+            <span>{label}</span>
+          </a>
+        );
+      })
+    }
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="/" target="_blank" rel="noreferrer">查看站点</a>
+    <form method="post" action="/api/admin/logout">
+      <button type="submit"><LogOut size={16} aria-hidden="true" />退出登录</button>
+    </form>
+  </div>
+</aside>

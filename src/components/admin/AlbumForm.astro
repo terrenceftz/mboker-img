@@ -1,0 +1,181 @@
+---
+import FieldError from './FieldError.astro';
+
+interface CategoryOption { id: number; title: string; }
+interface AlbumValue {
+  categoryId: number;
+  title: string;
+  titleEn: string;
+  slug: string;
+  description: string;
+  shotDate: string;
+  location: string;
+  tagsJson: string[];
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywordsJson: string[];
+  featured: boolean;
+  status: 'draft' | 'published';
+}
+interface Props {
+  action: string;
+  method?: 'POST' | 'PATCH';
+  submitLabel: string;
+  categories: CategoryOption[];
+  album?: AlbumValue;
+}
+
+const { action, method = 'POST', submitLabel, categories, album } = Astro.props;
+---
+
+<div class="form-shell">
+  <form class="admin-form" id="album-form" data-action={action} data-method={method} novalidate>
+    <section class="form-section">
+      <h2>基本信息</h2>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="categoryId">所属分类 *</label>
+          <select id="categoryId" name="categoryId" required>
+            <option value="">请选择</option>
+            {categories.map((category) => <option value={category.id} selected={album?.categoryId === category.id}>{category.title}</option>)}
+          </select>
+          <FieldError field="categoryId" />
+        </div>
+        <div class="form-field">
+          <label for="status">状态</label>
+          <select id="status" name="status">
+            <option value="draft" selected={(album?.status ?? 'draft') === 'draft'}>草稿</option>
+            <option value="published" selected={album?.status === 'published'}>已发布</option>
+          </select>
+          <FieldError field="status" />
+        </div>
+        <div class="form-field">
+          <label for="title">图集名称 *</label>
+          <input id="title" name="title" value={album?.title ?? ''} maxlength="80" required />
+          <FieldError field="title" />
+        </div>
+        <div class="form-field">
+          <label for="titleEn">英文名称</label>
+          <input id="titleEn" name="titleEn" value={album?.titleEn ?? ''} maxlength="80" />
+          <FieldError field="titleEn" />
+        </div>
+        <div class="form-field full">
+          <label for="slug">Slug *</label>
+          <input id="slug" name="slug" value={album?.slug ?? ''} maxlength="100" placeholder="hangzhou-night" required />
+          <FieldError field="slug" />
+        </div>
+        <div class="form-field full">
+          <label for="description">图集简介</label>
+          <textarea id="description" name="description" maxlength="4000">{album?.description ?? ''}</textarea>
+          <FieldError field="description" />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>拍摄信息</h2>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="shotDate">拍摄日期</label>
+          <input id="shotDate" name="shotDate" value={album?.shotDate ?? ''} placeholder="2026-07" />
+          <FieldError field="shotDate" />
+        </div>
+        <div class="form-field">
+          <label for="location">地点</label>
+          <input id="location" name="location" value={album?.location ?? ''} maxlength="120" />
+          <FieldError field="location" />
+        </div>
+        <div class="form-field full">
+          <label for="tags">标签</label>
+          <input id="tags" name="tags" value={album?.tagsJson.join(', ') ?? ''} placeholder="城市, 夜景" />
+          <p class="field-hint">多个标签用逗号分隔。</p>
+          <FieldError field="tags" />
+        </div>
+        <label class="checkbox-field full"><input type="checkbox" name="featured" checked={album?.featured ?? false} />在首页精选中展示</label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>SEO</h2>
+      <div class="form-grid">
+        <div class="form-field full">
+          <label for="seoTitle">SEO 标题</label>
+          <input id="seoTitle" name="seoTitle" value={album?.seoTitle ?? ''} maxlength="120" />
+          <FieldError field="seoTitle" />
+        </div>
+        <div class="form-field full">
+          <label for="seoDescription">SEO 描述</label>
+          <textarea id="seoDescription" name="seoDescription" maxlength="300">{album?.seoDescription ?? ''}</textarea>
+          <FieldError field="seoDescription" />
+        </div>
+        <div class="form-field full">
+          <label for="seoKeywords">SEO 关键词</label>
+          <input id="seoKeywords" name="seoKeywords" value={album?.seoKeywordsJson.join(', ') ?? ''} />
+          <FieldError field="seoKeywords" />
+        </div>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <button class="button" type="submit">{submitLabel}</button>
+      <a class="button-secondary" href="/admin/albums">取消</a>
+      <p class="form-message" data-form-message role="alert" hidden></p>
+    </div>
+  </form>
+</div>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#album-form');
+  const list = (value: FormDataEntryValue | null) => String(value ?? '').split(/[,\uff0c]/).map((item) => item.trim()).filter(Boolean);
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const message = form.querySelector<HTMLElement>('[data-form-message]');
+    form.querySelectorAll<HTMLElement>('[data-field-error]').forEach((item) => {
+      item.hidden = true;
+      item.textContent = '';
+      form.querySelector(`[name="${item.dataset.fieldError}"]`)?.removeAttribute('aria-invalid');
+    });
+    if (message) message.hidden = true;
+    if (submit) submit.disabled = true;
+
+    const data = new FormData(form);
+    const payload = {
+      categoryId: data.get('categoryId'), title: data.get('title'), titleEn: data.get('titleEn'), slug: data.get('slug'),
+      description: data.get('description'), shotDate: data.get('shotDate'), location: data.get('location'),
+      tags: list(data.get('tags')), seoTitle: data.get('seoTitle'), seoDescription: data.get('seoDescription'),
+      seoKeywords: list(data.get('seoKeywords')), featured: data.has('featured'), status: data.get('status'),
+    };
+    try {
+      const response = await fetch(form.dataset.action ?? '', {
+        method: form.dataset.method ?? 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        window.location.assign('/admin/albums?saved=1');
+        return;
+      }
+      const fields = result.error?.fields ?? {};
+      Object.entries(fields).forEach(([field, errors]) => {
+        const target = form.querySelector<HTMLElement>(`[data-field-error="${field}"]`);
+        const input = form.querySelector<HTMLElement>(`[name="${field}"]`);
+        if (target) {
+          target.textContent = Array.isArray(errors) ? String(errors[0]) : String(errors);
+          target.hidden = false;
+        }
+        input?.setAttribute('aria-invalid', 'true');
+      });
+      if (message) {
+        message.textContent = result.error?.message ?? '保存失败，请重试。';
+        message.hidden = false;
+      }
+    } catch {
+      if (message) {
+        message.textContent = '网络异常，请重试。';
+        message.hidden = false;
+      }
+    } finally {
+      if (submit) submit.disabled = false;
+    }
+  });
+</script>

@@ -1,0 +1,24 @@
+---
+import AlbumForm from '../../../components/admin/AlbumForm.astro';
+import PageHeader from '../../../components/admin/PageHeader.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../server/db/client';
+import { getAlbumById } from '../../../server/repositories/albums';
+import { listCategoriesAdmin } from '../../../server/repositories/categories';
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id) || id <= 0) return Astro.redirect('/admin/albums');
+const db = getDatabase();
+let album;
+try {
+  album = getAlbumById(db, id);
+} catch {
+  return Astro.redirect('/admin/albums');
+}
+const categories = listCategoriesAdmin(db);
+---
+
+<AdminLayout title={`编辑 ${album.title}`}>
+  <PageHeader title="编辑图集" description={album.title} />
+  <AlbumForm action={`/api/admin/albums/${album.id}`} method="PATCH" submitLabel="保存修改" categories={categories} album={album} />
+</AdminLayout>
