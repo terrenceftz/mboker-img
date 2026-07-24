@@ -7,8 +7,8 @@ import { fileURLToPath } from "node:url";
 // https://astro.build/config
 export default defineConfig({
   site: siteConfig.url,
-  ...ssrConfig,
-  adapter: node({ mode: "standalone" }),
+  output: ssrConfig.output,
+  adapter: node(ssrConfig.nodeAdapter),
   vite: {
     resolve: {
       alias: {

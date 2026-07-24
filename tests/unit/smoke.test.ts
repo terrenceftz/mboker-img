@@ -10,5 +10,6 @@ describe('upstream import', () => {
 
   it('uses standalone server rendering', () => {
     expect(ssrConfig.output).toBe('server');
+    expect(ssrConfig.nodeAdapter).toEqual({ mode: 'standalone' });
   });
 });

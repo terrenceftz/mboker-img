@@ -1,3 +1,13 @@
-export const ssrConfig = {
+interface SsrConfig {
+  output: 'server';
+  nodeAdapter: {
+    mode: 'standalone';
+  };
+}
+
+export const ssrConfig: SsrConfig = {
   output: 'server',
-} as const;
+  nodeAdapter: {
+    mode: 'standalone',
+  },
+};
