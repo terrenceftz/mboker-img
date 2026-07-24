@@ -1,0 +1,161 @@
+---
+import { normalizeAdminNextPath } from '../../server/auth/guard';
+
+const nextPath = normalizeAdminNextPath(Astro.url.searchParams.get('next'));
+const hasError = Astro.url.searchParams.get('error') === 'invalid';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>管理登录 | Tink.</title>
+  </head>
+  <body>
+    <main class="login-shell">
+      <section class="login-panel" aria-labelledby="login-title">
+        <p class="wordmark">Tink.</p>
+        <h1 id="login-title">管理登录</h1>
+
+        {hasError && <p class="form-error" id="login-error" role="alert">用户名或密码不正确，请重试。</p>}
+
+        <form method="post" action="/api/admin/login">
+          <input type="hidden" name="next" value={nextPath} />
+
+          <label for="username">用户名</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            maxlength="128"
+            required
+            aria-invalid={hasError ? 'true' : undefined}
+            aria-describedby={hasError ? 'login-error' : undefined}
+          />
+
+          <label for="password">密码</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            maxlength="1024"
+            required
+            aria-invalid={hasError ? 'true' : undefined}
+            aria-describedby={hasError ? 'login-error' : undefined}
+          />
+
+          <button type="submit">登录</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
+
+<style>
+  :global(*) {
+    box-sizing: border-box;
+  }
+
+  :global(html) {
+    color-scheme: light;
+    background: #f5f5f3;
+    color: #111;
+    font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  :global(body) {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  .login-shell {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    padding: 24px;
+  }
+
+  .login-panel {
+    width: min(100%, 400px);
+  }
+
+  .wordmark {
+    margin: 0 0 48px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  h1 {
+    margin: 0 0 32px;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  form {
+    display: grid;
+    gap: 10px;
+  }
+
+  label {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background: #fff;
+    color: #111;
+    font: inherit;
+    padding: 0 12px;
+  }
+
+  input:focus {
+    border-color: #111;
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 1px #111;
+  }
+
+  input[aria-invalid="true"] {
+    border-color: #a21d1d;
+  }
+
+  button {
+    height: 44px;
+    margin-top: 18px;
+    border: 1px solid #111;
+    border-radius: 4px;
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+  }
+
+  button:hover {
+    background: #333;
+  }
+
+  button:focus-visible {
+    outline: 2px solid #111;
+    outline-offset: 3px;
+  }
+
+  .form-error {
+    margin: -14px 0 14px;
+    border-left: 2px solid #a21d1d;
+    color: #7c1717;
+    font-size: 14px;
+    line-height: 1.5;
+    padding-left: 12px;
+  }
+</style>
