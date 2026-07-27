@@ -144,6 +144,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .photo-library-toolbar > span { color: #70706b; font-size: 12px; }
 .photo-library-toolbar .button-danger { min-height: 32px; margin-left: auto; }
 .photo-library-toolbar .form-message { margin-left: 0; }
+.batch-layout-controls { display: flex; align-items: center; gap: 7px; }
+.batch-layout-controls select, .batch-layout-controls input { min-height: 32px; border: 1px solid #c8c8c3; background: #fff; padding: 0 8px; font-size: 11px; }
+.batch-layout-controls input { width: 108px; }
 .selection-toggle { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; }
 .selection-toggle input, .photo-select input { width: 16px; height: 16px; margin: 0; accent-color: #222; }
 .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
@@ -167,6 +170,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .photo-editor-heading { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
 .photo-editor-heading h2 { margin: 0; font-size: 15px; }
 .photo-editor-heading span { display: block; color: #858580; margin-top: 4px; font-size: 11px; }
+.photo-editor-preview { display: flex; min-height: 150px; align-items: center; overflow: hidden; border: 1px solid #deded9; background: #f4f4f1; }
+.photo-editor-preview[data-align="start"] { justify-content: flex-start; }
+.photo-editor-preview[data-align="center"] { justify-content: center; }
+.photo-editor-preview[data-align="end"] { justify-content: flex-end; }
+.photo-editor-preview[data-background="true"] { background: #dfe4df; }
+.photo-editor-preview img { display: block; max-height: 190px; object-fit: contain; }
+.photo-editor-preview[data-layout-preset="wide"] img { width: 100%; }
+.photo-editor-preview[data-layout-preset="standard"] img { width: 78%; }
+.photo-editor-preview[data-layout-preset="narrow"] img { width: 52%; }
+.photo-editor-preview[data-layout-preset="auto"] img { max-width: 100%; }
 .photo-editor form, .photo-editor fieldset { display: grid; gap: 15px; min-width: 0; margin: 0; border: 0; padding: 0; }
 .photo-editor fieldset:disabled { opacity: .48; }
 .photo-editor .form-actions { padding-top: 14px; }
@@ -200,6 +213,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 @media (max-width: 640px) {
+  .batch-layout-controls { width: 100%; flex-wrap: wrap; order: 3; }
   .page-header { align-items: stretch; flex-direction: column; gap: 14px; }
   .page-header-actions .button { width: 100%; }
   .form-grid { grid-template-columns: 1fr; }

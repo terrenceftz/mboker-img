@@ -9,6 +9,9 @@ import { RefreshCw, Save, X } from 'lucide-astro';
   </div>
   <form data-photo-editor-form>
     <fieldset disabled data-editor-fields>
+      <div class="photo-editor-preview" data-editor-preview data-layout-preset="auto" data-align="center" data-background="false">
+        <img data-editor-preview-image alt="" />
+      </div>
       <div class="form-field full"><label for="photo-alt">替代文本</label><textarea id="photo-alt" maxlength="500" data-editor-alt></textarea></div>
       <div class="form-field full">
         <label>版式</label>
@@ -53,15 +56,27 @@ import { RefreshCw, Save, X } from 'lucide-astro';
   const replacementFile = editor?.querySelector<HTMLInputElement>('[data-editor-replacement-file]');
   const replacementUrl = editor?.querySelector<HTMLInputElement>('[data-editor-replacement-url]');
   const replaceButton = editor?.querySelector<HTMLButtonElement>('[data-editor-replace]');
+  const preview = editor?.querySelector<HTMLElement>('[data-editor-preview]');
+  const previewImage = editor?.querySelector<HTMLImageElement>('[data-editor-preview-image]');
   const message = editor?.querySelector<HTMLElement>('[data-editor-message]');
   let photoId = 0;
+  let currentPhoto: Record<string, unknown> | undefined;
   const setMessage = (value = '') => {
     if (!message) return;
     message.textContent = value;
     message.hidden = !value;
   };
+  const selectedPreset = () => editor?.querySelector<HTMLInputElement>('[name="layoutPreset"]:checked')?.value ?? 'auto';
+  const renderPreview = () => {
+    if (!preview) return;
+    preview.dataset.layoutPreset = selectedPreset();
+    preview.dataset.align = align?.value ?? 'center';
+    preview.dataset.background = String(background?.checked ?? false);
+    preview.style.padding = padding?.value.trim() || '0px';
+  };
   document.addEventListener('photo:edit', (event) => {
     const photo = (event as CustomEvent).detail;
+    currentPhoto = photo;
     photoId = Number(photo.id);
     if (idLabel) idLabel.textContent = `图片 #${photoId}`;
     if (alt) alt.value = photo.alt ?? '';
@@ -71,7 +86,12 @@ import { RefreshCw, Save, X } from 'lucide-astro';
     if (cover) cover.checked = false;
     if (replacementFile) replacementFile.value = '';
     if (replacementUrl) replacementUrl.value = '';
+    if (previewImage) {
+      previewImage.src = photo.thumbnailUrl ?? photo.originalUrl;
+      previewImage.alt = photo.alt ?? '';
+    }
     editor?.querySelector<HTMLInputElement>(`[name="layoutPreset"][value="${photo.layoutPreset ?? 'auto'}"]`)?.click();
+    renderPreview();
     if (fields) fields.disabled = false;
     setMessage();
     editor?.classList.add('is-active');
@@ -84,6 +104,8 @@ import { RefreshCw, Save, X } from 'lucide-astro';
     editor.classList.remove('is-active');
     setMessage();
   });
+  form?.addEventListener('input', renderPreview);
+  form?.addEventListener('change', renderPreview);
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!photoId) return;
@@ -102,7 +124,12 @@ import { RefreshCw, Save, X } from 'lucide-astro';
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error?.message ?? '保存失败，请重试。');
-      window.location.reload();
+      currentPhoto = { ...currentPhoto, ...result.data };
+      if (previewImage) previewImage.alt = result.data.alt ?? '';
+      document.dispatchEvent(new CustomEvent('photo:updated', { detail: currentPhoto }));
+      if (cover) cover.checked = false;
+      setMessage('已保存。');
+      if (submit) submit.disabled = false;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '保存失败，请重试。');
       if (submit) submit.disabled = false;
@@ -123,7 +150,13 @@ import { RefreshCw, Save, X } from 'lucide-astro';
       const response = await fetch(`/api/admin/photos/${photoId}/replace`, { method: 'POST', ...request });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error?.message ?? '替换图片失败，请重试。');
-      window.location.reload();
+      currentPhoto = { ...currentPhoto, ...result.data };
+      if (previewImage) previewImage.src = result.data.thumbnailUrl ?? result.data.originalUrl;
+      document.dispatchEvent(new CustomEvent('photo:updated', { detail: currentPhoto }));
+      if (replacementFile) replacementFile.value = '';
+      if (replacementUrl) replacementUrl.value = '';
+      setMessage('原图已替换。');
+      replaceButton.disabled = false;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '替换图片失败，请重试。');
       replaceButton.disabled = false;

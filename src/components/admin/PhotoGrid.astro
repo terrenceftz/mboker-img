@@ -1,5 +1,5 @@
 ---
-import { Crown, GripVertical, Link, Pencil, Trash2 } from 'lucide-astro';
+import { Crown, GripVertical, LayoutTemplate, Link, Pencil, Trash2 } from 'lucide-astro';
 
 interface Photo {
   id: number;
@@ -22,6 +22,17 @@ const { albumId, coverPhotoId, photos } = Astro.props;
   <div class="photo-library-toolbar">
     <label class="selection-toggle"><input type="checkbox" data-select-all />全选</label>
     <span data-selected-count>已选 0 张</span>
+    <div class="batch-layout-controls" data-batch-layout>
+      <select aria-label="批量版式" data-batch-preset>
+        <option value="auto">自动</option><option value="wide">宽幅</option><option value="standard">标准</option><option value="narrow">窄幅</option>
+      </select>
+      <select aria-label="批量对齐" data-batch-align>
+        <option value="start">左对齐</option><option value="center" selected>居中</option><option value="end">右对齐</option>
+      </select>
+      <input aria-label="批量留白" maxlength="80" placeholder="留白，如 24px" data-batch-padding />
+      <label class="selection-toggle"><input type="checkbox" data-batch-background />背景</label>
+      <button class="button-secondary" type="button" data-apply-layout disabled><LayoutTemplate size={15} aria-hidden="true" />应用布局</button>
+    </div>
     <button class="button-danger" type="button" data-delete-selected disabled><Trash2 size={15} aria-hidden="true" />批量删除</button>
     <p class="form-message" data-photo-message role="alert" hidden></p>
   </div>
@@ -31,17 +42,17 @@ const { albumId, coverPhotoId, photos } = Astro.props;
         {photos.map((photo) => (
           <article class="photo-card" data-id={photo.id} data-photo={JSON.stringify(photo)}>
             <div class="photo-thumbnail">
-              <img src={photo.thumbnailUrl ?? photo.originalUrl} alt={photo.alt} loading="lazy" />
+              <img src={photo.thumbnailUrl ?? photo.originalUrl} alt={photo.alt} loading="lazy" data-photo-image />
               <span class="photo-load-error">外链无法加载</span>
               <label class="photo-select"><input type="checkbox" value={photo.id} aria-label={`选择图片 ${photo.id}`} data-photo-select /></label>
               <button class="photo-drag" type="button" title="拖拽排序"><GripVertical size={17} aria-hidden="true" /><span class="sr-only">拖拽排序</span></button>
-              <div class="photo-badges">
+              <div class="photo-badges" data-photo-badges>
                 {photo.sourceType === 'external' && <span><Link size={12} aria-hidden="true" />外链</span>}
                 {coverPhotoId === photo.id && <span class="cover-badge"><Crown size={12} aria-hidden="true" />封面</span>}
               </div>
             </div>
             <div class="photo-card-footer">
-              <div><strong>{photo.alt || '未填写替代文本'}</strong><span>{photo.width && photo.height ? `${photo.width} × ${photo.height}` : '尺寸未知'}</span></div>
+              <div><strong data-card-title>{photo.alt || '未填写替代文本'}</strong><span data-card-meta>{photo.width && photo.height ? `${photo.width} × ${photo.height}` : '尺寸未知'}</span></div>
               <button class="icon-button" type="button" data-edit-photo title="编辑图片"><Pencil size={16} aria-hidden="true" /><span class="sr-only">编辑图片</span></button>
             </div>
           </article>
@@ -58,6 +69,11 @@ const { albumId, coverPhotoId, photos } = Astro.props;
   const grid = library?.querySelector<HTMLElement>('[data-sortable-photos]');
   const selectAll = library?.querySelector<HTMLInputElement>('[data-select-all]');
   const deleteSelected = library?.querySelector<HTMLButtonElement>('[data-delete-selected]');
+  const applyLayout = library?.querySelector<HTMLButtonElement>('[data-apply-layout]');
+  const batchPreset = library?.querySelector<HTMLSelectElement>('[data-batch-preset]');
+  const batchAlign = library?.querySelector<HTMLSelectElement>('[data-batch-align]');
+  const batchPadding = library?.querySelector<HTMLInputElement>('[data-batch-padding]');
+  const batchBackground = library?.querySelector<HTMLInputElement>('[data-batch-background]');
   const selectedCount = library?.querySelector<HTMLElement>('[data-selected-count]');
   const message = library?.querySelector<HTMLElement>('[data-photo-message]');
   const selections = () => Array.from(library?.querySelectorAll<HTMLInputElement>('[data-photo-select]:checked') ?? []);
@@ -65,6 +81,7 @@ const { albumId, coverPhotoId, photos } = Astro.props;
     const selected = selections();
     if (selectedCount) selectedCount.textContent = `已选 ${selected.length} 张`;
     if (deleteSelected) deleteSelected.disabled = selected.length === 0;
+    if (applyLayout) applyLayout.disabled = selected.length === 0;
     if (selectAll) {
       const all = library?.querySelectorAll('[data-photo-select]').length ?? 0;
       selectAll.checked = all > 0 && selected.length === all;
@@ -102,13 +119,81 @@ const { albumId, coverPhotoId, photos } = Astro.props;
     if (!card?.dataset.photo) return;
     document.dispatchEvent(new CustomEvent('photo:edit', { detail: JSON.parse(card.dataset.photo) }));
   });
+  document.addEventListener('photo:updated', (event) => {
+    const updated = (event as CustomEvent).detail;
+    const card = library?.querySelector<HTMLElement>(`[data-photo][data-id="${updated.id}"]`);
+    if (!card?.dataset.photo) return;
+    const photo = { ...JSON.parse(card.dataset.photo), ...updated };
+    card.dataset.photo = JSON.stringify(photo);
+    card.dataset.layoutPreset = photo.layoutPreset;
+    card.dataset.align = photo.align;
+    card.dataset.background = String(Boolean(photo.hasBackground));
+    const image = card.querySelector<HTMLImageElement>('[data-photo-image]');
+    if (image) {
+      image.src = photo.thumbnailUrl ?? photo.originalUrl;
+      image.alt = photo.alt ?? '';
+    }
+    const title = card.querySelector<HTMLElement>('[data-card-title]');
+    if (title) title.textContent = photo.alt || '未填写替代文本';
+    if (photo.isCover) {
+      library?.querySelectorAll('.cover-badge').forEach((badge) => badge.remove());
+      const badges = card.querySelector<HTMLElement>('[data-photo-badges]');
+      badges?.insertAdjacentHTML('beforeend', '<span class="cover-badge">封面</span>');
+    }
+  });
+  applyLayout?.addEventListener('click', async () => {
+    const selected = selections();
+    if (!selected.length) return;
+    applyLayout.disabled = true;
+    setMessage();
+    try {
+      const response = await fetch('/api/admin/photos/batch-layout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          albumId: Number(library?.dataset.albumId),
+          ids: selected.map((input) => Number(input.value)),
+          layoutPreset: batchPreset?.value ?? 'auto',
+          align: batchAlign?.value ?? 'center',
+          hasBackground: batchBackground?.checked ?? false,
+          padding: batchPadding?.value ?? '',
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message ?? '批量布局保存失败。');
+      result.data.forEach((photo: unknown) => document.dispatchEvent(new CustomEvent('photo:updated', { detail: photo })));
+      setMessage(`已更新 ${result.data.length} 张图片的布局。`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '批量布局保存失败。');
+    } finally {
+      applyLayout.disabled = selections().length === 0;
+    }
+  });
   deleteSelected?.addEventListener('click', async () => {
     const selected = selections();
-    if (!selected.length || !window.confirm(`确认删除选中的 ${selected.length} 张图片？`)) return;
+    if (!selected.length) return;
+    deleteSelected.disabled = true;
+    setMessage('正在检查特辑引用…');
+    const details = await Promise.all(selected.map(async (input) => {
+      const response = await fetch(`/api/admin/photos/${input.value}`);
+      return response.ok ? (await response.json()).data : { specialReferenceCount: 0 };
+    }));
+    const specialReferenceCount = details.reduce((total, item) => total + Number(item.specialReferenceCount ?? 0), 0);
+    const warning = specialReferenceCount > 0
+      ? `\n其中有 ${specialReferenceCount} 个特辑区块正在引用这些图片；删除后相应区块会显示降级内容。`
+      : '';
+    if (!window.confirm(`确认删除选中的 ${selected.length} 张图片？${warning}`)) {
+      deleteSelected.disabled = false;
+      return setMessage();
+    }
     deleteSelected.disabled = true;
     setMessage();
     const results = await Promise.all(selected.map((input) => fetch(`/api/admin/photos/${input.value}`, { method: 'DELETE' })));
-    if (results.every((response) => response.ok)) return window.location.reload();
+    if (results.every((response) => response.ok)) {
+      selected.forEach((input) => input.closest('[data-photo]')?.remove());
+      syncSelection();
+      return setMessage(`已删除 ${selected.length} 张图片。`);
+    }
     setMessage('部分图片删除失败，请刷新后重试。');
     deleteSelected.disabled = false;
   });

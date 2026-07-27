@@ -6,7 +6,7 @@ import { apiData, apiError, invalidId, parseId, readJson, repositoryError, requi
 import { getUploadRoot } from '../../../../server/media/paths';
 import { removeLocalMedia } from '../../../../server/media/remove';
 import { getAlbumById, updateAlbum } from '../../../../server/repositories/albums';
-import { deletePhoto, getPhotoById, updatePhoto } from '../../../../server/repositories/photos';
+import { countSpecialLayoutReferences, deletePhoto, getPhotoById, updatePhoto } from '../../../../server/repositories/photos';
 import type { CmsDatabase } from '../../../../server/repositories/shared';
 
 const photoInput = z.object({
@@ -17,6 +17,26 @@ const photoInput = z.object({
   padding: z.string().trim().max(80),
   setCover: z.boolean().optional().default(false),
 });
+
+export const GET: APIRoute = async ({ cookies, params }) => {
+  const db = getDatabase();
+  const unauthorized = requireAdmin(cookies, db);
+  if (unauthorized) return unauthorized;
+  const id = parseId(params.id);
+  if (!id) return invalidId();
+
+  try {
+    const photo = getPhotoById(db, id);
+    const album = getAlbumById(db, photo.albumId);
+    return apiData({
+      photo,
+      isCover: album.coverPhotoId === photo.id,
+      specialReferenceCount: countSpecialLayoutReferences(db, id),
+    });
+  } catch (error) {
+    return repositoryError(error);
+  }
+};
 
 export const PATCH: APIRoute = async ({ request, cookies, params }) => {
   const db = getDatabase();

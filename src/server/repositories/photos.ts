@@ -1,7 +1,7 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, inArray } from 'drizzle-orm';
 
-import { photos } from '../db/schema';
-import { assertCompleteOrder, type CmsDatabase, notFound, now } from './shared';
+import { albums, photos, type SpecialLayoutBlock } from '../db/schema';
+import { assertCompleteOrder, type CmsDatabase, notFound, now, RepositoryError } from './shared';
 
 type NewPhoto = typeof photos.$inferInsert;
 type PhotoChanges = Partial<
@@ -45,6 +45,43 @@ export function updatePhoto(db: CmsDatabase, id: number, values: PhotoChanges) {
     .returning()
     .get();
   return photo ?? notFound('Photo');
+}
+
+export function countSpecialLayoutReferences(db: CmsDatabase, id: number) {
+  const photo = getPhotoById(db, id);
+  const album = db
+    .select({ isSpecial: albums.isSpecial, layout: albums.specialLayoutJson })
+    .from(albums)
+    .where(eq(albums.id, photo.albumId))
+    .get();
+  if (!album?.isSpecial) return 0;
+
+  const referencesPhoto = (block: SpecialLayoutBlock) => {
+    if (block.type === 'image' || block.type === 'split') return block.photoId === id;
+    if (block.type === 'twoImages') return block.leftPhotoId === id || block.rightPhotoId === id;
+    return false;
+  };
+  return album.layout.blocks.filter(referencesPhoto).length;
+}
+
+export function updatePhotoLayoutsBatch(
+  db: CmsDatabase,
+  albumId: number,
+  ids: number[],
+  values: Pick<PhotoChanges, 'layoutPreset' | 'align' | 'hasBackground' | 'padding'>,
+) {
+  return db.transaction((tx: CmsDatabase) => {
+    const uniqueIds = [...new Set(ids)];
+    const selected = tx
+      .select({ id: photos.id, albumId: photos.albumId })
+      .from(photos)
+      .where(inArray(photos.id, uniqueIds))
+      .all();
+    if (uniqueIds.length !== ids.length || selected.length !== uniqueIds.length || selected.some((photo) => photo.albumId !== albumId)) {
+      throw new RepositoryError('PHOTO_NOT_IN_ALBUM', 'Batch layouts can only update photos from one album.');
+    }
+    return ids.map((id) => updatePhoto(tx, id, values));
+  });
 }
 
 export function replacePhotoMedia(db: CmsDatabase, id: number, values: PhotoMediaChanges) {

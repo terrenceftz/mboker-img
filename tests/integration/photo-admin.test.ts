@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { eq } from 'drizzle-orm';
 
 import { albums, photos } from '../../src/server/db/schema';
 import { createTestDatabase } from '../helpers/database';
@@ -33,7 +34,8 @@ vi.mock('../../src/server/media/remove', () => ({
   removeLocalMedia: state.removeLocalMedia,
 }));
 
-import { DELETE as deletePhoto, PATCH as updatePhoto } from '../../src/pages/api/admin/photos/[id]';
+import { DELETE as deletePhoto, GET as getPhoto, PATCH as updatePhoto } from '../../src/pages/api/admin/photos/[id]';
+import { POST as batchUpdatePhotoLayout } from '../../src/pages/api/admin/photos/batch-layout';
 import { POST as replacePhoto } from '../../src/pages/api/admin/photos/[id]/replace';
 import { DELETE as deleteAlbum } from '../../src/pages/api/admin/albums/[id]';
 import { POST as createExternalPhotos } from '../../src/pages/api/admin/photos/external';
@@ -181,6 +183,85 @@ describe('photo admin API', () => {
       alt: '新的说明', layoutPreset: 'wide', align: 'end', hasBackground: true, padding: '24px', isCover: true,
     });
     expect(state.database.db.select().from(albums).get().coverPhotoId).toBe(photo.id);
+  });
+
+  it('reports how many special layout blocks reference a photo', async () => {
+    const album = await seedAlbum();
+    const photo = state.database.db.insert(photos).values({
+      albumId: album.id,
+      originalUrl: 'https://images.example.com/referenced.jpg',
+      sourceType: 'external',
+    }).returning().get();
+    state.database.db.update(albums).set({
+      isSpecial: true,
+      specialLayoutJson: {
+        version: 1,
+        blocks: [
+          { id: 'hero', type: 'image', photoId: photo.id },
+          { id: 'copy', type: 'markdown', markdown: 'No image here' },
+          { id: 'pair', type: 'twoImages', ratio: '1:1', leftPhotoId: photo.id, rightPhotoId: photo.id },
+        ],
+      },
+    }).where(eq(albums.id, album.id)).run();
+
+    const response = await getPhoto(
+      context('GET', `/api/admin/photos/${photo.id}`, undefined, { params: { id: String(photo.id) } }),
+    );
+    const result = await responseJson(response);
+
+    expect(response.status).toBe(200);
+    expect(result.data.photo.id).toBe(photo.id);
+    expect(result.data.specialReferenceCount).toBe(2);
+  });
+
+  it('applies one layout to selected photos from the same album', async () => {
+    const album = await seedAlbum();
+    const selected = state.database.db.insert(photos).values([
+      { albumId: album.id, originalUrl: 'https://images.example.com/one.jpg' },
+      { albumId: album.id, originalUrl: 'https://images.example.com/two.jpg' },
+      { albumId: album.id, originalUrl: 'https://images.example.com/untouched.jpg' },
+    ]).returning().all();
+
+    const response = await batchUpdatePhotoLayout(context('POST', '/api/admin/photos/batch-layout', {
+      albumId: album.id,
+      ids: [selected[0].id, selected[1].id],
+      layoutPreset: 'narrow',
+      align: 'end',
+      hasBackground: true,
+      padding: '18px',
+    }));
+    const result = await responseJson(response);
+
+    expect(response.status).toBe(200);
+    expect(result.data).toHaveLength(2);
+    expect(result.data.every((photo: any) => photo.layoutPreset === 'narrow' && photo.align === 'end')).toBe(true);
+    expect(state.database.db.select().from(photos).where(eq(photos.id, selected[2].id)).get()).toMatchObject({
+      layoutPreset: 'auto',
+      align: 'center',
+      hasBackground: false,
+      padding: '',
+    });
+  });
+
+  it('rejects batch layout IDs owned by another album without partial updates', async () => {
+    const category = await state.database.seedCategory();
+    const firstAlbum = await state.database.seedAlbum(category.id, { slug: 'first-album' });
+    const secondAlbum = await state.database.seedAlbum(category.id, { slug: 'second-album' });
+    const first = state.database.db.insert(photos).values({ albumId: firstAlbum.id, originalUrl: 'https://example.com/1.jpg' }).returning().get();
+    const second = state.database.db.insert(photos).values({ albumId: secondAlbum.id, originalUrl: 'https://example.com/2.jpg' }).returning().get();
+
+    const response = await batchUpdatePhotoLayout(context('POST', '/api/admin/photos/batch-layout', {
+      albumId: firstAlbum.id,
+      ids: [first.id, second.id],
+      layoutPreset: 'wide',
+      align: 'start',
+      hasBackground: false,
+      padding: '',
+    }));
+
+    expect(response.status).toBe(409);
+    expect((await responseJson(response)).error.code).toBe('PHOTO_NOT_IN_ALBUM');
+    expect(state.database.db.select().from(photos).where(eq(photos.id, first.id)).get()?.layoutPreset).toBe('auto');
   });
 
   it('requires every album photo exactly once when reordering', async () => {
