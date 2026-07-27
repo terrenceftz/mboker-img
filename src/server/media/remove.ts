@@ -25,7 +25,13 @@ function assetPathFromUrl(originalUrl: string) {
       return undefined;
     }
   }
-  if (parts.length === 4 && parts[0] === 'site' && ['category-cover', 'post-cover', 'about-portrait'].includes(parts[1])) {
+  if (parts.length === 4 && parts[0] === 'site' && [
+    'category-cover',
+    'post-cover',
+    'about-portrait',
+    'home-hero',
+    'home-side',
+  ].includes(parts[1])) {
     try {
       assertAssetId(parts[2]);
       return parts.slice(0, 3);

@@ -12,6 +12,8 @@ import { getSettings } from '../server/repositories/settings';
 const db = getDatabase();
 const home = getHomeData(db);
 const settings = getSettings(db);
+const homeHeroUrl = settings?.homeHeroUrl || '/hero01.jpg';
+const homeSideUrl = settings?.homeSideUrl || '/hero02.jpg';
 const categoryItems = listCategoriesPublished(db).map((category) => {
   const albums = listAlbumsPublished(db, category.id);
   const firstAlbum = albums[0];
@@ -32,7 +34,7 @@ const featuredItems = featuredAlbums.length
       const photo = album.photos[photoIndex % album.photos.length] ?? album.cover!;
       return {
         href: `/collection/${album.category.slug}/${album.slug}`,
-        imageUrl: photo.thumbnailUrl ?? photo.originalUrl,
+        imageUrl: photo.originalUrl,
         alt: photo.alt || album.title,
         category: album.category.title,
         title: album.title,
@@ -58,8 +60,8 @@ const featuredItems = featuredAlbums.length
               {settings?.homeTitle || '影像故事'}
             </div>
            <div class="hero-line">
-            <svg width="608" height="123" viewBox="0 0 608 123" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 74.3544C38.0681 78.5223 110.282 73.1765 143.353 63.9346C178.418 54.1491 212.939 42.5515 247.46 30.9538C266.759 24.5208 286.058 12.5607 305.358 6.12763C298.381 1.68791 288.686 4.67792 283.068 10.658C277.451 16.638 274.914 24.8832 272.83 32.8566C265.672 59.7667 260.87 87.3111 258.514 115.037C270.927 93.1099 287.508 73.5389 307.079 57.5922C308.71 68.4649 308.891 79.5189 307.713 90.3917C312.969 91.3884 317.771 87.4017 321.304 83.415C324.838 79.4283 328.553 74.898 333.717 73.9919C338.973 73.0859 345.043 79.0659 341.963 83.415C349.664 85.4084 357.728 82.5996 365.067 79.6095C372.406 76.6195 380.289 73.4483 388.081 74.8074C395.874 76.1665 403.122 84.1399 400.495 91.6602C413.27 84.0493 428.492 80.425 443.351 81.6029C430.395 101.446 408.74 115.309 385.273 118.752C383.007 119.114 380.38 119.205 378.749 117.574C376.303 115.127 378.115 110.959 380.108 108.151C391.706 91.8414 408.287 79.7908 425.411 69.4616C475.245 39.4708 532.418 21.8026 590.497 18.6313C596.295 18.2689 604.178 20.081 603.997 25.8799C603.906 29.2323 600.826 31.5881 598.017 33.4002C579.352 45.4509 558.784 54.7833 537.401 60.854C532.237 62.3037 525.441 62.9379 522.813 58.317" stroke-width="6.4935" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg width="608" height="123" viewBox="0 0 608 123" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <text class="mboker-signature" x="8" y="94">Mboker</text>
             </svg>
 
            </div>
@@ -73,15 +75,15 @@ const featuredItems = featuredAlbums.length
         </p>
       </div>
       <div class="hero-banner">
-        <div class="side-img col-12 col-sm-4 col-md-2 p-0">
-          <picture class="gsap-picture side-picture col-5 col-sm-12 p-0">
-             <img src="/hero02.jpg" alt="" class="side-picture__img" />
+        <div class="side-img p-0">
+          <picture class="gsap-picture side-picture p-0">
+             <img src={homeSideUrl} alt="" class="side-picture__img" />
           </picture>
         </div>
         <div class="col-12 col-sm-10 col-md-10 col-lg-8 p-0">
           <div class="hero-01">
             <picture class="gsap-picture picture as__5-3">
-              <img src="/hero01.jpg" alt=""  class="picture__img hero-01"/>
+              <img src={homeHeroUrl} alt="" class="picture__img hero-01"/>
             </picture>
           </div>
         </div>
@@ -189,39 +191,30 @@ const featuredItems = featuredAlbums.length
     justify-content: flex-end;
     text-align: right;
     margin-bottom:15vw;
-    img {
-      max-width: 90%;
-    }
     @media only screen and (min-width: 601px) {
       position: absolute;
       top: -6.5vw;
       right: 0;
+      width: clamp(200px, 26vw, 460px);
+      flex: 0 0 auto;
       text-align: right;
       margin:0;
-      img {
-      max-width: 80%;
-      }
     }
   }
   .side-picture{
     position:relative;
     display:inline-block;
-    overflow:hidden;
-    width:100%;
-    min-height:144px;
+    width: min(76vw, 360px);
     @media only screen and (min-width: 601px) {
-        height:15vw;
+      width: 100%;
     }
   }
   .side-picture__img{
-      transition: all 0.5s ease-in-out;
-      @media only screen and (min-width: 601px) {
-          height: 100%;
-          -o-object-fit: cover;
-          object-fit: cover;
-          -o-object-position: center;
-          object-position: center;
-      }
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    transition: all 0.5s ease-in-out;
   }
   .hero-splitting{
     filter: blur(0);
@@ -247,6 +240,39 @@ const featuredItems = featuredAlbums.length
         max-width:95%;
         height: auto;
       }
+    }
+  }
+  .mboker-signature {
+    fill: transparent;
+    stroke: #65dc18;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1200;
+    stroke-dashoffset: 1200;
+    font-family: "Segoe Print", "Bradley Hand", cursive;
+    font-size: 92px;
+    font-weight: 600;
+    animation: none;
+  }
+  .hero-line.motion-svg__heroline .mboker-signature {
+    animation: draw-mboker 2.4s ease-out forwards;
+  }
+  @keyframes draw-mboker {
+    70% {
+      fill: transparent;
+      stroke-dashoffset: 0;
+    }
+    100% {
+      fill: #65dc18;
+      stroke-dashoffset: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mboker-signature {
+      fill: #65dc18;
+      stroke-dashoffset: 0;
+      animation: none;
     }
   }
   .hero-01{

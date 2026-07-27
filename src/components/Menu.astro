@@ -1,6 +1,23 @@
 ---
 import ArrowIcon from '../components/ArrowIcon.astro';
 import Noise from "../functions/Noise.astro";
+import { getDatabase } from '../server/db/client';
+import { listAlbumsPublished } from '../server/repositories/albums';
+import { listCategoriesPublished } from '../server/repositories/categories';
+import { listPhotos } from '../server/repositories/photos';
+
+const db = getDatabase();
+const menuItems = listCategoriesPublished(db).map((category) => {
+  const album = listAlbumsPublished(db, category.id)[0];
+  const photos = album ? listPhotos(db, album.id) : [];
+  const cover = photos.find((photo) => photo.id === album?.coverPhotoId) ?? photos[0];
+  return {
+    title: category.title,
+    href: album ? `/collection/${category.slug}/${album.slug}` : `/collection/${category.slug}`,
+    coverUrl: category.coverUrl ?? cover?.thumbnailUrl ?? cover?.originalUrl ?? '/menu/other.jpg',
+    special: Boolean(album?.isSpecial),
+  };
+});
 ---
 <div id="site-menu" class="menu" data-state="closed" role="dialog" aria-modal="true" aria-label="主题目录" aria-hidden="true">
     <Noise />
@@ -10,11 +27,13 @@ import Noise from "../functions/Noise.astro";
                 <div class="col-0 d-none d-md-block col-md-6 col-lg-5 p-0 position-relative">
                     <div class="menu-cover">
                         <div class="menu-cover__box">
-                            <img src="/menu/sunset.jpg" alt="" class="menu-cover__pic js-menu-cover__01 js-menu-cover--active">
-                            <img src="/menu/nature.jpg" alt="" class="menu-cover__pic js-menu-cover__03">
-                            <img src="/menu/city.jpg" alt="" class="menu-cover__pic js-menu-cover__04">
-                            <img src="/menu/other.jpg" alt="" class="menu-cover__pic js-menu-cover__02">
-                            <img src="/menu/altay.jpg" alt="" class="menu-cover__pic js-menu-cover__05">
+                            {menuItems.map((item, index) => (
+                                <img
+                                  src={item.coverUrl}
+                                  alt=""
+                                  class:list={['menu-cover__pic', index === 0 && 'js-menu-cover--active']}
+                                />
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -32,52 +51,17 @@ import Noise from "../functions/Noise.astro";
 
                         </div>
                         <div class="menu-nav">
-
-                            <div class="menu-item">
-                                <div class="menu-title">
-                                    <a href="/collection/sunset" class="js-menu-04 menu-item__link link-solid" data-splitting>
-                                        <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
-                                        日落
-                                        <div class="user" data-splitting>
-                                            (收集者)
-                                         </div>
-                                    </a>
+                            {menuItems.map((item) => (
+                                <div class="menu-item">
+                                    <div class="menu-title">
+                                        <a href={item.href} class="menu-item__link link-solid" data-splitting>
+                                            <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
+                                            {item.title}
+                                            {item.special && <div class="user" data-splitting>(特辑)</div>}
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div class="menu-item">
-                                <div class="menu-title">
-                                    <a href="/collection/nature" class="js-menu-02 menu-item__link link-solid" data-splitting>
-                                        <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
-                                       自然
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="menu-item">
-                                <div class="menu-title">
-                                    <a href="/collection/city" class="js-menu-03 menu-item__link link-solid" data-splitting>
-                                        <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
-                                        城市
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="menu-item">
-                                <div class="menu-title">
-                                    <a href="/collection/moment" class="js-menu-05 menu-item__link link-solid" data-splitting>
-                                    <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
-                                        瞬间
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="menu-item">
-                                <div class="menu-title">
-                                    <a href="/posts/altay" class="js-menu-01 menu-item__link link-solid" data-splitting>
-                                        <ArrowIcon iconClass="menu-item__arrow arrow-icon" />
-                                       阿勒泰<div class="user" data-splitting>(特辑)</div>
-                                    </a>
-                                </div>
-                            </div>
-
+                            ))}
                         </div>
                     </div>
                 </div>

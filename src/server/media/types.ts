@@ -5,7 +5,7 @@ export type ImageAlign = 'start' | 'center' | 'end';
 
 export type StorageScope =
   | { kind: 'album'; id: number }
-  | { kind: 'site'; key: 'category-cover' | 'post-cover' | 'about-portrait' };
+  | { kind: 'site'; key: 'category-cover' | 'post-cover' | 'about-portrait' | 'home-hero' | 'home-side' };
 
 export type ProcessedPhotoVariants = PhotoVariants & {
   webp: ResponsivePhotoVariant[];

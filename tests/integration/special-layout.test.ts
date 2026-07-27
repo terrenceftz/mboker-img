@@ -109,7 +109,10 @@ describe('special album layouts', () => {
 
   it('backfills Altay once and preserves later administrator edits', async () => {
     const category = await testDatabase.seedCategory({ slug: 'altay' });
-    const album = await testDatabase.seedAlbum(category.id, { slug: 'altay' });
+    const album = await testDatabase.seedAlbum(category.id, {
+      slug: 'altay',
+      seoTitle: '阿勒泰摄影作品集 | Tink Photo',
+    });
     testDatabase.db.insert(photos).values([
       { albumId: album.id, originalUrl: '/first.jpg', sortOrder: 0 },
       { albumId: album.id, originalUrl: '/second.jpg', sortOrder: 1 },
@@ -121,6 +124,7 @@ describe('special album layouts', () => {
 
     expect(changed).toBe(true);
     expect(initial.isSpecial).toBe(true);
+    expect(initial.seoTitle).toBe('阿勒泰摄影作品集 | Mboker Img');
     expect(initial.specialLayoutJson.blocks.map((block) => block.type)).toEqual(['split', 'image', 'image']);
     expect(initial.specialLayoutJson.blocks[0]).toMatchObject({
       type: 'split',

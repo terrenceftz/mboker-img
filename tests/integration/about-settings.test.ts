@@ -49,6 +49,24 @@ describe('About and site settings', () => {
     expect(getSettings(testDatabase.db)?.analyticsJson).toEqual({ google: 'G-TEST123' });
   });
 
+  it('stores homepage images from uploads or HTTPS external URLs', () => {
+    const valid = settingsInput.parse({
+      siteName: 'Mboker Img', shortName: 'Mboker Img', siteUrl: 'https://photos.example.com',
+      locale: 'zh-CN', homeTitle: '影像故事', homeIntro: '记录日常',
+      homeHeroUrl: '/media/site/home-hero/asset_20260727/original.jpg',
+      homeSideUrl: 'https://images.example.com/home-side.jpg',
+      defaultSeoTitle: 'Mboker Img', defaultSeoDescription: '摄影作品', analyticsJson: {},
+    });
+
+    upsertSettings(testDatabase.db, valid);
+
+    expect(getSettings(testDatabase.db)).toMatchObject({
+      homeHeroUrl: '/media/site/home-hero/asset_20260727/original.jpg',
+      homeSideUrl: 'https://images.example.com/home-side.jpg',
+    });
+    expect(settingsInput.safeParse({ ...valid, homeSideUrl: 'http://images.example.com/insecure.jpg' }).success).toBe(false);
+  });
+
   it('displays Mboker Img for untouched legacy Tink site settings', () => {
     upsertSettings(testDatabase.db, settingsInput.parse({
       siteName: 'Tink Photo Gallery', shortName: 'Tink.', siteUrl: 'https://photos.example.com',

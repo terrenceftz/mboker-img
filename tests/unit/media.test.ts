@@ -6,6 +6,7 @@ import sharp from 'sharp';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { validateExternalImageUrl } from '../../src/server/media/external';
+import { scopePathSegments } from '../../src/server/media/paths';
 import { serveMedia } from '../../src/server/media/serve';
 import { chooseAutomaticLayout } from '../../src/server/media/types';
 import { processUpload } from '../../src/server/media/upload';
@@ -54,6 +55,11 @@ describe('automatic layouts', () => {
 });
 
 describe('local media processing', () => {
+  it('stores both homepage image roles in separate site directories', () => {
+    expect(scopePathSegments({ kind: 'site', key: 'home-hero' })).toEqual(['site', 'home-hero']);
+    expect(scopePathSegments({ kind: 'site', key: 'home-side' })).toEqual(['site', 'home-side']);
+  });
+
   it('preserves the original and produces non-empty thumbnail and responsive formats', async () => {
     const root = await createRoot();
     const result = await processUpload(await imageFile(), { kind: 'album', id: 42 }, {

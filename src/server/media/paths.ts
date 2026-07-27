@@ -10,6 +10,8 @@ const SITE_KEYS = new Set<SiteMediaKey>([
   'category-cover',
   'post-cover',
   'about-portrait',
+  'home-hero',
+  'home-side',
 ]);
 const ASSET_ID_PATTERN = /^[A-Za-z0-9_-]{8,128}$/;
 

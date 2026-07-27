@@ -52,10 +52,22 @@ export function createAltaySpecialLayout(
 
 export function backfillAltaySpecial(db: CmsDatabase) {
   const row = db.select().from(albums).where(eq(albums.slug, 'altay')).get();
-  if (!row || row.specialLayoutJson.blocks.length > 0) return false;
-  const layout = createAltaySpecialLayout(listPhotos(db, row.id));
-  if (layout.blocks.length === 0) return false;
-  updateAlbum(db, row.id, { isSpecial: true, specialLayoutJson: layout });
+  if (!row) return false;
+
+  const changes: Parameters<typeof updateAlbum>[2] = {};
+  if (row.seoTitle.includes('Tink Photo')) {
+    changes.seoTitle = row.seoTitle.replaceAll('Tink Photo', 'Mboker Img');
+  }
+  if (row.specialLayoutJson.blocks.length === 0) {
+    const layout = createAltaySpecialLayout(listPhotos(db, row.id));
+    if (layout.blocks.length > 0) {
+      changes.isSpecial = true;
+      changes.specialLayoutJson = layout;
+    }
+  }
+  if (Object.keys(changes).length === 0) return false;
+
+  updateAlbum(db, row.id, changes);
   return true;
 }
 

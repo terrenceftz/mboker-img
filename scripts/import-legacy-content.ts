@@ -168,7 +168,7 @@ async function importGallery(
     shotDate: gallery.date,
     location: gallery.location ?? '',
     tagsJson: gallery.tags ?? [],
-    seoTitle: gallery.seo?.title ?? '',
+    seoTitle: gallery.seo?.title?.replaceAll('Tink Photo', 'Mboker Img') ?? '',
     seoDescription: gallery.seo?.description ?? '',
     seoKeywordsJson: gallery.seo?.keywords ?? [],
     featured: gallery.featured ?? false,

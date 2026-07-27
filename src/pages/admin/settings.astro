@@ -1,6 +1,7 @@
 ---
 import PageHeader from '../../components/admin/PageHeader.astro';
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { RotateCcw } from 'lucide-astro';
 import { siteConfig } from '../../config/site';
 import { getDatabase } from '../../server/db/client';
 import { getSettings } from '../../server/repositories/settings';
@@ -9,7 +10,7 @@ const saved = Astro.url.searchParams.get('saved') === '1';
 const current = getSettings(getDatabase());
 const settings = current ?? {
   siteName: siteConfig.name, shortName: siteConfig.shortName, siteUrl: siteConfig.url, locale: siteConfig.locale,
-  homeTitle: siteConfig.tagline, homeIntro: '', defaultSeoTitle: siteConfig.seo.title,
+  homeTitle: siteConfig.tagline, homeIntro: '', homeHeroUrl: '', homeSideUrl: '', defaultSeoTitle: siteConfig.seo.title,
   defaultSeoDescription: siteConfig.seo.description, analyticsJson: siteConfig.analytics,
 };
 const analytics = settings.analyticsJson as Record<string, string>;
@@ -28,6 +29,20 @@ const analytics = settings.analyticsJson as Record<string, string>;
     <section class="form-section"><h2>首页</h2><div class="form-grid">
       <div class="form-field full"><label for="homeTitle">首页标题</label><input id="homeTitle" name="homeTitle" value={settings.homeTitle} maxlength="160" /></div>
       <div class="form-field full"><label for="homeIntro">首页介绍</label><textarea id="homeIntro" name="homeIntro" maxlength="2000">{settings.homeIntro}</textarea></div>
+      <div class="image-setting-grid full">
+        <article class="image-setting-card" data-image-setting data-url-field="homeHeroUrl" data-file-field="homeHeroFile" data-site-key="home-hero" data-fallback="/hero01.jpg">
+          <div class="image-setting-heading"><h3>首页主图</h3><button class="text-button" type="button" data-reset-image><RotateCcw size={15} aria-hidden="true" />恢复默认</button></div>
+          <div class="image-preview image-preview--hero"><img src={settings.homeHeroUrl || '/hero01.jpg'} alt="首页主图预览" data-image-preview /></div>
+          <div class="form-field"><label for="homeHeroFile">上传图片</label><input id="homeHeroFile" name="homeHeroFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" /></div>
+          <div class="form-field"><label for="homeHeroUrl">HTTPS 外链</label><input id="homeHeroUrl" name="homeHeroUrl" type="text" inputmode="url" value={settings.homeHeroUrl} placeholder="https://..." /></div>
+        </article>
+        <article class="image-setting-card" data-image-setting data-url-field="homeSideUrl" data-file-field="homeSideFile" data-site-key="home-side" data-fallback="/hero02.jpg">
+          <div class="image-setting-heading"><h3>首页侧边图</h3><button class="text-button" type="button" data-reset-image><RotateCcw size={15} aria-hidden="true" />恢复默认</button></div>
+          <div class="image-preview image-preview--side"><img src={settings.homeSideUrl || '/hero02.jpg'} alt="首页侧边图预览" data-image-preview /></div>
+          <div class="form-field"><label for="homeSideFile">上传图片</label><input id="homeSideFile" name="homeSideFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" /></div>
+          <div class="form-field"><label for="homeSideUrl">HTTPS 外链</label><input id="homeSideUrl" name="homeSideUrl" type="text" inputmode="url" value={settings.homeSideUrl} placeholder="https://..." /></div>
+        </article>
+      </div>
     </div></section>
     <section class="form-section"><h2>默认 SEO</h2><div class="form-grid">
       <div class="form-field full"><label for="defaultSeoTitle">默认标题</label><input id="defaultSeoTitle" name="defaultSeoTitle" value={settings.defaultSeoTitle} maxlength="160" /></div>
@@ -41,6 +56,28 @@ const analytics = settings.analyticsJson as Record<string, string>;
   </form></div>
   <script>
     const form = document.querySelector<HTMLFormElement>('#settings-form');
+    const imageSettings = Array.from(document.querySelectorAll<HTMLElement>('[data-image-setting]'));
+    imageSettings.forEach((card) => {
+      const url = card.querySelector<HTMLInputElement>(`[name="${card.dataset.urlField}"]`);
+      const file = card.querySelector<HTMLInputElement>(`[name="${card.dataset.fileField}"]`);
+      const preview = card.querySelector<HTMLImageElement>('[data-image-preview]');
+      let objectUrl = '';
+      const show = (source: string) => { if (preview) preview.src = source || card.dataset.fallback || ''; };
+      url?.addEventListener('input', () => show(url.value.trim()));
+      file?.addEventListener('change', () => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        const selected = file.files?.[0];
+        objectUrl = selected ? URL.createObjectURL(selected) : '';
+        show(objectUrl || url?.value.trim() || '');
+      });
+      card.querySelector('[data-reset-image]')?.addEventListener('click', () => {
+        if (url) url.value = '';
+        if (file) file.value = '';
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        objectUrl = '';
+        show('');
+      });
+    });
     form?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -48,9 +85,29 @@ const analytics = settings.analyticsJson as Record<string, string>;
       if (submit) submit.disabled = true;
       if (message) message.hidden = true;
       const data = new FormData(form);
-      const payload = { ...Object.fromEntries(data.entries()), analyticsJson: { google: String(data.get('google') ?? ''), baidu: String(data.get('baidu') ?? '') } };
-      delete (payload as Record<string, unknown>).google; delete (payload as Record<string, unknown>).baidu;
       try {
+        for (const card of imageSettings) {
+          const fileField = card.dataset.fileField;
+          const urlField = card.dataset.urlField;
+          const siteKey = card.dataset.siteKey;
+          if (!fileField || !urlField || !siteKey) continue;
+          const file = data.get(fileField);
+          if (file instanceof File && file.size > 0) {
+            const upload = new FormData();
+            upload.set('file', file);
+            upload.set('scopeKind', 'site');
+            upload.set('siteKey', siteKey);
+            const uploadResponse = await fetch('/api/admin/media/asset', { method: 'POST', body: upload });
+            const uploaded = await uploadResponse.json();
+            if (!uploadResponse.ok) throw new Error(uploaded.error ?? '图片上传失败。');
+            data.set(urlField, uploaded.originalUrl);
+          }
+        }
+        const payload = { ...Object.fromEntries(data.entries()), analyticsJson: { google: String(data.get('google') ?? ''), baidu: String(data.get('baidu') ?? '') } };
+        delete (payload as Record<string, unknown>).google;
+        delete (payload as Record<string, unknown>).baidu;
+        delete (payload as Record<string, unknown>).homeHeroFile;
+        delete (payload as Record<string, unknown>).homeSideFile;
         const response = await fetch('/api/admin/settings', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error?.message ?? '保存失败，请检查表单。');
@@ -62,3 +119,18 @@ const analytics = settings.analyticsJson as Record<string, string>;
     });
   </script>
 </AdminLayout>
+
+<style>
+  .image-setting-grid { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .image-setting-card { display: grid; align-content: start; gap: 14px; padding: 16px; border: 1px solid var(--admin-border); border-radius: 8px; background: #fff; }
+  .image-setting-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .image-setting-heading h3 { margin: 0; font-size: 15px; }
+  .text-button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--admin-muted); font: inherit; cursor: pointer; }
+  .text-button:hover { color: var(--admin-ink); }
+  .image-preview { display: grid; place-items: center; min-height: 180px; overflow: hidden; border: 1px solid var(--admin-border); border-radius: 6px; background-color: #f4f4f2; background-image: linear-gradient(45deg, #e6e6e2 25%, transparent 25%), linear-gradient(-45deg, #e6e6e2 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e6e6e2 75%), linear-gradient(-45deg, transparent 75%, #e6e6e2 75%); background-position: 0 0, 0 8px, 8px -8px, -8px 0; background-size: 16px 16px; }
+  .image-preview img { display: block; max-width: 100%; max-height: 280px; object-fit: contain; }
+  .image-preview--hero { aspect-ratio: 5 / 3; }
+  .image-preview--hero img { width: 100%; height: 100%; object-fit: cover; }
+  .image-preview--side img { width: auto; height: auto; }
+  @media (max-width: 760px) { .image-setting-grid { grid-template-columns: 1fr; } }
+</style>

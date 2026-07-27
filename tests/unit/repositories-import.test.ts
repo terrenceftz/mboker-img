@@ -102,7 +102,11 @@ describe('legacy importer', () => {
     await expect(importLegacyContent({ db: firstDatabase.db, galleries: [] })).rejects.toThrow(/not empty/i);
 
     const { db } = await openDatabase();
-    const gallery = await readGalleryModule(resolve('tests/fixtures/legacy-gallery.ts'));
+    const fixture = await readGalleryModule(resolve('tests/fixtures/legacy-gallery.ts'));
+    const gallery = {
+      ...fixture,
+      seo: { ...fixture.seo, title: 'Fixture Gallery | Tink Photo' },
+    };
     const result = await importLegacyContent({
       db,
       galleries: [gallery],
@@ -119,7 +123,11 @@ describe('legacy importer', () => {
 
     expect(result).toMatchObject({ categories: 1, albums: 1, photos: 1 });
     expect(getAbout(db).page?.portraitUrl).toBe('');
-    expect(listAlbumsPublished(db)[0]).toMatchObject({ slug: 'fixture', legacyPath: '/collection/fixture' });
+    expect(listAlbumsPublished(db)[0]).toMatchObject({
+      slug: 'fixture',
+      legacyPath: '/collection/fixture',
+      seoTitle: 'Fixture Gallery | Mboker Img',
+    });
     expect(listPhotos(db, listAlbumsPublished(db)[0]!.id)[0]).toMatchObject({
       alt: 'Fixture image alt',
       hasBackground: true,

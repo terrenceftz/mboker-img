@@ -5,6 +5,10 @@ const analyticsId = (pattern: RegExp, message: string) => z.string().trim().max(
   (value) => value === '' || pattern.test(value),
   message,
 ).optional();
+const homepageImageUrl = z.string().trim().max(500).refine(
+  (value) => value === '' || value.startsWith('/media/') || value.startsWith('https://'),
+  '请使用 HTTPS 图片外链或后台上传的图片',
+).optional().default('');
 
 export const settingsInput = z.object({
   siteName: z.string().trim().min(1, '请填写站点名称').max(120),
@@ -13,6 +17,8 @@ export const settingsInput = z.object({
   locale: z.string().trim().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/, '语言格式应类似 zh-CN'),
   homeTitle: text(160),
   homeIntro: text(2_000),
+  homeHeroUrl: homepageImageUrl,
+  homeSideUrl: homepageImageUrl,
   defaultSeoTitle: text(160),
   defaultSeoDescription: text(500),
   analyticsJson: z.object({
