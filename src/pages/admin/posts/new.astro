@@ -1,0 +1,10 @@
+---
+import PageHeader from '../../../components/admin/PageHeader.astro';
+import PostForm from '../../../components/admin/PostForm.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="新建文章">
+  <PageHeader title="新建文章" description="使用 Markdown 编写博客内容。" />
+  <PostForm action="/api/admin/posts" />
+</AdminLayout>

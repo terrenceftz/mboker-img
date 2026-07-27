@@ -1,0 +1,25 @@
+---
+interface Props { value?: string; }
+const { value = '' } = Astro.props;
+---
+
+<div class="markdown-editor">
+  <div class="form-field full">
+    <label for="markdown">Markdown 正文</label>
+    <textarea id="markdown" name="markdown" rows="22" maxlength="200000" data-markdown-input>{value}</textarea>
+  </div>
+  <div class="markdown-preview" data-markdown-preview><pre>{value}</pre></div>
+</div>
+
+<script>
+  const input = document.querySelector<HTMLTextAreaElement>('[data-markdown-input]');
+  const preview = document.querySelector<HTMLElement>('[data-markdown-preview] pre');
+  input?.addEventListener('input', () => { if (preview) preview.textContent = input.value; });
+</script>
+
+<style>
+  .markdown-editor { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+  .markdown-preview { min-height: 260px; border: 1px solid var(--admin-border); background: #fff; padding: 16px; overflow: auto; }
+  .markdown-preview pre { margin: 0; white-space: pre-wrap; word-break: break-word; font: 14px/1.65 ui-monospace, monospace; }
+  @media (min-width: 1100px) { .markdown-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>

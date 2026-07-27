@@ -1,0 +1,45 @@
+---
+import MarkdownEditor from './MarkdownEditor.astro';
+
+interface Props { action: string; method?: 'POST' | 'PATCH'; post?: any; }
+const { action, method = 'POST', post } = Astro.props;
+const publishedAt = post?.publishedAt ? new Date(post.publishedAt).toISOString().slice(0, 16) : '';
+---
+
+<div class="form-shell">
+  <form class="admin-form" id="post-form" data-action={action} data-method={method}>
+    <section class="form-section"><h2>文章内容</h2><div class="form-grid">
+      <div class="form-field"><label for="title">标题 *</label><input id="title" name="title" value={post?.title ?? ''} maxlength="160" required /></div>
+      <div class="form-field"><label for="slug">Slug *</label><input id="slug" name="slug" value={post?.slug ?? ''} maxlength="160" required /></div>
+      <div class="form-field full"><label for="excerpt">摘要</label><textarea id="excerpt" name="excerpt" maxlength="1000">{post?.excerpt ?? ''}</textarea></div>
+      <div class="form-field full"><label for="coverUrl">封面图片地址</label><input id="coverUrl" name="coverUrl" type="url" value={post?.coverUrl ?? ''} /></div>
+    </div><MarkdownEditor value={post?.markdown ?? ''} /></section>
+    <section class="form-section"><h2>发布与 SEO</h2><div class="form-grid">
+      <div class="form-field"><label for="status">状态</label><select id="status" name="status"><option value="draft" selected={(post?.status ?? 'draft') === 'draft'}>草稿</option><option value="published" selected={post?.status === 'published'}>已发布</option></select></div>
+      <div class="form-field"><label for="publishedAt">发布时间</label><input id="publishedAt" name="publishedAt" type="datetime-local" value={publishedAt} /></div>
+      <div class="form-field full"><label for="seoTitle">SEO 标题</label><input id="seoTitle" name="seoTitle" value={post?.seoTitle ?? ''} maxlength="160" /></div>
+      <div class="form-field full"><label for="seoDescription">SEO 描述</label><textarea id="seoDescription" name="seoDescription" maxlength="500">{post?.seoDescription ?? ''}</textarea></div>
+    </div></section>
+    <div class="form-actions"><button class="button" type="submit">保存文章</button><a class="button-secondary" href="/admin/posts">取消</a><p class="form-message" role="alert" data-form-message hidden></p></div>
+  </form>
+</div>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#post-form');
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const message = form.querySelector<HTMLElement>('[data-form-message]');
+    if (submit) submit.disabled = true;
+    if (message) message.hidden = true;
+    try {
+      const response = await fetch(form.dataset.action ?? '', { method: form.dataset.method ?? 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form).entries())) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message ?? '保存失败，请重试。');
+      window.location.assign('/admin/posts?saved=1');
+    } catch (error) {
+      if (message) { message.textContent = error instanceof Error ? error.message : '保存失败，请重试。'; message.hidden = false; }
+      if (submit) submit.disabled = false;
+    }
+  });
+</script>

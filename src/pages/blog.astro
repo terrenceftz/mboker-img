@@ -1,12 +1,12 @@
 ---
 
-import { getCollection } from 'astro:content';
 import SectionHeader from "@/elements/SectionHeader.astro";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import PostPreview from "@/elements/PostPreview.astro"
-const posts = (await getCollection("blog")).sort(
-  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf(),
-);
+import { getDatabase } from '../server/db/client';
+import { listPostsPublished } from '../server/repositories/posts';
+
+const posts = listPostsPublished(getDatabase());
 ---
 
 <BaseLayout
@@ -29,10 +29,10 @@ const posts = (await getCollection("blog")).sort(
                     {
                         posts.map((post) => (
                             <PostPreview
-                                slug={post.id}
-                                title={post.data.title}
-                                description={post.data.description}
-                                date={post.data.publishDate}
+                                slug={post.slug}
+                                title={post.title}
+                                description={post.excerpt}
+                                date={post.publishedAt!}
                          />
                         ))
                     }

@@ -1,0 +1,88 @@
+---
+import { FileText, MoreHorizontal, Pencil, Plus } from 'lucide-astro';
+
+import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
+import PageHeader from '../../../components/admin/PageHeader.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../server/db/client';
+import { listPostsAdmin } from '../../../server/repositories/posts';
+
+const posts = listPostsAdmin(getDatabase());
+const saved = Astro.url.searchParams.get('saved') === '1';
+---
+
+<AdminLayout title="文章">
+  <PageHeader title="文章" description="管理博客文章、发布状态和搜索信息。">
+    <a class="button" href="/admin/posts/new"><Plus size={16} aria-hidden="true" />新建文章</a>
+  </PageHeader>
+
+  {saved && <p class="notice" role="status">文章已保存。</p>}
+
+  {
+    posts.length ? (
+      <div class="table-shell">
+        <table class="admin-table">
+          <thead><tr><th>封面</th><th>标题</th><th>状态</th><th>发布日期</th><th>更新日期</th><th><span class="sr-only">操作</span></th></tr></thead>
+          <tbody>
+            {posts.map((post) => (
+              <tr>
+                <td><div class="cover-thumb">{post.coverUrl ? <img src={post.coverUrl} alt="" loading="lazy" /> : <span class="cover-placeholder"><FileText size={15} aria-hidden="true" /></span>}</div></td>
+                <td class="title-cell"><strong>{post.title}</strong><small>/{post.slug}</small></td>
+                <td><span class:list={['status', { published: post.status === 'published' }]}>{post.status === 'published' ? '已发布' : '草稿'}</span></td>
+                <td>{post.publishedAt ? post.publishedAt.toLocaleDateString('zh-CN') : '-'}</td>
+                <td>{post.updatedAt.toLocaleDateString('zh-CN')}</td>
+                <td>
+                  <div class="row-actions">
+                    <a class="icon-button" href={`/admin/posts/${post.id}`} title="编辑"><Pencil size={15} aria-hidden="true" /><span class="sr-only">编辑</span></a>
+                    <details class="action-menu">
+                      <summary title="更多操作"><MoreHorizontal size={17} aria-hidden="true" /><span class="sr-only">更多操作</span></summary>
+                      <div><button type="button" data-delete-id={post.id} data-delete-name={post.title}>删除文章</button></div>
+                    </details>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div class="empty-state"><p>还没有文章。</p><a class="button" href="/admin/posts/new">创建第一篇文章</a></div>
+    )
+  }
+
+  <ConfirmDialog id="delete-post-dialog" title="删除文章" />
+
+  <script>
+    const dialog = document.querySelector<HTMLDialogElement>('#delete-post-dialog');
+    const name = dialog?.querySelector<HTMLElement>('[data-confirm-name]');
+    const error = dialog?.querySelector<HTMLElement>('[data-dialog-error]');
+    let deleteId = '';
+    let opener: HTMLElement | null = null;
+
+    document.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-delete-id]');
+      if (!button || !dialog) return;
+      deleteId = button.dataset.deleteId ?? '';
+      opener = button;
+      if (name) name.textContent = button.dataset.deleteName ?? '';
+      if (error) error.hidden = true;
+      dialog.showModal();
+      dialog.querySelector<HTMLButtonElement>('[data-dialog-cancel]')?.focus();
+    });
+    dialog?.querySelector('[data-dialog-cancel]')?.addEventListener('click', () => dialog.close());
+    dialog?.addEventListener('close', () => opener?.focus());
+    dialog?.querySelector('[data-dialog-confirm]')?.addEventListener('click', async () => {
+      const response = await fetch(`/api/admin/posts/${deleteId}`, { method: 'DELETE' });
+      if (response.ok) {
+        dialog.close();
+        window.location.reload();
+        return;
+      }
+      const result = await response.json();
+      if (error) {
+        error.textContent = result.error?.message ?? '删除失败。';
+        error.hidden = false;
+      }
+    });
+  </script>
+</AdminLayout>

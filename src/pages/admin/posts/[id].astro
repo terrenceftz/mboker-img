@@ -1,0 +1,21 @@
+---
+import PageHeader from '../../../components/admin/PageHeader.astro';
+import PostForm from '../../../components/admin/PostForm.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../server/db/client';
+import { getPostById } from '../../../server/repositories/posts';
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id) || id <= 0) return Astro.redirect('/admin/posts');
+let post;
+try {
+  post = getPostById(getDatabase(), id);
+} catch {
+  return Astro.redirect('/admin/posts');
+}
+---
+
+<AdminLayout title={`编辑 ${post.title}`}>
+  <PageHeader title="编辑文章" description={post.title} />
+  <PostForm action={`/api/admin/posts/${post.id}`} method="PATCH" post={post} />
+</AdminLayout>
