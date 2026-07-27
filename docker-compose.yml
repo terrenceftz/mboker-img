@@ -1,0 +1,11 @@
+services:
+  tink:
+    build: .
+    container_name: tink-photography
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${PORT:-4321}:4321"
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups

@@ -11,7 +11,8 @@ const about = getAbout(db);
 const settings = getSettings(db);
 const page = about.page;
 const author = { name: page?.name || siteConfig.author.name, role: page?.role || siteConfig.author.role };
-const profile = page
+type DisplayProfile = { label: string; value: string; href?: string; external?: boolean };
+const profile: DisplayProfile[] = page
   ? [
       { label: '我是', value: page.name, href: '', external: false },
       { label: '身份', value: page.role, href: '', external: false },
@@ -20,7 +21,12 @@ const profile = page
       { label: '信息', value: page.biography, href: '', external: false },
       { label: '邮件', value: page.email, href: page.email ? `mailto:${page.email}` : '', external: false },
     ].filter((item) => item.value)
-  : siteConfig.author.profile;
+  : siteConfig.author.profile.map((item) => ({
+      label: item.label,
+      value: item.value,
+      href: 'href' in item ? item.href : undefined,
+      external: 'external' in item ? item.external : false,
+    }));
 const portraitUrl = page?.portraitUrl || ImgTink.src;
 ---
 <ClearLayout

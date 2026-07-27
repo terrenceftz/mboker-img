@@ -1,6 +1,6 @@
 ---
 interface Row { label?: string; value?: string; href?: string; external?: boolean; handle?: string; }
-interface Props { kind: 'profile' | 'social'; title: string; rows?: Row[]; }
+interface Props { kind: 'profile' | 'social'; title: string; rows?: readonly Row[]; }
 const { kind, title, rows = [] } = Astro.props;
 ---
 
