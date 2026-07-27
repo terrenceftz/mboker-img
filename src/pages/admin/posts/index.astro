@@ -7,16 +7,24 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getDatabase } from '../../../server/db/client';
 import { listPostsAdmin } from '../../../server/repositories/posts';
 
-const posts = listPostsAdmin(getDatabase());
+const requestedStatus = Astro.url.searchParams.get('status');
+const status = requestedStatus === 'draft' || requestedStatus === 'published' ? requestedStatus : undefined;
+const posts = listPostsAdmin(getDatabase(), status);
 const saved = Astro.url.searchParams.get('saved') === '1';
 ---
 
 <AdminLayout title="文章">
-  <PageHeader title="文章" description="管理博客文章、发布状态和搜索信息。">
+  <PageHeader title="文章" description="撰写、预览并发布博客文章。">
     <a class="button" href="/admin/posts/new"><Plus size={16} aria-hidden="true" />新建文章</a>
   </PageHeader>
 
   {saved && <p class="notice" role="status">文章已保存。</p>}
+
+  <nav class="status-tabs" aria-label="文章状态">
+    <a href="/admin/posts" aria-current={!status ? 'page' : undefined}>全部</a>
+    <a href="/admin/posts?status=draft" aria-current={status === 'draft' ? 'page' : undefined}>草稿</a>
+    <a href="/admin/posts?status=published" aria-current={status === 'published' ? 'page' : undefined}>已发布</a>
+  </nav>
 
   {
     posts.length ? (

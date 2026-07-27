@@ -1,13 +1,17 @@
 ---
+import { Eye, Save, Send, Undo2 } from 'lucide-astro';
+
 import MarkdownEditor from './MarkdownEditor.astro';
 
 interface Props { action: string; method?: 'POST' | 'PATCH'; post?: any; }
 const { action, method = 'POST', post } = Astro.props;
+const initialStatus = post?.status === 'published' ? 'published' : 'draft';
 const publishedAt = post?.publishedAt ? new Date(post.publishedAt).toISOString().slice(0, 16) : '';
 ---
 
-<div class="form-shell">
-  <form class="admin-form" id="post-form" data-action={action} data-method={method}>
+<div class="form-shell post-form-shell">
+  <form class="admin-form" id="post-form" data-action={action} data-method={method} data-post-id={post?.id ?? ''} data-status={initialStatus}>
+    <input type="hidden" name="status" value={initialStatus} data-post-status />
     <section class="form-section"><h2>文章内容</h2><div class="form-grid">
       <div class="form-field"><label for="title">标题 *</label><input id="title" name="title" value={post?.title ?? ''} maxlength="160" required /></div>
       <div class="form-field"><label for="slug">Slug *</label><input id="slug" name="slug" value={post?.slug ?? ''} maxlength="160" required /></div>
@@ -15,31 +19,104 @@ const publishedAt = post?.publishedAt ? new Date(post.publishedAt).toISOString()
       <div class="form-field full"><label for="coverUrl">封面图片地址</label><input id="coverUrl" name="coverUrl" type="url" value={post?.coverUrl ?? ''} /></div>
     </div><MarkdownEditor value={post?.markdown ?? ''} /></section>
     <section class="form-section"><h2>发布与 SEO</h2><div class="form-grid">
-      <div class="form-field"><label for="status">状态</label><select id="status" name="status"><option value="draft" selected={(post?.status ?? 'draft') === 'draft'}>草稿</option><option value="published" selected={post?.status === 'published'}>已发布</option></select></div>
+      <div class="form-field"><label>当前状态</label><output data-status-label>{initialStatus === 'published' ? '已发布' : '草稿'}</output></div>
       <div class="form-field"><label for="publishedAt">发布时间</label><input id="publishedAt" name="publishedAt" type="datetime-local" value={publishedAt} /></div>
       <div class="form-field full"><label for="seoTitle">SEO 标题</label><input id="seoTitle" name="seoTitle" value={post?.seoTitle ?? ''} maxlength="160" /></div>
       <div class="form-field full"><label for="seoDescription">SEO 描述</label><textarea id="seoDescription" name="seoDescription" maxlength="500">{post?.seoDescription ?? ''}</textarea></div>
     </div></section>
-    <div class="form-actions"><button class="button" type="submit">保存文章</button><a class="button-secondary" href="/admin/posts">取消</a><p class="form-message" role="alert" data-form-message hidden></p></div>
+    <div class="editorial-toolbar" data-editorial-toolbar>
+      <p class="form-message" role="status" data-form-message hidden></p>
+      <div class="editorial-actions">
+        <button class="button-secondary" type="button" data-post-action="save" data-draft-action><Save size={16} aria-hidden="true" />保存草稿</button>
+        <button class="button-secondary" type="button" data-post-action="save" data-published-action hidden><Save size={16} aria-hidden="true" />更新</button>
+        <button class="button-secondary" type="button" data-post-action="preview"><Eye size={16} aria-hidden="true" />预览</button>
+        <button class="button" type="button" data-post-action="publish" data-draft-action><Send size={16} aria-hidden="true" />发布</button>
+        <button class="button-danger" type="button" data-post-action="withdraw" data-published-action hidden><Undo2 size={16} aria-hidden="true" />撤回为草稿</button>
+      </div>
+    </div>
   </form>
 </div>
 
 <script>
   const form = document.querySelector<HTMLFormElement>('#post-form');
-  form?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
-    const message = form.querySelector<HTMLElement>('[data-form-message]');
-    if (submit) submit.disabled = true;
-    if (message) message.hidden = true;
+  const message = form?.querySelector<HTMLElement>('[data-form-message]');
+  const statusInput = form?.querySelector<HTMLInputElement>('[data-post-status]');
+  const statusLabel = form?.querySelector<HTMLOutputElement>('[data-status-label]');
+  let dirty = false;
+
+  const setMessage = (value = '', isError = false) => {
+    if (!message) return;
+    message.textContent = value;
+    message.hidden = !value;
+    message.classList.toggle('is-error', isError);
+  };
+  const syncStatus = (status: 'draft' | 'published') => {
+    if (!form || !statusInput) return;
+    form.dataset.status = status;
+    statusInput.value = status;
+    if (statusLabel) statusLabel.textContent = status === 'published' ? '已发布' : '草稿';
+    form.querySelectorAll<HTMLElement>('[data-draft-action]').forEach((element) => element.hidden = status !== 'draft');
+    form.querySelectorAll<HTMLElement>('[data-published-action]').forEach((element) => element.hidden = status !== 'published');
+  };
+  const savePost = async (status: 'draft' | 'published') => {
+    if (!form || !form.reportValidity()) return undefined;
+    const values = Object.fromEntries(new FormData(form).entries());
+    values.status = status;
+    const response = await fetch(form.dataset.action ?? '', {
+      method: form.dataset.method ?? 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(values),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error?.message ?? '保存失败，请重试。');
+    const saved = result.data;
+    if (form.dataset.method === 'POST') {
+      form.dataset.method = 'PATCH';
+      form.dataset.action = `/api/admin/posts/${saved.id}`;
+      form.dataset.postId = String(saved.id);
+      window.history.replaceState({}, '', `/admin/posts/${saved.id}`);
+    }
+    syncStatus(saved.status);
+    dirty = false;
+    return saved;
+  };
+
+  form?.addEventListener('input', () => { dirty = true; setMessage(); });
+  form?.addEventListener('change', () => { dirty = true; setMessage(); });
+  form?.addEventListener('submit', (event) => event.preventDefault());
+  form?.addEventListener('click', async (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-post-action]');
+    if (!button) return;
+    const action = button.dataset.postAction;
+    const currentStatus = form.dataset.status === 'published' ? 'published' : 'draft';
+    const nextStatus = action === 'publish' ? 'published' : action === 'withdraw' ? 'draft' : currentStatus;
+    const previewWindow = action === 'preview' ? window.open('', '_blank') : null;
+    form.querySelectorAll<HTMLButtonElement>('[data-post-action]').forEach((item) => item.disabled = true);
+    setMessage(action === 'preview' ? '正在保存并准备预览…' : '正在保存…');
     try {
-      const response = await fetch(form.dataset.action ?? '', { method: form.dataset.method ?? 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form).entries())) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error?.message ?? '保存失败，请重试。');
-      window.location.assign('/admin/posts?saved=1');
+      const saved = await savePost(nextStatus);
+      if (!saved) {
+        previewWindow?.close();
+        return;
+      }
+      if (action === 'preview') {
+        if (previewWindow) previewWindow.location.href = `/admin/posts/${saved.id}/preview`;
+        else window.open(`/admin/posts/${saved.id}/preview`, '_blank');
+        setMessage('已保存并打开预览。');
+      } else {
+        setMessage(nextStatus === 'published' ? '文章已发布。' : action === 'withdraw' ? '文章已撤回为草稿。' : '文章已保存。');
+      }
     } catch (error) {
-      if (message) { message.textContent = error instanceof Error ? error.message : '保存失败，请重试。'; message.hidden = false; }
-      if (submit) submit.disabled = false;
+      previewWindow?.close();
+      setMessage(error instanceof Error ? error.message : '保存失败，请重试。', true);
+    } finally {
+      form.querySelectorAll<HTMLButtonElement>('[data-post-action]').forEach((item) => item.disabled = false);
     }
   });
+  window.addEventListener('beforeunload', (event) => {
+    if (!dirty) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
+  syncStatus(form?.dataset.status === 'published' ? 'published' : 'draft');
 </script>

@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, lte } from 'drizzle-orm';
 
 import { posts } from '../db/schema';
 import { type CmsDatabase, notFound, now, withSlugConflict } from './shared';
@@ -6,15 +6,17 @@ import { type CmsDatabase, notFound, now, withSlugConflict } from './shared';
 type NewPost = typeof posts.$inferInsert;
 type PostChanges = Partial<Omit<NewPost, 'id' | 'createdAt' | 'updatedAt'>>;
 
-export function listPostsAdmin(db: CmsDatabase) {
-  return db.select().from(posts).orderBy(desc(posts.publishedAt), desc(posts.id)).all();
+export function listPostsAdmin(db: CmsDatabase, status?: 'draft' | 'published') {
+  const query = db.select().from(posts);
+  const filtered = status ? query.where(eq(posts.status, status)) : query;
+  return filtered.orderBy(desc(posts.publishedAt), desc(posts.id)).all();
 }
 
 export function listPostsPublished(db: CmsDatabase) {
   return db
     .select()
     .from(posts)
-    .where(and(eq(posts.status, 'published'), isNotNull(posts.publishedAt)))
+    .where(and(eq(posts.status, 'published'), isNotNull(posts.publishedAt), lte(posts.publishedAt, now())))
     .orderBy(desc(posts.publishedAt), desc(posts.id))
     .all();
 }
@@ -29,7 +31,7 @@ export function getPostBySlug(db: CmsDatabase, slug: string) {
 
 export function getPublishedPostBySlug(db: CmsDatabase, slug: string) {
   const post = getPostBySlug(db, slug);
-  if (post.status !== 'published' || !post.publishedAt) return notFound('Post');
+  if (post.status !== 'published' || !post.publishedAt || post.publishedAt > now()) return notFound('Post');
   return post;
 }
 

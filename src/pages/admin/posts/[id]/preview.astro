@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { getDatabase } from '../../../../server/db/client';
+import { renderMarkdownSafe } from '../../../../server/markdown/render';
+import { getPostById } from '../../../../server/repositories/posts';
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id) || id <= 0) return Astro.redirect('/admin/posts');
+let post;
+try {
+  post = getPostById(getDatabase(), id);
+} catch {
+  return Astro.redirect('/admin/posts');
+}
+const content = await renderMarkdownSafe(post.markdown);
+---
+
+<BaseLayout title={`预览：${post.title}`} description={post.excerpt} keywords="" showContact={false} showPreloader={false}>
+  <div class="preview-notice">后台预览 · {post.status === 'published' ? '已发布' : '草稿'}</div>
+  <div class="post">
+    <main class="post-container">
+      <div class="section-header">
+        <div class="row"><div class="section-content m-auto"><div class="section-title"><div class="title-tag">PREVIEW</div><h1 class="title">{post.title}</h1></div></div></div>
+        <div class="post-line post-line-bottom text-center"><span class="text-center">Last update: {post.updatedAt.toISOString().slice(0, 10)}</span></div>
+      </div>
+      <section><div class="content" set:html={content}></div></section>
+    </main>
+  </div>
+</BaseLayout>
+
+<style>
+  .preview-notice { position: fixed; z-index: 40; top: 16px; left: 50%; transform: translateX(-50%); border: 1px solid #214b3a; border-radius: 6px; background: #fff; color: #173c2e; padding: 8px 14px; font-size: 12px; }
+  .post-container { width: 100%; max-width: 65rem; margin: 7.5rem auto; min-height: calc(100vh - 88px); }
+  .section-content { text-align: center; }
+  .post-line-bottom { border-bottom: 1px dashed var(--color-600); padding-bottom: .75rem; margin: 1.5rem auto 3rem; font-size: .8rem; white-space: nowrap; color: var(--color-300); }
+  .title-tag { display: inline-block; margin: 16px auto 24px; border: 1px solid var(--color-300); border-radius: 36px; padding: 6px 22px; color: var(--color-300); font-size: 13px; }
+  .title { margin: 1rem 0; color: var(--color-100); font-size: 4rem; line-height: 1.2; text-align: center; }
+  .content { position: relative; color: var(--color-200); margin: 6rem auto 12rem; }
+  .content > :global(* + *) { margin-top: 1rem; }
+  .content :global(h1), .content :global(h2), .content :global(h3), .content :global(h4), .content :global(h5) { margin: 1.75em 0 1em; color: var(--color-100); }
+  .content :global(p) { margin: 16px 0; line-height: 1.75; }
+  .content :global(img) { max-width: 100%; height: auto; border-radius: 8px; }
+  .content :global(pre) { overflow: auto; border-radius: 6px; padding: 1.2em; }
+  @media (max-width: 576px) { .title { font-size: 2.5rem; } }
+</style>
