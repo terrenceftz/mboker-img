@@ -75,6 +75,23 @@ describe('category and album admin API', () => {
     });
   });
 
+  it('updates an imported category that uses a managed media cover', async () => {
+    const category = await state.database.seedCategory({ slug: 'legacy' });
+    const response = await updateCategory(
+      context(
+        'PATCH',
+        `/api/admin/categories/${category.id}`,
+        { title: 'Legacy updated', slug: 'legacy', coverUrl: '/media/categories/legacy/thumbnail.webp' },
+        { params: { id: String(category.id) } },
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await responseJson(response)).toMatchObject({
+      data: { title: 'Legacy updated', coverUrl: '/media/categories/legacy/thumbnail.webp' },
+    });
+  });
+
   it('creates, publishes, reorders, and deletes categories while normalizing slugs', async () => {
     const firstResponse = await createCategory(
       context('POST', '/api/admin/categories', { title: '城市', slug: '  CITY_Nights  ', status: 'draft' }),

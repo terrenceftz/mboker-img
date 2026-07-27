@@ -11,13 +11,22 @@ export function normalizeSlug(value: string) {
 }
 
 const optionalText = (max: number) => z.string().trim().max(max).optional().default('');
+function isImageUrl(value: string) {
+  if (/^\/media\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+$/.test(value)) return true;
+
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
 const optionalImageUrl = z.preprocess(
   (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
   z
     .string()
     .trim()
-    .url()
-    .refine((value) => ['http:', 'https:'].includes(new URL(value).protocol), '请使用 HTTP 或 HTTPS 图片地址')
+    .refine(isImageUrl, '请使用站内图片或 HTTP/HTTPS 图片地址')
     .nullable()
     .optional()
     .default(null),

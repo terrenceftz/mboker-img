@@ -54,6 +54,13 @@ docker compose exec tink pnpm content:import
 
 部署前必须在 `.env` 中设置 `ADMIN_USERNAME`、`ADMIN_PASSWORD_HASH` 和实际的 `PUBLIC_SITE_URL`。反向代理应启用 HTTPS，并把请求转发到 `127.0.0.1:4321`。
 
+默认持久化到项目下的 `data` 和 `backups`。如需放到其他磁盘，在 `.env` 中设置宿主机路径，例如：
+
+```dotenv
+DOCKER_DATA_DIR=D:/Docker/tink-photography/data
+DOCKER_BACKUP_DIR=D:/Docker/tink-photography/backups
+```
+
 `data` 和 `backups` 必须允许容器内 `tink` 用户读写。升级容器前不要删除这两个挂载目录。
 
 ## 备份与恢复

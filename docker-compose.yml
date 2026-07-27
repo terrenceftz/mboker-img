@@ -7,5 +7,5 @@ services:
     ports:
       - "${PORT:-4321}:4321"
     volumes:
-      - ./data:/app/data
-      - ./backups:/app/backups
+      - ${DOCKER_DATA_DIR:-./data}:/app/data
+      - ${DOCKER_BACKUP_DIR:-./backups}:/app/backups
