@@ -1,0 +1,349 @@
+---
+import { Columns2, ExternalLink, Image, Images, Monitor, Save, Smartphone, Type } from 'lucide-astro';
+import type { SpecialLayoutDocument } from '../../server/db/schema';
+
+interface Photo {
+  id: number;
+  originalUrl: string;
+  thumbnailUrl: string | null;
+  alt: string;
+  sourceType: 'upload' | 'external';
+}
+
+interface Props {
+  albumId: number;
+  isSpecial: boolean;
+  layout: SpecialLayoutDocument;
+  photos: Photo[];
+  previewHref: string;
+}
+
+const { albumId, isSpecial, layout, photos, previewHref } = Astro.props;
+const initialState = JSON.stringify({ albumId, isSpecial, layout, photos, previewHref }).replace(/</g, '\\u003c');
+---
+
+<section class="special-editor" data-special-editor>
+  <script is:inline type="application/json" data-special-state set:html={initialState}></script>
+
+  <div class="special-editor-toolbar">
+    <label class="special-toggle"><input type="checkbox" checked={isSpecial} data-special-toggle />启用特辑</label>
+    <div class="special-preview-modes" aria-label="预览宽度">
+      <button class="icon-button active" type="button" data-preview-mode="desktop" title="桌面预览"><Monitor size={17} aria-hidden="true" /><span class="sr-only">桌面预览</span></button>
+      <button class="icon-button" type="button" data-preview-mode="mobile" title="移动预览"><Smartphone size={17} aria-hidden="true" /><span class="sr-only">移动预览</span></button>
+    </div>
+    <span class="save-state" data-save-state>已保存</span>
+    <a class="button-secondary" href={previewHref} target="_blank" rel="noopener" data-special-preview><ExternalLink size={15} aria-hidden="true" />前台预览</a>
+    <button class="button" type="button" data-save-special><Save size={15} aria-hidden="true" />保存版式</button>
+  </div>
+
+  <div class="special-add-toolbar" aria-label="添加区块">
+    <span>添加区块</span>
+    <button type="button" data-add-block="image"><Image size={15} aria-hidden="true" />通栏图片</button>
+    <button type="button" data-add-block="markdown"><Type size={15} aria-hidden="true" />通栏文字</button>
+    <button type="button" data-add-block="image-text"><Columns2 size={15} aria-hidden="true" />左图右文</button>
+    <button type="button" data-add-block="text-image"><Columns2 size={15} aria-hidden="true" />左文右图</button>
+    <button type="button" data-add-block="twoImages"><Images size={15} aria-hidden="true" />双图</button>
+  </div>
+
+  <div class="special-canvas" data-special-canvas>
+    <div class="special-block-list" data-special-blocks></div>
+    <div class="empty-state" data-special-empty hidden><p>还没有排版区块。</p></div>
+  </div>
+
+  <p class="form-message" role="alert" data-special-message hidden></p>
+
+  <dialog class="photo-picker" data-photo-picker>
+    <div class="photo-picker-header">
+      <div><h2>选择图集图片</h2><p>上传图片和外链图片都可以用于特辑。</p></div>
+      <button class="icon-button" type="button" data-picker-close title="关闭">×<span class="sr-only">关闭</span></button>
+    </div>
+    <div class="photo-picker-grid">
+      {photos.map((photo) => (
+        <button type="button" data-photo-choice={photo.id}>
+          <img src={photo.thumbnailUrl ?? photo.originalUrl} alt={photo.alt} loading="lazy" />
+          <span>{photo.alt || `图片 #${photo.id}`}</span>
+        </button>
+      ))}
+    </div>
+    {photos.length === 0 && <div class="empty-state"><p>当前图集还没有图片。</p></div>}
+    <div class="dialog-actions">
+      <a class="button-secondary" href={`/admin/albums/${albumId}/photos`}>上传或添加外链</a>
+      <button class="button-secondary" type="button" data-picker-close>取消</button>
+    </div>
+  </dialog>
+</section>
+
+<script>
+  import { marked } from 'marked';
+  import Sortable from 'sortablejs';
+  import type { SpecialLayoutBlock, SpecialLayoutDocument } from '../../server/db/schema';
+
+  type EditorPhoto = { id: number; originalUrl: string; thumbnailUrl: string | null; alt: string; sourceType: 'upload' | 'external' };
+  type EditorState = { albumId: number; isSpecial: boolean; layout: SpecialLayoutDocument; photos: EditorPhoto[]; previewHref: string };
+  type PhotoField = 'photoId' | 'leftPhotoId' | 'rightPhotoId';
+
+  const editor = document.querySelector<HTMLElement>('[data-special-editor]');
+  const stateElement = editor?.querySelector<HTMLElement>('[data-special-state]');
+  const initial = JSON.parse(stateElement?.textContent ?? '{}') as EditorState;
+  const list = editor?.querySelector<HTMLElement>('[data-special-blocks]');
+  const empty = editor?.querySelector<HTMLElement>('[data-special-empty]');
+  const message = editor?.querySelector<HTMLElement>('[data-special-message]');
+  const saveState = editor?.querySelector<HTMLElement>('[data-save-state]');
+  const specialToggle = editor?.querySelector<HTMLInputElement>('[data-special-toggle]');
+  const picker = editor?.querySelector<HTMLDialogElement>('[data-photo-picker]');
+  const photoById = new Map(initial.photos.map((photo) => [photo.id, photo]));
+  let blocks = structuredClone(initial.layout.blocks) as SpecialLayoutBlock[];
+  let savedSnapshot = JSON.stringify({ isSpecial: initial.isSpecial, blocks });
+  let pickerTarget: { blockId: string; field: PhotoField } | null = null;
+
+  const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+  })[character] ?? character);
+
+  const setMessage = (value = '') => {
+    if (!message) return;
+    message.textContent = value;
+    message.hidden = !value;
+  };
+
+  const currentSnapshot = () => JSON.stringify({ isSpecial: specialToggle?.checked ?? false, blocks });
+  const syncDirty = () => {
+    if (!saveState) return;
+    const dirty = currentSnapshot() !== savedSnapshot;
+    saveState.textContent = dirty ? '未保存' : '已保存';
+    saveState.classList.toggle('dirty', dirty);
+  };
+
+  const safeMarkdown = (value: string) => {
+    const parsed = marked.parse(value, { async: false }) as string;
+    const documentValue = new DOMParser().parseFromString(parsed, 'text/html');
+    documentValue.querySelectorAll('script, style, iframe, object, embed').forEach((element) => element.remove());
+    documentValue.querySelectorAll<HTMLElement>('*').forEach((element) => {
+      for (const attribute of [...element.attributes]) {
+        const unsafeUrl = ['href', 'src'].includes(attribute.name) && /^javascript:/i.test(attribute.value.trim());
+        if (attribute.name.startsWith('on') || unsafeUrl) element.removeAttribute(attribute.name);
+      }
+    });
+    return documentValue.body.innerHTML;
+  };
+
+  const imageSlot = (blockId: string, field: PhotoField, photoId: number) => {
+    const photo = photoById.get(photoId);
+    return `<button class="special-image-slot ${photo ? '' : 'missing'}" type="button" data-choose-photo data-block-id="${escapeHtml(blockId)}" data-photo-field="${field}">
+      ${photo ? `<img src="${escapeHtml(photo.thumbnailUrl ?? photo.originalUrl)}" alt="${escapeHtml(photo.alt)}">` : '<span>选择图片</span>'}
+      <small>${photo ? escapeHtml(photo.alt || `图片 #${photo.id}`) : photoId ? `图片 #${photoId} 已缺失` : '尚未选择图片'}</small>
+    </button>`;
+  };
+
+  const options = (selected: string, values: Array<[string, string]>) => values
+    .map(([value, label]) => `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`)
+    .join('');
+
+  const blockBody = (block: SpecialLayoutBlock) => {
+    if (block.type === 'image') return imageSlot(block.id, 'photoId', block.photoId);
+    if (block.type === 'markdown') return `<div class="special-markdown"><textarea data-markdown maxlength="200000">${escapeHtml(block.markdown)}</textarea><div class="special-markdown-preview" data-markdown-preview>${safeMarkdown(block.markdown)}</div></div>`;
+    if (block.type === 'split') {
+      const image = imageSlot(block.id, 'photoId', block.photoId);
+      const text = `<div class="special-markdown"><textarea data-markdown maxlength="200000">${escapeHtml(block.markdown)}</textarea><div class="special-markdown-preview" data-markdown-preview>${safeMarkdown(block.markdown)}</div></div>`;
+      return `<div class="special-block-settings"><label>比例<select data-field="ratio">${options(block.ratio, [['1:1', '1:1'], ['2:3', '2:3'], ['3:2', '3:2']])}</select></label><label>垂直对齐<select data-field="verticalAlign">${options(block.verticalAlign, [['start', '顶部'], ['center', '居中'], ['end', '底部']])}</select></label></div><div class="special-split" data-ratio="${block.ratio}">${block.direction === 'image-text' ? image + text : text + image}</div>`;
+    }
+    return `<div class="special-block-settings"><label>比例<select data-field="ratio">${options(block.ratio, [['1:1', '1:1'], ['2:3', '2:3'], ['3:2', '3:2']])}</select></label></div><div class="special-split" data-ratio="${block.ratio}">${imageSlot(block.id, 'leftPhotoId', block.leftPhotoId)}${imageSlot(block.id, 'rightPhotoId', block.rightPhotoId)}</div>`;
+  };
+
+  const blockLabel = (block: SpecialLayoutBlock) => {
+    if (block.type === 'image') return '通栏图片';
+    if (block.type === 'markdown') return '通栏文字';
+    if (block.type === 'split') return block.direction === 'image-text' ? '左图右文' : '左文右图';
+    return '双图';
+  };
+
+  const render = () => {
+    if (!list || !empty) return;
+    list.innerHTML = blocks.map((block, index) => `<article class="special-block-card" data-block-id="${escapeHtml(block.id)}">
+      <header><button class="drag-handle" type="button" title="拖动排序">⋮⋮</button><strong>${index + 1}. ${blockLabel(block)}</strong><div class="special-block-actions"><button type="button" data-move="up" ${index === 0 ? 'disabled' : ''}>上移</button><button type="button" data-move="down" ${index === blocks.length - 1 ? 'disabled' : ''}>下移</button><button type="button" data-delete-block>删除</button></div></header>
+      <div class="special-block-content">${blockBody(block)}</div>
+    </article>`).join('');
+    empty.hidden = blocks.length > 0;
+    Sortable.create(list, {
+      animation: 150,
+      handle: '.drag-handle',
+      onEnd: () => {
+        const ids = [...list.querySelectorAll<HTMLElement>('[data-block-id]')].map((item) => item.dataset.blockId);
+        blocks.sort((left, right) => ids.indexOf(left.id) - ids.indexOf(right.id));
+        render();
+        syncDirty();
+      },
+    });
+    syncDirty();
+  };
+
+  const createBlock = (kind: string): SpecialLayoutBlock => {
+    const id = crypto.randomUUID();
+    const photoId = initial.photos[0]?.id ?? 0;
+    if (kind === 'image') return { id, type: 'image', photoId };
+    if (kind === 'markdown') return { id, type: 'markdown', markdown: '' };
+    if (kind === 'twoImages') return { id, type: 'twoImages', ratio: '1:1', leftPhotoId: photoId, rightPhotoId: initial.photos[1]?.id ?? photoId };
+    return { id, type: 'split', direction: kind === 'text-image' ? 'text-image' : 'image-text', ratio: '1:1', verticalAlign: 'start', photoId, markdown: '' };
+  };
+
+  editor?.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const add = target.closest<HTMLButtonElement>('[data-add-block]');
+    if (add?.dataset.addBlock) {
+      blocks.push(createBlock(add.dataset.addBlock));
+      render();
+      return;
+    }
+    const card = target.closest<HTMLElement>('[data-block-id]');
+    const blockIndex = blocks.findIndex((block) => block.id === card?.dataset.blockId);
+    const move = target.closest<HTMLButtonElement>('[data-move]');
+    if (move && blockIndex >= 0) {
+      const offset = move.dataset.move === 'up' ? -1 : 1;
+      const nextIndex = blockIndex + offset;
+      if (nextIndex >= 0 && nextIndex < blocks.length) [blocks[blockIndex], blocks[nextIndex]] = [blocks[nextIndex]!, blocks[blockIndex]!];
+      render();
+      return;
+    }
+    if (target.closest('[data-delete-block]') && blockIndex >= 0 && window.confirm('确认删除这个区块？')) {
+      blocks.splice(blockIndex, 1);
+      render();
+      return;
+    }
+    const chooser = target.closest<HTMLButtonElement>('[data-choose-photo]');
+    if (chooser?.dataset.blockId && chooser.dataset.photoField) {
+      pickerTarget = { blockId: chooser.dataset.blockId, field: chooser.dataset.photoField as PhotoField };
+      picker?.showModal();
+      return;
+    }
+    const photoChoice = target.closest<HTMLButtonElement>('[data-photo-choice]');
+    if (photoChoice?.dataset.photoChoice && pickerTarget) {
+      const block = blocks.find((item) => item.id === pickerTarget?.blockId) as any;
+      if (block) block[pickerTarget.field] = Number(photoChoice.dataset.photoChoice);
+      picker?.close();
+      pickerTarget = null;
+      render();
+      return;
+    }
+    if (target.closest('[data-picker-close]')) picker?.close();
+    const mode = target.closest<HTMLButtonElement>('[data-preview-mode]');
+    if (mode?.dataset.previewMode) {
+      editor.querySelectorAll('[data-preview-mode]').forEach((button) => button.classList.toggle('active', button === mode));
+      editor.querySelector('[data-special-canvas]')?.classList.toggle('mobile-preview', mode.dataset.previewMode === 'mobile');
+    }
+  });
+
+  editor?.addEventListener('input', (event) => {
+    const target = event.target as HTMLTextAreaElement | HTMLSelectElement;
+    const card = target.closest<HTMLElement>('[data-block-id]');
+    const block = blocks.find((item) => item.id === card?.dataset.blockId) as any;
+    if (!block) return;
+    if (target.matches('[data-markdown]')) {
+      block.markdown = target.value;
+      const preview = target.parentElement?.querySelector<HTMLElement>('[data-markdown-preview]');
+      if (preview) preview.innerHTML = safeMarkdown(target.value);
+    }
+    if (target.dataset.field) block[target.dataset.field] = target.value;
+    syncDirty();
+  });
+
+  specialToggle?.addEventListener('change', syncDirty);
+
+  const save = async () => {
+    const missing = blocks.some((block) => block.type === 'image' ? block.photoId <= 0 : block.type === 'split' ? block.photoId <= 0 : block.type === 'twoImages' ? block.leftPhotoId <= 0 || block.rightPhotoId <= 0 : false);
+    if (missing) {
+      setMessage('请先为所有图片区块选择图片。');
+      return false;
+    }
+    const button = editor?.querySelector<HTMLButtonElement>('[data-save-special]');
+    if (button) button.disabled = true;
+    if (saveState) saveState.textContent = '保存中';
+    setMessage();
+    try {
+      const response = await fetch(`/api/admin/albums/${initial.albumId}/special`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ isSpecial: specialToggle?.checked ?? false, layout: { version: 1, blocks } }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message ?? '保存失败，请重试。');
+      blocks = structuredClone(result.data.specialLayoutJson.blocks);
+      savedSnapshot = currentSnapshot();
+      render();
+      return true;
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '保存失败，请重试。');
+      syncDirty();
+      return false;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  };
+
+  editor?.querySelector('[data-save-special]')?.addEventListener('click', save);
+  editor?.querySelector('[data-special-preview]')?.addEventListener('click', async (event) => {
+    if (currentSnapshot() === savedSnapshot) return;
+    event.preventDefault();
+    if (await save()) window.open(initial.previewHref, '_blank', 'noopener');
+  });
+  window.addEventListener('beforeunload', (event) => {
+    if (currentSnapshot() === savedSnapshot) return;
+    event.preventDefault();
+  });
+  render();
+</script>
+
+<style>
+  .special-editor { display: grid; gap: 18px; }
+  .special-editor-toolbar, .special-add-toolbar { display: flex; align-items: center; gap: 8px; border: 1px solid var(--admin-border); border-radius: 8px; background: #fff; padding: 10px; }
+  .special-editor-toolbar .save-state { margin-left: auto; color: #557066; font-size: 12px; }
+  .special-editor-toolbar .save-state.dirty { color: #9a6424; }
+  .special-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+  .special-toggle input { width: 17px; height: 17px; accent-color: #194d3b; }
+  .special-preview-modes { display: flex; gap: 2px; padding-left: 8px; border-left: 1px solid var(--admin-border); }
+  .special-preview-modes .active { background: #194d3b; color: #fff; }
+  .special-add-toolbar { flex-wrap: wrap; }
+  .special-add-toolbar > span { margin-right: 4px; color: #6b746f; font-size: 12px; }
+  .special-add-toolbar button { display: inline-flex; min-height: 36px; align-items: center; gap: 6px; border: 1px solid var(--admin-border); border-radius: 6px; background: #fff; padding: 0 10px; cursor: pointer; }
+  .special-add-toolbar button:hover { border-color: #194d3b; color: #194d3b; }
+  .special-canvas { width: 100%; border: 1px solid var(--admin-border); border-radius: 8px; background: #f3f5f3; padding: clamp(12px, 2.4vw, 28px); }
+  .special-canvas.mobile-preview { width: min(390px, 100%); margin-inline: auto; }
+  .special-block-list { display: grid; gap: 16px; }
+  .special-block-card { min-width: 0; border: 1px solid #d7ddd9; border-radius: 8px; background: #fff; overflow: hidden; }
+  .special-block-card > header { display: flex; min-height: 48px; align-items: center; gap: 9px; border-bottom: 1px solid #e2e6e3; padding: 7px 10px; }
+  .special-block-card > header strong { font-size: 13px; }
+  .drag-handle { width: 30px; height: 30px; border: 0; border-radius: 5px; background: transparent; color: #66716b; cursor: grab; }
+  .special-block-actions { display: flex; gap: 4px; margin-left: auto; }
+  .special-block-actions button { min-height: 30px; border: 0; border-radius: 5px; background: #f1f3f1; padding: 0 8px; cursor: pointer; font-size: 11px; }
+  .special-block-actions button:last-child { color: #9b2222; }
+  .special-block-content { display: grid; gap: 12px; padding: 14px; }
+  .special-block-settings { display: flex; flex-wrap: wrap; gap: 12px; }
+  .special-block-settings label { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; }
+  .special-block-settings select { min-height: 34px; border: 1px solid var(--admin-border); border-radius: 6px; background: #fff; padding: 0 8px; }
+  .special-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+  .special-split[data-ratio='2:3'] { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .special-split[data-ratio='3:2'] { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .special-image-slot { display: grid; min-width: 0; min-height: 180px; place-items: center; align-content: center; gap: 7px; overflow: hidden; border: 1px dashed #aebbb4; border-radius: 6px; background: #eef2ef; color: #43534b; cursor: pointer; padding: 8px; }
+  .special-image-slot img { display: block; width: 100%; max-height: 360px; object-fit: contain; }
+  .special-image-slot small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .special-image-slot.missing { color: #8c552b; }
+  .special-markdown { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+  .special-markdown textarea, .special-markdown-preview { min-height: 180px; border: 1px solid var(--admin-border); border-radius: 6px; padding: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+  .special-markdown textarea { resize: vertical; font: 13px/1.6 ui-monospace, monospace; }
+  .special-markdown-preview { background: #fafbfa; color: #303834; overflow: auto; }
+  .photo-picker { width: min(880px, calc(100vw - 32px)); max-height: min(760px, calc(100vh - 32px)); border: 0; border-radius: 8px; box-shadow: 0 24px 90px rgb(0 0 0 / .28); padding: 18px; }
+  .photo-picker::backdrop { background: rgb(10 24 18 / .48); }
+  .photo-picker-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .photo-picker-header h2 { margin: 0; font-size: 18px; }
+  .photo-picker-header p { margin: 5px 0 0; color: #69736d; font-size: 12px; }
+  .photo-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 9px; max-height: 500px; overflow: auto; margin-top: 16px; }
+  .photo-picker-grid button { min-width: 0; overflow: hidden; border: 1px solid var(--admin-border); border-radius: 6px; background: #fff; cursor: pointer; padding: 6px; text-align: left; }
+  .photo-picker-grid img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; }
+  .photo-picker-grid span { display: block; overflow: hidden; margin-top: 6px; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 760px) {
+    .special-editor-toolbar { align-items: stretch; flex-wrap: wrap; }
+    .special-editor-toolbar .save-state { width: 100%; order: 3; margin-left: 0; }
+    .special-split { grid-template-columns: 1fr !important; }
+    .special-block-card > header { align-items: flex-start; flex-wrap: wrap; }
+    .special-block-actions { width: 100%; margin-left: 39px; }
+  }
+</style>

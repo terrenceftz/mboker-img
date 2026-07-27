@@ -45,4 +45,9 @@ export const specialLayoutInput = z
     });
   });
 
+export const specialAlbumInput = z.object({
+  isSpecial: z.boolean(),
+  layout: specialLayoutInput,
+});
+
 export type SpecialLayoutInput = z.infer<typeof specialLayoutInput>;

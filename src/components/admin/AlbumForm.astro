@@ -15,6 +15,7 @@ interface AlbumValue {
   seoDescription: string;
   seoKeywordsJson: string[];
   featured: boolean;
+  isSpecial: boolean;
   status: 'draft' | 'published';
 }
 interface Props {
@@ -92,6 +93,7 @@ const { action, method = 'POST', submitLabel, categories, album } = Astro.props;
           <FieldError field="tags" />
         </div>
         <label class="checkbox-field full"><input type="checkbox" name="featured" checked={album?.featured ?? false} />在首页精选中展示</label>
+        <label class="checkbox-field full"><input type="checkbox" name="isSpecial" checked={album?.isSpecial ?? false} />设为特辑并启用区块排版</label>
       </div>
     </section>
 
@@ -144,7 +146,7 @@ const { action, method = 'POST', submitLabel, categories, album } = Astro.props;
       categoryId: data.get('categoryId'), title: data.get('title'), titleEn: data.get('titleEn'), slug: data.get('slug'),
       description: data.get('description'), shotDate: data.get('shotDate'), location: data.get('location'),
       tags: list(data.get('tags')), seoTitle: data.get('seoTitle'), seoDescription: data.get('seoDescription'),
-      seoKeywords: list(data.get('seoKeywords')), featured: data.has('featured'), status: data.get('status'),
+      seoKeywords: list(data.get('seoKeywords')), featured: data.has('featured'), isSpecial: data.has('isSpecial'), status: data.get('status'),
     };
     try {
       const response = await fetch(form.dataset.action ?? '', {

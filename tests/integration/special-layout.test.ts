@@ -1,4 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const apiState = vi.hoisted(() => ({ database: undefined as any }));
+
+vi.mock('../../src/server/db/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/server/db/client')>()),
+  getDatabase: () => apiState.database.db,
+}));
+
+vi.mock('../../src/server/auth/session', () => ({
+  readSession: (_db: unknown, token: string) => token === 'valid-session' ? { id: 1 } : undefined,
+}));
 
 import { backfillAltaySpecial } from '../../scripts/backfill-altay-special';
 import { albums, photos, type SpecialLayoutDocument } from '../../src/server/db/schema';
@@ -6,16 +17,38 @@ import { getAlbumById, saveSpecialLayout } from '../../src/server/repositories/a
 import { RepositoryError } from '../../src/server/repositories/shared';
 import { resolveSpecialLayout } from '../../src/server/special-layout/resolve';
 import { createTestDatabase } from '../helpers/database';
+import { GET as getSpecialLayout, PATCH as patchSpecialLayout } from '../../src/pages/api/admin/albums/[id]/special';
+
+function apiContext(
+  method: string,
+  albumId: number,
+  body?: unknown,
+  authenticated = true,
+) {
+  const url = new URL(`http://localhost/api/admin/albums/${albumId}/special`);
+  return {
+    request: new Request(url, {
+      method,
+      headers: body === undefined ? undefined : { 'content-type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+    url,
+    params: { id: String(albumId) },
+    cookies: { get: () => authenticated ? { value: 'valid-session' } : undefined },
+  } as any;
+}
 
 describe('special album layouts', () => {
   let testDatabase: Awaited<ReturnType<typeof createTestDatabase>>;
 
   beforeEach(async () => {
     testDatabase = await createTestDatabase();
+    apiState.database = testDatabase;
   });
 
   afterEach(async () => {
     await testDatabase.close();
+    apiState.database = undefined;
   });
 
   it('saves owned photo references and rejects photos owned by another album', async () => {
@@ -104,5 +137,61 @@ describe('special album layouts', () => {
 
     expect(backfillAltaySpecial(testDatabase.db)).toBe(false);
     expect(getAlbumById(testDatabase.db, album.id).specialLayoutJson).toEqual(customized);
+  });
+
+  it('protects and validates the special layout API', async () => {
+    const category = await testDatabase.seedCategory();
+    const album = await testDatabase.seedAlbum(category.id);
+
+    const unauthorized = await patchSpecialLayout(apiContext('PATCH', album.id, {
+      isSpecial: true,
+      layout: { version: 1, blocks: [] },
+    }, false));
+    expect(unauthorized.status).toBe(401);
+
+    const invalid = await patchSpecialLayout(apiContext('PATCH', album.id, {
+      isSpecial: true,
+      layout: { version: 1, blocks: [{ id: 'bad', type: 'image', photoId: 0 }] },
+    }));
+    expect(invalid.status).toBe(422);
+  });
+
+  it('returns and saves normalized special layout API data', async () => {
+    const category = await testDatabase.seedCategory();
+    const album = await testDatabase.seedAlbum(category.id);
+    const photo = testDatabase.db.insert(photos).values({
+      albumId: album.id,
+      originalUrl: '/api-photo.jpg',
+    }).returning().get();
+    const layout: SpecialLayoutDocument = {
+      version: 1,
+      blocks: [{ id: 'api-hero', type: 'image', photoId: photo.id }],
+    };
+
+    const saved = await patchSpecialLayout(apiContext('PATCH', album.id, { isSpecial: true, layout }));
+    expect(saved.status).toBe(200);
+    await expect(saved.json()).resolves.toMatchObject({ data: { isSpecial: true, specialLayoutJson: layout } });
+
+    const loaded = await getSpecialLayout(apiContext('GET', album.id));
+    await expect(loaded.json()).resolves.toMatchObject({
+      data: { album: { id: album.id, isSpecial: true }, photos: [{ id: photo.id }] },
+    });
+  });
+
+  it('rejects cross-album photos through the special layout API', async () => {
+    const category = await testDatabase.seedCategory();
+    const album = await testDatabase.seedAlbum(category.id);
+    const other = await testDatabase.seedAlbum(category.id);
+    const foreign = testDatabase.db.insert(photos).values({
+      albumId: other.id,
+      originalUrl: '/foreign-api.jpg',
+    }).returning().get();
+
+    const response = await patchSpecialLayout(apiContext('PATCH', album.id, {
+      isSpecial: true,
+      layout: { version: 1, blocks: [{ id: 'foreign', type: 'image', photoId: foreign.id }] },
+    }));
+
+    expect(response.status).toBe(409);
   });
 });

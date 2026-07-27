@@ -1,0 +1,23 @@
+---
+import { Images, Info, LayoutPanelTop } from 'lucide-astro';
+
+interface Props {
+  albumId: number;
+  active: 'info' | 'photos' | 'special';
+}
+
+const { albumId, active } = Astro.props;
+const tabs = [
+  { id: 'info', label: '基本信息', href: `/admin/albums/${albumId}`, icon: Info },
+  { id: 'photos', label: '图片管理', href: `/admin/albums/${albumId}/photos`, icon: Images },
+  { id: 'special', label: '特辑排版', href: `/admin/albums/${albumId}/special`, icon: LayoutPanelTop },
+] as const;
+---
+
+<nav class="album-tabs" aria-label="图集编辑">
+  {tabs.map((tab) => (
+    <a class:list={['album-tab', { active: active === tab.id }]} href={tab.href} aria-current={active === tab.id ? 'page' : undefined}>
+      <tab.icon size={15} aria-hidden="true" />{tab.label}
+    </a>
+  ))}
+</nav>

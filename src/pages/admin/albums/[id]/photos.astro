@@ -2,6 +2,7 @@
 import { ArrowLeft, Pencil } from 'lucide-astro';
 
 import ExternalImageForm from '../../../../components/admin/ExternalImageForm.astro';
+import AlbumTabs from '../../../../components/admin/AlbumTabs.astro';
 import PageHeader from '../../../../components/admin/PageHeader.astro';
 import PhotoEditor from '../../../../components/admin/PhotoEditor.astro';
 import PhotoGrid from '../../../../components/admin/PhotoGrid.astro';
@@ -28,6 +29,7 @@ const photos = listPhotos(db, album.id);
     <a class="button-secondary" href="/admin/photos"><ArrowLeft size={15} aria-hidden="true" />图片库</a>
     <a class="button-secondary" href={`/admin/albums/${album.id}`}><Pencil size={15} aria-hidden="true" />图集信息</a>
   </PageHeader>
+  <AlbumTabs albumId={album.id} active="photos" />
 
   <div class="photo-ingest-grid">
     <UploadDropzone albumId={album.id} />

@@ -21,6 +21,7 @@ export const albumInput = z.object({
   seoDescription: optionalText(300),
   seoKeywords: stringList,
   featured: z.boolean().optional().default(false),
+  isSpecial: z.boolean().optional().default(false),
   status: z.enum(['draft', 'published']).optional().default('draft'),
 });
 

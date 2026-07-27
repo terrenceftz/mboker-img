@@ -88,6 +88,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .category-group-header h2 { margin: 0; font-size: 15px; }
 
 .form-shell { max-width: 820px; }
+.album-tabs { display: flex; gap: 4px; margin: 0 0 24px; border-bottom: 1px solid var(--admin-border); }
+.album-tab { display: inline-flex; min-height: 42px; align-items: center; gap: 7px; border-bottom: 2px solid transparent; color: #69716c; padding: 0 12px; font-size: 12px; font-weight: 700; }
+.album-tab:hover { color: #194d3b; }
+.album-tab.active { border-bottom-color: #194d3b; color: #194d3b; }
 .admin-form { display: grid; gap: 26px; }
 .form-section { border-top: 1px solid #d8d8d5; padding-top: 20px; }
 .form-section:first-child { border-top: 0; padding-top: 0; }

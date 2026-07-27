@@ -176,11 +176,13 @@ describe('category and album admin API', () => {
       context(
         'PATCH',
         `/api/admin/albums/${first.id}`,
-        { categoryId: category.id, title: '杭州夜景', slug: first.slug, status: 'published' },
+        { categoryId: category.id, title: '杭州夜景', slug: first.slug, status: 'published', isSpecial: true },
         { params: { id: String(first.id) } },
       ),
     );
-    expect(await responseJson(updated)).toMatchObject({ data: { title: '杭州夜景', status: 'published' } });
+    expect(await responseJson(updated)).toMatchObject({
+      data: { title: '杭州夜景', status: 'published', isSpecial: true },
+    });
 
     const reordered = await reorderAlbums(
       context('POST', '/api/admin/albums/reorder', { categoryId: category.id, ids: [second.id, first.id] }),

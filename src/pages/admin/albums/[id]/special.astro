@@ -1,0 +1,33 @@
+---
+import AlbumTabs from '../../../../components/admin/AlbumTabs.astro';
+import PageHeader from '../../../../components/admin/PageHeader.astro';
+import SpecialLayoutEditor from '../../../../components/admin/SpecialLayoutEditor.astro';
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../../server/db/client';
+import { getAlbumById } from '../../../../server/repositories/albums';
+import { listPhotos } from '../../../../server/repositories/photos';
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id) || id <= 0) return Astro.redirect('/admin/albums');
+const db = getDatabase();
+let album;
+try {
+  album = getAlbumById(db, id);
+} catch {
+  return Astro.redirect('/admin/albums');
+}
+const photos = listPhotos(db, album.id);
+const previewHref = `/collection/${album.category.slug}/${album.slug}`;
+---
+
+<AdminLayout title={`${album.title} 特辑排版`}>
+  <PageHeader title="特辑排版" description={`${album.title} · ${photos.length} 张图片`} />
+  <AlbumTabs albumId={album.id} active="special" />
+  <SpecialLayoutEditor
+    albumId={album.id}
+    isSpecial={album.isSpecial}
+    layout={album.specialLayoutJson}
+    photos={photos}
+    previewHref={previewHref}
+  />
+</AdminLayout>
