@@ -5,12 +5,16 @@ import { getPublishedCategoryBySlug } from './categories';
 import { listAlbumsPublished } from './albums';
 import { listPhotos } from './photos';
 import { type CmsDatabase, notFound } from './shared';
+import { resolveSpecialLayout } from '../special-layout/resolve';
 
 function withPhotos(db: CmsDatabase, album: ReturnType<typeof listAlbumsPublished>[number]) {
   const albumPhotos = listPhotos(db, album.id);
   return {
     ...album,
     photos: albumPhotos,
+    specialBlocks: album.isSpecial
+      ? resolveSpecialLayout(album.specialLayoutJson, albumPhotos)
+      : [],
     cover: albumPhotos.find((photo) => photo.id === album.coverPhotoId) ?? albumPhotos[0] ?? null,
   };
 }

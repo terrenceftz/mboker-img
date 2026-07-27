@@ -36,7 +36,7 @@ export function createAltaySpecialLayout(
         id: 'altay-intro',
         type: 'split',
         direction: 'image-text',
-        ratio: '1:1',
+        ratio: '3:2',
         verticalAlign: 'start',
         photoId: first.id,
         markdown: ALTAY_MARKDOWN,

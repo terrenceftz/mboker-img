@@ -16,9 +16,11 @@ interface Props {
     layoutJson: StoredPhotoLayout;
   };
   index: number;
+  embedded?: boolean;
+  fill?: boolean;
 }
 
-const { photo, index } = Astro.props;
+const { photo, index, embedded = false, fill = false } = Astro.props;
 
 function responsiveClasses(prefix: 'col' | 'offset', sizes?: StoredResponsiveSize) {
   if (!sizes) return '';
@@ -43,19 +45,25 @@ const webp = photo.variantsJson.webp ?? [];
 const avif = photo.variantsJson.avif ?? [];
 const loading = index < 3 ? 'eager' : 'lazy';
 const style = padding ? `padding:${padding}` : undefined;
+const effectivePreset = fill
+  ? 'wide'
+  : photo.layoutPreset === 'auto'
+    ? photo.width && photo.height && photo.height > photo.width ? 'narrow' : 'wide'
+    : photo.layoutPreset;
 ---
 
 <div
   class:list={[
-    'collection-item',
-    'gallery-item',
-    responsiveClasses('col', cols),
-    responsiveClasses('offset', storedLayout.offset),
+    embedded ? 'special-media' : 'collection-item',
+    embedded ? `special-media--${effectivePreset}` : 'gallery-item',
+    !embedded && responsiveClasses('col', cols),
+    !embedded && responsiveClasses('offset', storedLayout.offset),
     align ? `justify-content-${align}` : '',
     hasBackground ? 'pg-bg pg-pad' : '',
     storedLayout.class,
   ]}
   style={style}
+  data-align={align}
   data-gallery-item
   data-index={index}
 >
@@ -78,8 +86,14 @@ const style = padding ? `padding:${padding}` : undefined;
   .collection-item { position: relative; display: flex; flex-direction: row; align-items: center; margin-bottom: 10vh; }
   .collection__figure, .collection__figure picture { position: relative; display: block; width: 100%; }
   .collection__img { position: relative; display: block; width: 100%; max-width: 100%; height: auto; }
+  .special-media { position: relative; width: 100%; }
+  .special-media--standard { width: 76%; }
+  .special-media--narrow { width: 58%; }
+  .special-media[data-align='start'] { margin-right: auto; }
+  .special-media[data-align='center'] { margin-inline: auto; }
+  .special-media[data-align='end'] { margin-left: auto; }
   .pg-bg { background: var(--project-color, #f1f2f3); }
   .pg-pad { padding: 80px 0; text-align: center; display: flex; justify-content: center; }
   @media (min-width: 767px) { .collection-item { margin-bottom: 12vw; } }
-  @media (max-width: 767px) { .pg-pad { padding: 40px 0; } }
+  @media (max-width: 767px) { .pg-pad { padding: 40px 0; } .special-media { width: 100%; } }
 </style>

@@ -1,0 +1,99 @@
+---
+import DynamicGalleryImage from './DynamicGalleryImage.astro';
+import { renderMarkdownSafe } from '../../server/markdown/render';
+import type { ResolvedSpecialLayoutBlock } from '../../server/special-layout/resolve';
+
+interface Props {
+  blocks: ResolvedSpecialLayoutBlock[];
+}
+
+const { blocks } = Astro.props;
+const markdownEntries = await Promise.all(blocks.flatMap((block) => {
+  if (block.type !== 'markdown' && block.type !== 'split') return [];
+  return [[block.id, renderMarkdownSafe(block.markdown)] as const];
+}).map(async ([id, html]) => [id, await html] as const));
+const renderedMarkdown = new Map(markdownEntries);
+let imageIndex = 0;
+---
+
+<div class="special-gallery" data-special-gallery>
+  {
+    blocks.map((block) => {
+      if (block.type === 'image') {
+        if (!block.photo) return null;
+        const index = imageIndex++;
+        return (
+          <section class="special-block special-block--image" data-block-id={block.id}>
+            <DynamicGalleryImage photo={block.photo} index={index} embedded />
+          </section>
+        );
+      }
+
+      if (block.type === 'markdown') {
+        return (
+          <section class="special-block special-block--markdown special-copy" data-block-id={block.id} set:html={renderedMarkdown.get(block.id) ?? ''} />
+        );
+      }
+
+      if (block.type === 'split') {
+        const index = imageIndex++;
+        const media = block.photo
+          ? <DynamicGalleryImage photo={block.photo} index={index} embedded fill />
+          : null;
+        const copy = <div class="special-copy" set:html={renderedMarkdown.get(block.id) ?? ''} />;
+        return (
+          <section
+            class:list={['special-block', 'special-block--split', { 'special-block--copy-only': !media }]}
+            data-block-id={block.id}
+            data-ratio={block.ratio}
+            data-align={block.verticalAlign}
+          >
+            {block.direction === 'image-text' ? <>{media}{copy}</> : <>{copy}{media}</>}
+          </section>
+        );
+      }
+
+      if (block.type === 'twoImages') {
+        const leftIndex = imageIndex++;
+        const rightIndex = imageIndex++;
+        return (
+          <section
+            class:list={['special-block', 'special-block--two', { 'special-block--single': !block.leftPhoto || !block.rightPhoto }]}
+            data-block-id={block.id}
+            data-ratio={block.ratio}
+          >
+            {block.leftPhoto && <DynamicGalleryImage photo={block.leftPhoto} index={leftIndex} embedded fill />}
+            {block.rightPhoto && <DynamicGalleryImage photo={block.rightPhoto} index={rightIndex} embedded fill />}
+          </section>
+        );
+      }
+
+      return null;
+    })
+  }
+</div>
+
+<style>
+  .special-gallery { --special-gap: clamp(48px, 8vw, 132px); display: grid; gap: var(--special-gap); width: 100%; }
+  .special-block { min-width: 0; }
+  .special-block--split, .special-block--two { display: grid; gap: clamp(28px, 5vw, 76px); }
+  .special-block--split[data-ratio='1:1'], .special-block--two[data-ratio='1:1'] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .special-block--split[data-ratio='2:3'], .special-block--two[data-ratio='2:3'] { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .special-block--split[data-ratio='3:2'], .special-block--two[data-ratio='3:2'] { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .special-block--split[data-align='start'] { align-items: start; }
+  .special-block--split[data-align='center'] { align-items: center; }
+  .special-block--split[data-align='end'] { align-items: end; }
+  .special-block--copy-only, .special-block--single { grid-template-columns: minmax(0, 1fr) !important; }
+  .special-copy { min-width: 0; color: var(--color-200); font-size: clamp(16px, 1.35vw, 21px); line-height: 1.8; overflow-wrap: anywhere; }
+  .special-copy :global(*:first-child) { margin-top: 0; }
+  .special-copy :global(*:last-child) { margin-bottom: 0; }
+  .special-copy :global(h1), .special-copy :global(h2), .special-copy :global(h3) { color: var(--color-100); line-height: 1.2; margin: 1.4em 0 .7em; }
+  .special-copy :global(p), .special-copy :global(ul), .special-copy :global(ol), .special-copy :global(blockquote) { margin: 0 0 1em; }
+  .special-copy :global(img) { max-width: 100%; height: auto; }
+  .special-copy :global(a) { text-decoration: underline; text-underline-offset: .2em; }
+  @media (max-width: 767px) {
+    .special-gallery { --special-gap: 56px; }
+    .special-block--split, .special-block--two { grid-template-columns: 1fr !important; gap: 28px; }
+    .special-copy { font-size: 16px; line-height: 1.75; }
+  }
+</style>

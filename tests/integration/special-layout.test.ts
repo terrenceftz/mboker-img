@@ -92,6 +92,7 @@ describe('special album layouts', () => {
     expect(initial.specialLayoutJson.blocks[0]).toMatchObject({
       type: 'split',
       direction: 'image-text',
+      ratio: '3:2',
       markdown: expect.stringContaining('阿勒泰地区西部'),
     });
 

@@ -82,4 +82,45 @@ describe('visitor gallery queries', () => {
     expect(findPublishedAlbumByLegacyPath(testDatabase.db, '/collection/old-gallery')?.id).toBe(published.id);
     expect(findPublishedAlbumByLegacyPath(testDatabase.db, '/collection/draft-gallery')).toBeUndefined();
   });
+
+  it('resolves special blocks while ordinary albums keep their photo stream', async () => {
+    const category = await testDatabase.seedCategory({ slug: 'features', status: 'published' });
+    const special = await testDatabase.seedAlbum(category.id, {
+      slug: 'special',
+      status: 'published',
+      isSpecial: true,
+      specialLayoutJson: {
+        version: 1,
+        blocks: [
+          { id: 'hero', type: 'image', photoId: 1 },
+          {
+            id: 'intro',
+            type: 'split',
+            direction: 'image-text',
+            ratio: '1:1',
+            verticalAlign: 'start',
+            photoId: 999,
+            markdown: 'Text survives a missing image',
+          },
+        ],
+      },
+    });
+    const photo = testDatabase.db.insert(photos).values({
+      id: 1,
+      albumId: special.id,
+      originalUrl: '/hero.jpg',
+    }).returning().get();
+    await testDatabase.seedAlbum(category.id, { slug: 'ordinary', status: 'published' });
+
+    const specialView = getPublishedAlbumView(testDatabase.db, 'features', 'special');
+    const ordinaryView = getPublishedAlbumView(testDatabase.db, 'features', 'ordinary');
+
+    expect(specialView.album.specialBlocks[0]).toMatchObject({ type: 'image', photo });
+    expect(specialView.album.specialBlocks[1]).toMatchObject({
+      type: 'split',
+      photo: null,
+      markdown: 'Text survives a missing image',
+    });
+    expect(ordinaryView.album.specialBlocks).toEqual([]);
+  });
 });

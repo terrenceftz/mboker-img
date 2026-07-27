@@ -49,13 +49,17 @@ describe('special layout validation', () => {
     expect(result.success).toBe(false);
   });
 
-  it.each([
-    [{ id: 'bad-photo', type: 'image', photoId: 0 }],
-    [{ id: 'bad-ratio', type: 'twoImages', ratio: '4:1', leftPhotoId: 1, rightPhotoId: 2 }],
-    [{ id: 'nested', type: 'group', blocks: [] }],
-    [{ id: 'too-long', type: 'markdown', markdown: 'x'.repeat(200_001) }],
-    Array.from({ length: 201 }, (_, index) => ({ id: `block-${index}`, type: 'image', photoId: index + 1 })),
-  ])('rejects unsupported or oversized documents', (blocks) => {
-    expect(specialLayoutInput.safeParse({ version: 1, blocks }).success).toBe(false);
+  it('rejects unsupported or oversized documents', () => {
+    const invalidBlockSets: unknown[][] = [
+      [{ id: 'bad-photo', type: 'image', photoId: 0 }],
+      [{ id: 'bad-ratio', type: 'twoImages', ratio: '4:1', leftPhotoId: 1, rightPhotoId: 2 }],
+      [{ id: 'nested', type: 'group', blocks: [] }],
+      [{ id: 'too-long', type: 'markdown', markdown: 'x'.repeat(200_001) }],
+      Array.from({ length: 201 }, (_, index) => ({ id: `block-${index}`, type: 'image', photoId: index + 1 })),
+    ];
+
+    for (const blocks of invalidBlockSets) {
+      expect(specialLayoutInput.safeParse({ version: 1, blocks }).success).toBe(false);
+    }
   });
 });

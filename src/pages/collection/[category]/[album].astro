@@ -2,6 +2,7 @@
 import CollectionComm from '../CollectionComm.astro';
 import DynamicGalleryImage from '../../../components/gallery/DynamicGalleryImage.astro';
 import GalleryNav from '../../../components/gallery/GalleryNav.astro';
+import SpecialGallery from '../../../components/gallery/SpecialGallery.astro';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { getDatabase } from '../../../server/db/client';
 import { getPublishedAlbumView } from '../../../server/repositories/visitor-gallery';
@@ -13,7 +14,7 @@ try {
   return Astro.redirect('/404', 302);
 }
 const { album, category, next } = view;
-const title = album.seoTitle || `${album.title} | Tink Photo`;
+const title = album.seoTitle || `${album.title} | Mboker Img`;
 const description = album.seoDescription || album.description;
 const keywords = album.seoKeywordsJson.join(', ') || album.tagsJson.join(', ');
 ---
@@ -29,7 +30,9 @@ const keywords = album.seoKeywordsJson.join(', ') || album.tagsJson.join(', ');
               <h1 class="collection-title heading-01 collection-title__01" data-splitting>{album.titleEn || album.title}</h1>
               <div class="collection-gallery" data-gallery={album.id}>
                 <div class="gallery-container p-0">
-                  {album.photos.map((photo, index) => <DynamicGalleryImage photo={photo} index={index} />)}
+                  {album.isSpecial
+                    ? <SpecialGallery blocks={album.specialBlocks} />
+                    : album.photos.map((photo, index) => <DynamicGalleryImage photo={photo} index={index} />)}
                 </div>
               </div>
             </div>

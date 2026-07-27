@@ -154,10 +154,10 @@ describe('legacy importer', () => {
       importPosts: false,
       mediaImporter: async (_sourcePath, albumId) => ({
         originalUrl: `/media/albums/${albumId}/${Math.random()}/original.jpg`,
-        thumbnailUrl: null,
+        thumbnailUrl: `/media/albums/${albumId}/thumbnail.webp`,
         width: 1200,
         height: 800,
-        variants: {},
+        variants: { webp: [], avif: [] },
         automaticLayout: 'standard',
       }),
     });
