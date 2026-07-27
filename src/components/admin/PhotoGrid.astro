@@ -1,0 +1,116 @@
+---
+import { Crown, GripVertical, Link, Pencil, Trash2 } from 'lucide-astro';
+
+interface Photo {
+  id: number;
+  originalUrl: string;
+  thumbnailUrl: string | null;
+  sourceType: 'upload' | 'external';
+  alt: string;
+  width: number | null;
+  height: number | null;
+  layoutPreset: 'auto' | 'wide' | 'standard' | 'narrow';
+  align: 'start' | 'center' | 'end';
+  hasBackground: boolean;
+  padding: string;
+}
+interface Props { albumId: number; coverPhotoId: number | null; photos: Photo[]; }
+const { albumId, coverPhotoId, photos } = Astro.props;
+---
+
+<section class="photo-library" data-photo-library data-album-id={albumId}>
+  <div class="photo-library-toolbar">
+    <label class="selection-toggle"><input type="checkbox" data-select-all />全选</label>
+    <span data-selected-count>已选 0 张</span>
+    <button class="button-danger" type="button" data-delete-selected disabled><Trash2 size={15} aria-hidden="true" />批量删除</button>
+    <p class="form-message" data-photo-message role="alert" hidden></p>
+  </div>
+  {
+    photos.length ? (
+      <div class="photo-grid" data-sortable-photos>
+        {photos.map((photo) => (
+          <article class="photo-card" data-id={photo.id} data-photo={JSON.stringify(photo)}>
+            <div class="photo-thumbnail">
+              <img src={photo.thumbnailUrl ?? photo.originalUrl} alt={photo.alt} loading="lazy" />
+              <span class="photo-load-error">外链无法加载</span>
+              <label class="photo-select"><input type="checkbox" value={photo.id} aria-label={`选择图片 ${photo.id}`} data-photo-select /></label>
+              <button class="photo-drag" type="button" title="拖拽排序"><GripVertical size={17} aria-hidden="true" /><span class="sr-only">拖拽排序</span></button>
+              <div class="photo-badges">
+                {photo.sourceType === 'external' && <span><Link size={12} aria-hidden="true" />外链</span>}
+                {coverPhotoId === photo.id && <span class="cover-badge"><Crown size={12} aria-hidden="true" />封面</span>}
+              </div>
+            </div>
+            <div class="photo-card-footer">
+              <div><strong>{photo.alt || '未填写替代文本'}</strong><span>{photo.width && photo.height ? `${photo.width} × ${photo.height}` : '尺寸未知'}</span></div>
+              <button class="icon-button" type="button" data-edit-photo title="编辑图片"><Pencil size={16} aria-hidden="true" /><span class="sr-only">编辑图片</span></button>
+            </div>
+          </article>
+        ))}
+      </div>
+    ) : <div class="empty-state"><p>这个图集还没有图片。</p></div>
+  }
+</section>
+
+<script>
+  import Sortable from 'sortablejs';
+
+  const library = document.querySelector<HTMLElement>('[data-photo-library]');
+  const grid = library?.querySelector<HTMLElement>('[data-sortable-photos]');
+  const selectAll = library?.querySelector<HTMLInputElement>('[data-select-all]');
+  const deleteSelected = library?.querySelector<HTMLButtonElement>('[data-delete-selected]');
+  const selectedCount = library?.querySelector<HTMLElement>('[data-selected-count]');
+  const message = library?.querySelector<HTMLElement>('[data-photo-message]');
+  const selections = () => Array.from(library?.querySelectorAll<HTMLInputElement>('[data-photo-select]:checked') ?? []);
+  const syncSelection = () => {
+    const selected = selections();
+    if (selectedCount) selectedCount.textContent = `已选 ${selected.length} 张`;
+    if (deleteSelected) deleteSelected.disabled = selected.length === 0;
+    if (selectAll) {
+      const all = library?.querySelectorAll('[data-photo-select]').length ?? 0;
+      selectAll.checked = all > 0 && selected.length === all;
+      selectAll.indeterminate = selected.length > 0 && selected.length < all;
+    }
+  };
+  const setMessage = (value = '') => {
+    if (!message) return;
+    message.textContent = value;
+    message.hidden = !value;
+  };
+  const persistOrder = async () => {
+    if (!grid) return;
+    const ids = Array.from(grid.querySelectorAll<HTMLElement>('[data-id]')).map((card) => Number(card.dataset.id));
+    const response = await fetch('/api/admin/photos/reorder', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ albumId: Number(library?.dataset.albumId), ids }),
+    });
+    if (!response.ok) setMessage('排序保存失败，请刷新后重试。');
+  };
+  if (grid) Sortable.create(grid, { animation: 150, handle: '.photo-drag', onEnd: persistOrder });
+  grid?.querySelectorAll<HTMLImageElement>('img').forEach((image) => {
+    const markFailed = () => image.closest('.photo-card')?.classList.add('has-load-error');
+    image.addEventListener('error', markFailed);
+    if (image.complete && image.naturalWidth === 0) markFailed();
+  });
+  library?.addEventListener('change', (event) => {
+    const input = event.target as HTMLInputElement;
+    if (input.matches('[data-select-all]')) library.querySelectorAll<HTMLInputElement>('[data-photo-select]').forEach((item) => item.checked = input.checked);
+    syncSelection();
+  });
+  library?.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest('[data-edit-photo]');
+    const card = button?.closest<HTMLElement>('[data-photo]');
+    if (!card?.dataset.photo) return;
+    document.dispatchEvent(new CustomEvent('photo:edit', { detail: JSON.parse(card.dataset.photo) }));
+  });
+  deleteSelected?.addEventListener('click', async () => {
+    const selected = selections();
+    if (!selected.length || !window.confirm(`确认删除选中的 ${selected.length} 张图片？`)) return;
+    deleteSelected.disabled = true;
+    setMessage();
+    const results = await Promise.all(selected.map((input) => fetch(`/api/admin/photos/${input.value}`, { method: 'DELETE' })));
+    if (results.every((response) => response.ok)) return window.location.reload();
+    setMessage('部分图片删除失败，请刷新后重试。');
+    deleteSelected.disabled = false;
+  });
+  syncSelection();
+</script>

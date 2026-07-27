@@ -1,0 +1,41 @@
+---
+import { ArrowLeft, Pencil } from 'lucide-astro';
+
+import ExternalImageForm from '../../../../components/admin/ExternalImageForm.astro';
+import PageHeader from '../../../../components/admin/PageHeader.astro';
+import PhotoEditor from '../../../../components/admin/PhotoEditor.astro';
+import PhotoGrid from '../../../../components/admin/PhotoGrid.astro';
+import UploadDropzone from '../../../../components/admin/UploadDropzone.astro';
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../../server/db/client';
+import { getAlbumById } from '../../../../server/repositories/albums';
+import { listPhotos } from '../../../../server/repositories/photos';
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id) || id <= 0) return Astro.redirect('/admin/photos');
+const db = getDatabase();
+let album;
+try {
+  album = getAlbumById(db, id);
+} catch {
+  return Astro.redirect('/admin/photos');
+}
+const photos = listPhotos(db, album.id);
+---
+
+<AdminLayout title={`${album.title} 图片`}>
+  <PageHeader title={album.title} description={`${album.category.title} · ${photos.length} 张图片`}>
+    <a class="button-secondary" href="/admin/photos"><ArrowLeft size={15} aria-hidden="true" />图片库</a>
+    <a class="button-secondary" href={`/admin/albums/${album.id}`}><Pencil size={15} aria-hidden="true" />图集信息</a>
+  </PageHeader>
+
+  <div class="photo-ingest-grid">
+    <UploadDropzone albumId={album.id} />
+    <ExternalImageForm albumId={album.id} />
+  </div>
+
+  <div class="photo-management-layout">
+    <PhotoGrid albumId={album.id} coverPhotoId={album.coverPhotoId} photos={photos} />
+    <PhotoEditor />
+  </div>
+</AdminLayout>

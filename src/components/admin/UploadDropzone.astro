@@ -1,0 +1,142 @@
+---
+import { RefreshCw, UploadCloud, X } from 'lucide-astro';
+
+interface Props { albumId: number; }
+const { albumId } = Astro.props;
+---
+
+<section class="photo-tool" data-upload-dropzone data-album-id={albumId}>
+  <div class="photo-tool-heading">
+    <div><h2>本地上传</h2><span>最多 30 张</span></div>
+    <button class="button" type="button" data-upload-start disabled><UploadCloud size={16} aria-hidden="true" />开始上传</button>
+  </div>
+  <label class="upload-dropzone">
+    <UploadCloud size={24} strokeWidth={1.6} aria-hidden="true" />
+    <span>选择图片</span>
+    <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple data-upload-input />
+  </label>
+  <div class="upload-queue" data-upload-queue hidden></div>
+  <div class="upload-progress" data-upload-progress hidden>
+    <progress max="100" value="0"></progress><span>0%</span>
+  </div>
+  <p class="form-message" data-upload-message role="alert" hidden></p>
+
+  <template data-upload-item-template>
+    <div class="upload-item">
+      <div class="upload-item-name"><strong data-upload-name></strong><span data-upload-size></span></div>
+      <input type="text" maxlength="500" placeholder="替代文本" aria-label="替代文本" data-upload-alt />
+      <span class="upload-item-status" data-upload-status>待上传</span>
+      <button class="icon-button" type="button" data-upload-retry title="重试" hidden><RefreshCw size={15} aria-hidden="true" /><span class="sr-only">重试</span></button>
+      <button class="icon-button" type="button" data-upload-remove title="移除"><X size={15} aria-hidden="true" /><span class="sr-only">移除</span></button>
+    </div>
+  </template>
+</section>
+
+<script>
+  type QueueItem = { id: string; file: File; alt: string; status: 'pending' | 'uploading' | 'failed' };
+  const root = document.querySelector<HTMLElement>('[data-upload-dropzone]');
+  const input = root?.querySelector<HTMLInputElement>('[data-upload-input]');
+  const queue = root?.querySelector<HTMLElement>('[data-upload-queue]');
+  const template = root?.querySelector<HTMLTemplateElement>('[data-upload-item-template]');
+  const start = root?.querySelector<HTMLButtonElement>('[data-upload-start]');
+  const progress = root?.querySelector<HTMLElement>('[data-upload-progress]');
+  const progressBar = progress?.querySelector<HTMLProgressElement>('progress');
+  const progressLabel = progress?.querySelector<HTMLElement>('span');
+  const message = root?.querySelector<HTMLElement>('[data-upload-message]');
+  let items: QueueItem[] = [];
+
+  const key = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const size = (bytes: number) => bytes < 1024 * 1024 ? `${Math.ceil(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  const setMessage = (value = '') => {
+    if (!message) return;
+    message.textContent = value;
+    message.hidden = !value;
+  };
+  const render = () => {
+    if (!queue || !template) return;
+    queue.replaceChildren();
+    queue.hidden = items.length === 0;
+    start && (start.disabled = items.length === 0 || items.some((item) => item.status === 'uploading'));
+    items.forEach((item) => {
+      const node = template.content.firstElementChild?.cloneNode(true) as HTMLElement;
+      node.dataset.queueId = item.id;
+      const name = node.querySelector<HTMLElement>('[data-upload-name]');
+      const bytes = node.querySelector<HTMLElement>('[data-upload-size]');
+      const status = node.querySelector<HTMLElement>('[data-upload-status]');
+      const retry = node.querySelector<HTMLButtonElement>('[data-upload-retry]');
+      const alt = node.querySelector<HTMLInputElement>('[data-upload-alt]');
+      if (name) name.textContent = item.file.name;
+      if (bytes) bytes.textContent = size(item.file.size);
+      if (status) status.textContent = item.status === 'failed' ? '失败' : item.status === 'uploading' ? '上传中' : '待上传';
+      if (alt) alt.value = item.alt;
+      if (retry) retry.hidden = item.status !== 'failed';
+      queue.append(node);
+    });
+  };
+  const addFiles = (files: File[]) => {
+    setMessage();
+    const available = Math.max(0, 30 - items.length);
+    items.push(...files.slice(0, available).map((file) => ({ id: key(), file, alt: '', status: 'pending' as const })));
+    if (files.length > available) setMessage('一次最多上传 30 张图片。');
+    render();
+  };
+  const send = (selected: QueueItem[]) => new Promise<void>((resolve, reject) => {
+    const form = new FormData();
+    form.set('albumId', root?.dataset.albumId ?? '');
+    selected.forEach((item) => {
+      const row = queue?.querySelector<HTMLElement>(`[data-queue-id="${item.id}"]`);
+      item.alt = row?.querySelector<HTMLInputElement>('[data-upload-alt]')?.value ?? item.alt;
+      form.append('files', item.file);
+      form.append('alts', item.alt);
+      item.status = 'uploading';
+    });
+    render();
+    if (progress) progress.hidden = false;
+    if (progressBar) progressBar.value = 0;
+    if (progressLabel) progressLabel.textContent = '0%';
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/admin/photos/upload');
+    xhr.upload.addEventListener('progress', (event) => {
+      const value = event.lengthComputable ? Math.round(event.loaded / event.total * 100) : 0;
+      if (progressBar) progressBar.value = value;
+      if (progressLabel) progressLabel.textContent = `${value}%`;
+    });
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) return resolve();
+      let error = '上传失败，请重试。';
+      try { error = JSON.parse(xhr.responseText).error?.message ?? error; } catch {}
+      reject(new Error(error));
+    });
+    xhr.addEventListener('error', () => reject(new Error('网络异常，请重试。')));
+    xhr.send(form);
+  });
+  const upload = async (selected: QueueItem[]) => {
+    if (!selected.length) return;
+    setMessage();
+    try {
+      await send(selected);
+      window.location.reload();
+    } catch (error) {
+      selected.forEach((item) => item.status = 'failed');
+      setMessage(error instanceof Error ? error.message : '上传失败，请重试。');
+      if (progress) progress.hidden = true;
+      render();
+    }
+  };
+
+  input?.addEventListener('change', () => { addFiles(Array.from(input.files ?? [])); input.value = ''; });
+  root?.querySelector('.upload-dropzone')?.addEventListener('dragover', (event) => { event.preventDefault(); root.classList.add('is-dragging'); });
+  root?.querySelector('.upload-dropzone')?.addEventListener('dragleave', () => root.classList.remove('is-dragging'));
+  root?.querySelector('.upload-dropzone')?.addEventListener('drop', (event) => {
+    const dropEvent = event as DragEvent;
+    dropEvent.preventDefault(); root.classList.remove('is-dragging'); addFiles(Array.from(dropEvent.dataTransfer?.files ?? []));
+  });
+  start?.addEventListener('click', () => upload(items.filter((item) => item.status !== 'uploading')));
+  queue?.addEventListener('click', (event) => {
+    const row = (event.target as HTMLElement).closest<HTMLElement>('[data-queue-id]');
+    const item = items.find((candidate) => candidate.id === row?.dataset.queueId);
+    if (!item) return;
+    if ((event.target as HTMLElement).closest('[data-upload-remove]')) { items = items.filter((candidate) => candidate !== item); render(); }
+    if ((event.target as HTMLElement).closest('[data-upload-retry]')) upload([item]);
+  });
+</script>

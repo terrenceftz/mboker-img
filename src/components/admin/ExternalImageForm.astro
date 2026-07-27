@@ -1,0 +1,70 @@
+---
+import { Link, Plus, Trash2 } from 'lucide-astro';
+
+interface Props { albumId: number; }
+const { albumId } = Astro.props;
+---
+
+<section class="photo-tool" data-external-form data-album-id={albumId}>
+  <div class="photo-tool-heading">
+    <div><h2>外链图片</h2><span>浏览器直接加载</span></div>
+    <button class="button" type="button" data-external-submit><Link size={16} aria-hidden="true" />添加图片</button>
+  </div>
+  <div class="external-image-rows" data-external-rows>
+    <div class="external-image-row">
+      <input type="url" placeholder="https://example.com/photo.jpg" aria-label="图片 URL" data-external-url />
+      <input type="text" maxlength="500" placeholder="替代文本" aria-label="替代文本" data-external-alt />
+      <button class="icon-button" type="button" data-external-remove title="移除"><Trash2 size={15} aria-hidden="true" /><span class="sr-only">移除</span></button>
+    </div>
+  </div>
+  <button class="button-secondary" type="button" data-external-add><Plus size={15} aria-hidden="true" />增加一行</button>
+  <p class="form-message" data-external-message role="alert" hidden></p>
+</section>
+
+<script>
+  const form = document.querySelector<HTMLElement>('[data-external-form]');
+  const rows = form?.querySelector<HTMLElement>('[data-external-rows]');
+  const firstRow = rows?.firstElementChild?.cloneNode(true) as HTMLElement | undefined;
+  const message = form?.querySelector<HTMLElement>('[data-external-message]');
+  const setMessage = (value = '') => {
+    if (!message) return;
+    message.textContent = value;
+    message.hidden = !value;
+  };
+  form?.querySelector('[data-external-add]')?.addEventListener('click', () => {
+    if (!firstRow || !rows || rows.children.length >= 30) return;
+    const row = firstRow.cloneNode(true) as HTMLElement;
+    row.querySelectorAll<HTMLInputElement>('input').forEach((input) => input.value = '');
+    rows.append(row);
+    row.querySelector<HTMLInputElement>('[data-external-url]')?.focus();
+  });
+  rows?.addEventListener('click', (event) => {
+    const remove = (event.target as HTMLElement).closest('[data-external-remove]');
+    const row = remove?.closest('.external-image-row');
+    if (!row) return;
+    if (rows.children.length === 1) row.querySelectorAll<HTMLInputElement>('input').forEach((input) => input.value = '');
+    else row.remove();
+  });
+  form?.querySelector<HTMLButtonElement>('[data-external-submit]')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const entries = Array.from(rows?.querySelectorAll<HTMLElement>('.external-image-row') ?? []).map((row) => ({
+      url: row.querySelector<HTMLInputElement>('[data-external-url]')?.value.trim() ?? '',
+      alt: row.querySelector<HTMLInputElement>('[data-external-alt]')?.value.trim() ?? '',
+    })).filter((entry) => entry.url);
+    if (!entries.length) return setMessage('请输入至少一个图片 URL。');
+    button.disabled = true;
+    setMessage();
+    try {
+      const response = await fetch('/api/admin/photos/external', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ albumId: Number(form?.dataset.albumId), urls: entries.map((entry) => entry.url), alts: entries.map((entry) => entry.alt) }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message ?? '添加失败，请重试。');
+      window.location.reload();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '添加失败，请重试。');
+      button.disabled = false;
+    }
+  });
+</script>

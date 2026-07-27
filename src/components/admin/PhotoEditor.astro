@@ -1,0 +1,95 @@
+---
+import { Save, X } from 'lucide-astro';
+---
+
+<aside class="photo-editor" data-photo-editor aria-label="图片设置">
+  <div class="photo-editor-heading">
+    <div><h2>图片设置</h2><span data-editor-id>选择一张图片</span></div>
+    <button class="icon-button" type="button" data-editor-close title="关闭"><X size={17} aria-hidden="true" /><span class="sr-only">关闭</span></button>
+  </div>
+  <form data-photo-editor-form>
+    <fieldset disabled data-editor-fields>
+      <div class="form-field full"><label for="photo-alt">替代文本</label><textarea id="photo-alt" maxlength="500" data-editor-alt></textarea></div>
+      <div class="form-field full">
+        <label>版式</label>
+        <div class="segmented-control" data-editor-preset>
+          <label><input type="radio" name="layoutPreset" value="auto" checked /><span>自动</span></label>
+          <label><input type="radio" name="layoutPreset" value="wide" /><span>宽幅</span></label>
+          <label><input type="radio" name="layoutPreset" value="standard" /><span>标准</span></label>
+          <label><input type="radio" name="layoutPreset" value="narrow" /><span>窄幅</span></label>
+        </div>
+      </div>
+      <div class="form-field"><label for="photo-align">对齐</label><select id="photo-align" data-editor-align><option value="start">左</option><option value="center">中</option><option value="end">右</option></select></div>
+      <div class="form-field"><label for="photo-padding">留白</label><input id="photo-padding" maxlength="80" placeholder="例如 24px" data-editor-padding /></div>
+      <label class="checkbox-field"><input type="checkbox" data-editor-background />显示背景</label>
+      <label class="checkbox-field"><input type="checkbox" data-editor-cover />设为图集封面</label>
+      <div class="form-actions"><button class="button" type="submit"><Save size={16} aria-hidden="true" />保存设置</button></div>
+    </fieldset>
+    <p class="form-message" data-editor-message role="alert" hidden></p>
+  </form>
+</aside>
+
+<script>
+  const editor = document.querySelector<HTMLElement>('[data-photo-editor]');
+  const form = editor?.querySelector<HTMLFormElement>('[data-photo-editor-form]');
+  const fields = editor?.querySelector<HTMLFieldSetElement>('[data-editor-fields]');
+  const idLabel = editor?.querySelector<HTMLElement>('[data-editor-id]');
+  const alt = editor?.querySelector<HTMLTextAreaElement>('[data-editor-alt]');
+  const align = editor?.querySelector<HTMLSelectElement>('[data-editor-align]');
+  const padding = editor?.querySelector<HTMLInputElement>('[data-editor-padding]');
+  const background = editor?.querySelector<HTMLInputElement>('[data-editor-background]');
+  const cover = editor?.querySelector<HTMLInputElement>('[data-editor-cover]');
+  const message = editor?.querySelector<HTMLElement>('[data-editor-message]');
+  let photoId = 0;
+  const setMessage = (value = '') => {
+    if (!message) return;
+    message.textContent = value;
+    message.hidden = !value;
+  };
+  document.addEventListener('photo:edit', (event) => {
+    const photo = (event as CustomEvent).detail;
+    photoId = Number(photo.id);
+    if (idLabel) idLabel.textContent = `图片 #${photoId}`;
+    if (alt) alt.value = photo.alt ?? '';
+    if (align) align.value = photo.align ?? 'center';
+    if (padding) padding.value = photo.padding ?? '';
+    if (background) background.checked = Boolean(photo.hasBackground);
+    if (cover) cover.checked = false;
+    editor?.querySelector<HTMLInputElement>(`[name="layoutPreset"][value="${photo.layoutPreset ?? 'auto'}"]`)?.click();
+    if (fields) fields.disabled = false;
+    setMessage();
+    editor?.classList.add('is-active');
+    alt?.focus();
+  });
+  editor?.querySelector('[data-editor-close]')?.addEventListener('click', () => {
+    photoId = 0;
+    if (fields) fields.disabled = true;
+    if (idLabel) idLabel.textContent = '选择一张图片';
+    editor.classList.remove('is-active');
+    setMessage();
+  });
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!photoId) return;
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (submit) submit.disabled = true;
+    setMessage();
+    try {
+      const response = await fetch(`/api/admin/photos/${photoId}`, {
+        method: 'PATCH', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          alt: alt?.value ?? '',
+          layoutPreset: editor?.querySelector<HTMLInputElement>('[name="layoutPreset"]:checked')?.value ?? 'auto',
+          align: align?.value ?? 'center', hasBackground: background?.checked ?? false,
+          padding: padding?.value ?? '', setCover: cover?.checked ?? false,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message ?? '保存失败，请重试。');
+      window.location.reload();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '保存失败，请重试。');
+      if (submit) submit.disabled = false;
+    }
+  });
+</script>

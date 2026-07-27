@@ -1,0 +1,39 @@
+---
+import { ArrowRight, Image } from 'lucide-astro';
+
+import PageHeader from '../../../components/admin/PageHeader.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../../server/db/client';
+import { listAlbumsAdmin } from '../../../server/repositories/albums';
+import { listPhotos } from '../../../server/repositories/photos';
+
+const db = getDatabase();
+const albums = listAlbumsAdmin(db).map((album) => {
+  const albumPhotos = listPhotos(db, album.id);
+  return { ...album, photos: albumPhotos, cover: albumPhotos.find((photo) => photo.id === album.coverPhotoId) ?? albumPhotos[0] ?? null };
+});
+---
+
+<AdminLayout title="图片库">
+  <PageHeader title="图片库" description="按图集管理本地上传与外链图片。" />
+  {
+    albums.length ? (
+      <div class="table-shell">
+        <table class="admin-table photo-album-table">
+          <thead><tr><th>封面</th><th>图集</th><th>分类</th><th>图片数</th><th><span class="sr-only">操作</span></th></tr></thead>
+          <tbody>
+            {albums.map((album) => (
+              <tr>
+                <td><div class="cover-thumb">{album.cover ? <img src={album.cover.thumbnailUrl ?? album.cover.originalUrl} alt="" loading="lazy" /> : <span class="cover-placeholder"><Image size={15} aria-hidden="true" /></span>}</div></td>
+                <td class="title-cell"><strong>{album.title}</strong><small>/{album.slug}</small></td>
+                <td>{album.category.title}</td>
+                <td>{album.photos.length}</td>
+                <td><div class="row-actions"><a class="button-secondary" href={`/admin/albums/${album.id}/photos`}>管理图片<ArrowRight size={15} aria-hidden="true" /></a></div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : <div class="empty-state"><p>请先创建图集。</p><a class="button" href="/admin/albums/new">新建图集</a></div>
+  }
+</AdminLayout>

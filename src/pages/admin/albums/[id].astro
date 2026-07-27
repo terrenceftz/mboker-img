@@ -1,4 +1,6 @@
 ---
+import { Images } from 'lucide-astro';
+
 import AlbumForm from '../../../components/admin/AlbumForm.astro';
 import PageHeader from '../../../components/admin/PageHeader.astro';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
@@ -19,6 +21,8 @@ const categories = listCategoriesAdmin(db);
 ---
 
 <AdminLayout title={`编辑 ${album.title}`}>
-  <PageHeader title="编辑图集" description={album.title} />
+  <PageHeader title="编辑图集" description={album.title}>
+    <a class="button-secondary" href={`/admin/albums/${album.id}/photos`}><Images size={16} aria-hidden="true" />管理图片</a>
+  </PageHeader>
   <AlbumForm action={`/api/admin/albums/${album.id}`} method="PATCH" submitLabel="保存修改" categories={categories} album={album} />
 </AdminLayout>
