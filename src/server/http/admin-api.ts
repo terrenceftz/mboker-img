@@ -50,6 +50,8 @@ export function repositoryError(error: unknown) {
       return apiError(409, error.code, '请先移动或删除分类中的图集。');
     case 'INVALID_ORDER':
       return apiError(422, error.code, '排序数据不完整。');
+    case 'PHOTO_NOT_IN_ALBUM':
+      return apiError(409, error.code, '特辑只能使用当前图集中的图片。');
   }
 }
 
