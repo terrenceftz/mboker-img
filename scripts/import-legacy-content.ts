@@ -49,7 +49,7 @@ const SITE_SEED = {
     biography: '自由职业，偶尔与工作室或个人合作摄影。热衷于将优秀的审美和设计理念融入生活与工作。',
     email: 'hello@ricoui.com',
     portraitSource: 'upload' as const,
-    portraitUrl: '/src/assets/images/tink.jpg',
+    portraitUrl: '',
     seoTitle: 'Tink Photo Gallery',
     seoDescription: '欢迎来到 Tink 的摄影学习日记，记录城市、自然与旅途中的影像故事。',
     profileItems: [

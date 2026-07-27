@@ -16,6 +16,7 @@ import {
   listAlbumsPublished,
 } from '../../src/server/repositories/albums';
 import { createUploadedPhoto, listPhotos, reorderPhotos } from '../../src/server/repositories/photos';
+import { getAbout } from '../../src/server/repositories/about';
 import { RepositoryError } from '../../src/server/repositories/shared';
 
 const databases: Array<Awaited<ReturnType<typeof createTestDatabase>>> = [];
@@ -117,6 +118,7 @@ describe('legacy importer', () => {
     });
 
     expect(result).toMatchObject({ categories: 1, albums: 1, photos: 1 });
+    expect(getAbout(db).page?.portraitUrl).toBe('');
     expect(listAlbumsPublished(db)[0]).toMatchObject({ slug: 'fixture', legacyPath: '/collection/fixture' });
     expect(listPhotos(db, listAlbumsPublished(db)[0]!.id)[0]).toMatchObject({
       alt: 'Fixture image alt',
