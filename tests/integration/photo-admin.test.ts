@@ -34,6 +34,7 @@ vi.mock('../../src/server/media/remove', () => ({
 }));
 
 import { DELETE as deletePhoto, PATCH as updatePhoto } from '../../src/pages/api/admin/photos/[id]';
+import { POST as replacePhoto } from '../../src/pages/api/admin/photos/[id]/replace';
 import { DELETE as deleteAlbum } from '../../src/pages/api/admin/albums/[id]';
 import { POST as createExternalPhotos } from '../../src/pages/api/admin/photos/external';
 import { POST as reorderPhotos } from '../../src/pages/api/admin/photos/reorder';
@@ -235,6 +236,55 @@ describe('photo admin API', () => {
 
     expect(response.status).toBe(200);
     expect(state.database.db.select().from(albums).get().coverPhotoId).toBeNull();
+  });
+
+  it('replaces an existing local image while preserving its record and cover reference', async () => {
+    const album = await seedAlbum();
+    const current = state.database.db.insert(photos).values({
+      albumId: album.id,
+      sourceType: 'upload',
+      originalUrl: '/media/albums/1/old_asset/original.jpg',
+      alt: 'Keep this text',
+    }).returning().get();
+    state.database.db.update(albums).set({ coverPhotoId: current.id }).run();
+    state.processUpload.mockResolvedValueOnce(uploadedMedia(9));
+    const form = new FormData();
+    form.set('file', new File(['replacement'], 'replacement.jpg', { type: 'image/jpeg' }));
+
+    const response = await replacePhoto(context('POST', `/api/admin/photos/${current.id}/replace`, form, {
+      params: { id: String(current.id) },
+    }));
+    const result = await responseJson(response);
+
+    expect(response.status).toBe(200);
+    expect(result.data).toMatchObject({ id: current.id, sourceType: 'upload', alt: 'Keep this text' });
+    expect(result.data.originalUrl).toContain('upload_asset_9');
+    expect(state.database.db.select().from(albums).get().coverPhotoId).toBe(current.id);
+    expect(state.removeLocalMedia).toHaveBeenCalledWith(state.uploadRoot, current.originalUrl);
+  });
+
+  it('can replace an existing local image with an external URL without server fetching', async () => {
+    const album = await seedAlbum();
+    const current = state.database.db.insert(photos).values({
+      albumId: album.id,
+      sourceType: 'upload',
+      originalUrl: '/media/albums/1/old_asset/original.jpg',
+    }).returning().get();
+
+    const response = await replacePhoto(context('POST', `/api/admin/photos/${current.id}/replace`, {
+      externalUrl: ' HTTPS://images.example.com/new%20photo.jpg ',
+    }, { params: { id: String(current.id) } }));
+    const result = await responseJson(response);
+
+    expect(response.status).toBe(200);
+    expect(result.data).toMatchObject({
+      id: current.id,
+      sourceType: 'external',
+      originalUrl: 'https://images.example.com/new%20photo.jpg',
+      variantsJson: {},
+    });
+    expect(state.processUpload).not.toHaveBeenCalled();
+    expect(state.removeLocalMedia).toHaveBeenCalledWith(state.uploadRoot, current.originalUrl);
   });
 
   it('cascades photo rows when their album is deleted', async () => {

@@ -1,5 +1,5 @@
 ---
-import { Save, X } from 'lucide-astro';
+import { RefreshCw, Save, X } from 'lucide-astro';
 ---
 
 <aside class="photo-editor" data-photo-editor aria-label="图片设置">
@@ -23,6 +23,17 @@ import { Save, X } from 'lucide-astro';
       <div class="form-field"><label for="photo-padding">留白</label><input id="photo-padding" maxlength="80" placeholder="例如 24px" data-editor-padding /></div>
       <label class="checkbox-field"><input type="checkbox" data-editor-background />显示背景</label>
       <label class="checkbox-field"><input type="checkbox" data-editor-cover />设为图集封面</label>
+      <div class="form-field full">
+        <label for="photo-replacement-file">替换本地图片</label>
+        <input id="photo-replacement-file" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" data-editor-replacement-file />
+      </div>
+      <div class="form-field full">
+        <label for="photo-replacement-url">或替换为外链图片</label>
+        <input id="photo-replacement-url" type="url" placeholder="https://images.example.com/photo.jpg" data-editor-replacement-url />
+      </div>
+      <div class="form-actions">
+        <button class="button-secondary" type="button" data-editor-replace><RefreshCw size={16} aria-hidden="true" />替换原图</button>
+      </div>
       <div class="form-actions"><button class="button" type="submit"><Save size={16} aria-hidden="true" />保存设置</button></div>
     </fieldset>
     <p class="form-message" data-editor-message role="alert" hidden></p>
@@ -39,6 +50,9 @@ import { Save, X } from 'lucide-astro';
   const padding = editor?.querySelector<HTMLInputElement>('[data-editor-padding]');
   const background = editor?.querySelector<HTMLInputElement>('[data-editor-background]');
   const cover = editor?.querySelector<HTMLInputElement>('[data-editor-cover]');
+  const replacementFile = editor?.querySelector<HTMLInputElement>('[data-editor-replacement-file]');
+  const replacementUrl = editor?.querySelector<HTMLInputElement>('[data-editor-replacement-url]');
+  const replaceButton = editor?.querySelector<HTMLButtonElement>('[data-editor-replace]');
   const message = editor?.querySelector<HTMLElement>('[data-editor-message]');
   let photoId = 0;
   const setMessage = (value = '') => {
@@ -55,6 +69,8 @@ import { Save, X } from 'lucide-astro';
     if (padding) padding.value = photo.padding ?? '';
     if (background) background.checked = Boolean(photo.hasBackground);
     if (cover) cover.checked = false;
+    if (replacementFile) replacementFile.value = '';
+    if (replacementUrl) replacementUrl.value = '';
     editor?.querySelector<HTMLInputElement>(`[name="layoutPreset"][value="${photo.layoutPreset ?? 'auto'}"]`)?.click();
     if (fields) fields.disabled = false;
     setMessage();
@@ -90,6 +106,27 @@ import { Save, X } from 'lucide-astro';
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '保存失败，请重试。');
       if (submit) submit.disabled = false;
+    }
+  });
+
+  replaceButton?.addEventListener('click', async () => {
+    if (!photoId) return;
+    const file = replacementFile?.files?.[0];
+    const externalUrl = replacementUrl?.value.trim() ?? '';
+    if (!file && !externalUrl) return setMessage('请选择替换文件或输入外链图片地址。');
+    replaceButton.disabled = true;
+    setMessage();
+    try {
+      const request = file
+        ? (() => { const body = new FormData(); body.set('file', file); return { body }; })()
+        : { body: JSON.stringify({ externalUrl }), headers: { 'content-type': 'application/json' } };
+      const response = await fetch(`/api/admin/photos/${photoId}/replace`, { method: 'POST', ...request });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message ?? '替换图片失败，请重试。');
+      window.location.reload();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '替换图片失败，请重试。');
+      replaceButton.disabled = false;
     }
   });
 </script>

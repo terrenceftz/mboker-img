@@ -11,6 +11,10 @@ type PhotoMedia = Pick<
   NewPhoto,
   'albumId' | 'originalUrl' | 'variantsJson' | 'thumbnailUrl' | 'width' | 'height' | 'alt' | 'sortOrder' | 'layoutPreset' | 'align' | 'hasBackground' | 'padding' | 'layoutJson'
 >;
+type PhotoMediaChanges = Pick<
+  NewPhoto,
+  'sourceType' | 'originalUrl' | 'variantsJson' | 'thumbnailUrl' | 'width' | 'height' | 'layoutPreset'
+>;
 
 export function listPhotos(db: CmsDatabase, albumId: number) {
   return db
@@ -34,6 +38,16 @@ export function createExternalPhoto(db: CmsDatabase, values: PhotoMedia) {
 }
 
 export function updatePhoto(db: CmsDatabase, id: number, values: PhotoChanges) {
+  const photo = db
+    .update(photos)
+    .set({ ...values, updatedAt: now() })
+    .where(eq(photos.id, id))
+    .returning()
+    .get();
+  return photo ?? notFound('Photo');
+}
+
+export function replacePhotoMedia(db: CmsDatabase, id: number, values: PhotoMediaChanges) {
   const photo = db
     .update(photos)
     .set({ ...values, updatedAt: now() })
