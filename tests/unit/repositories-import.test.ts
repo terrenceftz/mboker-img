@@ -135,4 +135,35 @@ describe('legacy importer', () => {
       },
     });
   });
+
+  it('creates the initial special layout while importing Altay', async () => {
+    const { db } = await openDatabase();
+    const fixture = await readGalleryModule(resolve('tests/fixtures/legacy-gallery.ts'));
+    const gallery = {
+      ...fixture,
+      slug: 'altay',
+      images: [
+        fixture.images[0]!,
+        { ...fixture.images[0]!, alt: 'Second image', order: 8 },
+      ],
+    };
+
+    await importLegacyContent({
+      db,
+      galleries: [gallery],
+      importPosts: false,
+      mediaImporter: async (_sourcePath, albumId) => ({
+        originalUrl: `/media/albums/${albumId}/${Math.random()}/original.jpg`,
+        thumbnailUrl: null,
+        width: 1200,
+        height: 800,
+        variants: {},
+        automaticLayout: 'standard',
+      }),
+    });
+
+    const album = listAlbumsPublished(db)[0]!;
+    expect(album.isSpecial).toBe(true);
+    expect(album.specialLayoutJson.blocks.map((block) => block.type)).toEqual(['split', 'image']);
+  });
 });

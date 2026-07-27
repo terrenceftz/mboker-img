@@ -27,6 +27,7 @@ import { createUploadedPhoto } from '../src/server/repositories/photos';
 import { createPost } from '../src/server/repositories/posts';
 import { upsertSettings } from '../src/server/repositories/settings';
 import type { CmsDatabase } from '../src/server/repositories/shared';
+import { createAltaySpecialLayout } from './backfill-altay-special';
 
 const DEFAULT_GALLERIES = ['sunset', 'city', 'nature', 'moment', 'altay'] as const;
 
@@ -201,7 +202,12 @@ async function importGallery(
         layoutJson: image.layout,
       }));
       const cover = createdCover(photoRows, gallery.coverIndex);
-      updateAlbum(tx, album.id, { coverPhotoId: cover?.id ?? null });
+      updateAlbum(tx, album.id, {
+        coverPhotoId: cover?.id ?? null,
+        ...(gallery.slug === 'altay'
+          ? { isSpecial: true, specialLayoutJson: createAltaySpecialLayout(photoRows) }
+          : {}),
+      });
       updateCategory(tx, category.id, { coverUrl: cover?.thumbnailUrl ?? cover?.originalUrl ?? null });
       return photoRows;
     });

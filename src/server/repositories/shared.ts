@@ -6,7 +6,8 @@ export type RepositoryErrorCode =
   | 'NOT_FOUND'
   | 'SLUG_CONFLICT'
   | 'CATEGORY_NOT_EMPTY'
-  | 'INVALID_ORDER';
+  | 'INVALID_ORDER'
+  | 'PHOTO_NOT_IN_ALBUM';
 
 export class RepositoryError extends Error {
   constructor(readonly code: RepositoryErrorCode, message: string) {

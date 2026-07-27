@@ -1,7 +1,8 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 
-import { albums, categories } from '../db/schema';
-import { assertCompleteOrder, type CmsDatabase, notFound, now, withSlugConflict } from './shared';
+import { albums, categories, photos, type SpecialLayoutDocument } from '../db/schema';
+import { referencedPhotoIds } from '../special-layout/resolve';
+import { assertCompleteOrder, type CmsDatabase, notFound, now, RepositoryError, withSlugConflict } from './shared';
 
 type NewAlbum = typeof albums.$inferInsert;
 type AlbumChanges = Partial<Omit<NewAlbum, 'id' | 'createdAt' | 'updatedAt'>>;
@@ -75,6 +76,31 @@ export function updateAlbum(db: CmsDatabase, id: number, values: AlbumChanges) {
       .returning()
       .get();
     return album ?? notFound('Album');
+  });
+}
+
+export function saveSpecialLayout(
+  db: CmsDatabase,
+  id: number,
+  values: { isSpecial: boolean; layout: SpecialLayoutDocument },
+) {
+  return db.transaction((tx: CmsDatabase) => {
+    getAlbumById(tx, id);
+    const referencedIds = referencedPhotoIds(values.layout);
+    if (referencedIds.length > 0) {
+      const referencedPhotos = tx
+        .select({ id: photos.id, albumId: photos.albumId })
+        .from(photos)
+        .where(inArray(photos.id, referencedIds))
+        .all();
+      if (referencedPhotos.some((photo) => photo.albumId !== id)) {
+        throw new RepositoryError('PHOTO_NOT_IN_ALBUM', 'Special layouts can only use photos from their album.');
+      }
+    }
+    return updateAlbum(tx, id, {
+      isSpecial: values.isSpecial,
+      specialLayoutJson: values.layout,
+    });
   });
 }
 
