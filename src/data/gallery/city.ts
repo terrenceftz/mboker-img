@@ -162,7 +162,7 @@ export const cityGallery: GalleryConfig = {
     },
   ],
   seo: {
-    title: '城市摄影作品集 | Tink Photo',
+    title: '城市摄影作品集 | Mboker Img',
     description: '城市风光摄影作品，记录都市的建筑与人文',
     keywords: ['城市', '摄影', '建筑', '街拍', '人文'],
   },

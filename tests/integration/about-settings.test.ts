@@ -48,4 +48,19 @@ describe('About and site settings', () => {
     expect(settingsInput.safeParse({ ...valid, analyticsJson: { custom: '<script>' } }).success).toBe(false);
     expect(getSettings(testDatabase.db)?.analyticsJson).toEqual({ google: 'G-TEST123' });
   });
+
+  it('displays Mboker Img for untouched legacy Tink site settings', () => {
+    upsertSettings(testDatabase.db, settingsInput.parse({
+      siteName: 'Tink Photo Gallery', shortName: 'Tink.', siteUrl: 'https://photos.example.com',
+      locale: 'zh-CN', homeTitle: '影像故事', homeIntro: '欢迎来到 Tink 的摄影学习日记',
+      defaultSeoTitle: 'Tink Photo Gallery', defaultSeoDescription: '欢迎来到 Tink 的摄影学习日记', analyticsJson: {},
+    }));
+
+    expect(getSettings(testDatabase.db)).toMatchObject({
+      siteName: 'Mboker Img',
+      shortName: 'Mboker Img',
+      defaultSeoTitle: 'Mboker Img',
+      homeIntro: '欢迎来到 Mboker Img 的摄影学习日记',
+    });
+  });
 });

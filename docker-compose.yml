@@ -1,11 +1,11 @@
 services:
-  tink:
+  mboker-img:
     build: .
-    container_name: tink-photography
+    container_name: mboker-img
     restart: unless-stopped
     env_file: .env
     ports:
       - "${PORT:-4321}:4321"
     volumes:
-      - ${DOCKER_DATA_DIR:-./data}:/app/data
-      - ${DOCKER_BACKUP_DIR:-./backups}:/app/backups
+      - "${DOCKER_DATA_DIR:-D:/Docker/mboker-img/data}:/app/data"
+      - "${DOCKER_BACKUP_DIR:-D:/Docker/mboker-img/backups}:/app/backups"

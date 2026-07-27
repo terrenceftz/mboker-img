@@ -8,7 +8,16 @@ export type SiteSettingsInput = Partial<
 >;
 
 export function getSettings(db: CmsDatabase) {
-  return db.select().from(siteSettings).where(eq(siteSettings.id, 1)).get() ?? null;
+  const settings = db.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
+  if (!settings) return null;
+  return {
+    ...settings,
+    siteName: settings.siteName === 'Tink Photo Gallery' ? 'Mboker Img' : settings.siteName,
+    shortName: settings.shortName === 'Tink.' ? 'Mboker Img' : settings.shortName,
+    defaultSeoTitle: settings.defaultSeoTitle === 'Tink Photo Gallery' ? 'Mboker Img' : settings.defaultSeoTitle,
+    homeIntro: settings.homeIntro.replaceAll('Tink', 'Mboker Img'),
+    defaultSeoDescription: settings.defaultSeoDescription.replaceAll('Tink', 'Mboker Img'),
+  };
 }
 
 export function upsertSettings(db: CmsDatabase, values: SiteSettingsInput) {

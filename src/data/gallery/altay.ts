@@ -144,7 +144,7 @@ export const altayGallery: GalleryConfig = {
     },
   ],
   seo: {
-    title: '阿勒泰摄影作品集 | Tink Photo',
+    title: '阿勒泰摄影作品集 | Mboker Img',
     description: '阿勒泰旅行摄影作品，记录新疆阿勒泰的自然风光与人文风情',
     keywords: ['阿勒泰', '新疆', '旅行', '摄影', '风光'],
   },

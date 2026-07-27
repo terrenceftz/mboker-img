@@ -90,7 +90,7 @@ export const momentGallery: GalleryConfig = {
     },
   ],
   seo: {
-    title: '瞬间摄影作品集 | Tink Photo',
+    title: '瞬间摄影作品集 | Mboker Img',
     description: '生活瞬间摄影作品，捕捉生活中的美好时刻',
     keywords: ['瞬间', '摄影', '生活', '人文', '纪实'],
   },

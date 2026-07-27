@@ -3,8 +3,9 @@ import { siteConfig } from '../../src/config/site';
 import { ssrConfig } from '../../src/config/ssr';
 
 describe('upstream import', () => {
-  it('keeps the Tink visitor identity', () => {
-    expect(siteConfig.shortName).toBe('Tink.');
+  it('uses the Mboker Img visitor identity', () => {
+    expect(siteConfig.shortName).toBe('Mboker Img');
+    expect(siteConfig.name).toContain('Mboker Img');
     expect(siteConfig.locale).toBe('zh-CN');
   });
 

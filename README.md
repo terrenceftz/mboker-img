@@ -1,6 +1,6 @@
-# Tink Photography CMS
+# Mboker Img
 
-保留原 Tink 摄影站前端和动画，并增加单管理员内容后台。后台可管理图集分类、图集、图片、文章、关于页和站点设置；图片支持本地上传与 HTTPS 外链。
+Mboker Img 保留原摄影站前端设计和动画，并增加单管理员内容后台。后台可管理图集分类、图集、图片、特辑排版、文章、关于页和站点设置；图片支持本地上传与 HTTPS 外链。
 
 ## 本地运行
 
@@ -48,8 +48,8 @@ pnpm admin:hash "请替换为至少12位的强密码"
 cp .env.example .env
 mkdir -p data/uploads backups
 docker compose up -d --build
-docker compose exec tink pnpm db:migrate
-docker compose exec tink pnpm content:import
+docker compose exec mboker-img pnpm db:migrate
+docker compose exec mboker-img pnpm content:import
 ```
 
 部署前必须在 `.env` 中设置 `ADMIN_USERNAME`、`ADMIN_PASSWORD_HASH` 和实际的 `PUBLIC_SITE_URL`。反向代理应启用 HTTPS，并把请求转发到 `127.0.0.1:4321`。
@@ -57,18 +57,18 @@ docker compose exec tink pnpm content:import
 默认持久化到项目下的 `data` 和 `backups`。如需放到其他磁盘，在 `.env` 中设置宿主机路径，例如：
 
 ```dotenv
-DOCKER_DATA_DIR=D:/Docker/tink-photography/data
-DOCKER_BACKUP_DIR=D:/Docker/tink-photography/backups
+DOCKER_DATA_DIR=D:/Docker/mboker-img/data
+DOCKER_BACKUP_DIR=D:/Docker/mboker-img/backups
 ```
 
-`data` 和 `backups` 必须允许容器内 `tink` 用户读写。升级容器前不要删除这两个挂载目录。
+`data` 和 `backups` 必须允许容器读写。升级容器前不要删除这两个挂载目录。
 
 ## 备份与恢复
 
 运行在线一致性备份：
 
 ```bash
-docker compose exec tink pnpm backup
+docker compose exec mboker-img pnpm backup
 ```
 
 压缩包写入 `backups/tink-时间.zip`，包含 `tink.sqlite`、`uploads/` 和 `manifest.json`。
@@ -76,9 +76,9 @@ docker compose exec tink pnpm backup
 恢复时先停止服务，解压备份，然后用压缩包中的 `tink.sqlite` 替换 `data/tink.sqlite`，用 `uploads/` 替换 `data/uploads/`，最后重新启动：
 
 ```bash
-docker compose stop tink
+docker compose stop mboker-img
 # 完成文件恢复并确认目录权限
-docker compose start tink
+docker compose start mboker-img
 ```
 
 ## 验证命令

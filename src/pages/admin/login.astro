@@ -11,12 +11,12 @@ const hasError = Astro.url.searchParams.get('error') === 'invalid';
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>管理登录 | Tink.</title>
+    <title>管理登录 | Mboker Img</title>
   </head>
   <body>
     <main class="login-shell">
       <section class="login-panel" aria-labelledby="login-title">
-        <p class="wordmark">Tink.</p>
+        <p class="wordmark">Mboker Img</p>
         <h1 id="login-title">管理登录</h1>
 
         {hasError && <p class="form-error" id="login-error" role="alert">用户名或密码不正确，请重试。</p>}
@@ -62,8 +62,8 @@ const hasError = Astro.url.searchParams.get('error') === 'invalid';
 
   :global(html) {
     color-scheme: light;
-    background: #f5f5f3;
-    color: #111;
+    background: #f3f6f4;
+    color: #15372b;
     font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
   }
 
@@ -82,6 +82,11 @@ const hasError = Astro.url.searchParams.get('error') === 'invalid';
 
   .login-panel {
     width: min(100%, 400px);
+    border: 1px solid #d8dfda;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 18px 54px rgb(20 61 47 / .1);
+    padding: 32px;
   }
 
   .wordmark {
@@ -112,7 +117,7 @@ const hasError = Astro.url.searchParams.get('error') === 'invalid';
     width: 100%;
     height: 44px;
     border: 1px solid #bbb;
-    border-radius: 4px;
+    border-radius: 6px;
     background: #fff;
     color: #111;
     font: inherit;
@@ -120,9 +125,9 @@ const hasError = Astro.url.searchParams.get('error') === 'invalid';
   }
 
   input:focus {
-    border-color: #111;
+    border-color: #1d5a43;
     outline: 2px solid transparent;
-    box-shadow: 0 0 0 1px #111;
+    box-shadow: 0 0 0 2px rgb(29 90 67 / .18);
   }
 
   input[aria-invalid="true"] {
@@ -132,9 +137,9 @@ const hasError = Astro.url.searchParams.get('error') === 'invalid';
   button {
     height: 44px;
     margin-top: 18px;
-    border: 1px solid #111;
-    border-radius: 4px;
-    background: #111;
+    border: 1px solid #194d3b;
+    border-radius: 6px;
+    background: #194d3b;
     color: #fff;
     cursor: pointer;
     font: inherit;
@@ -142,11 +147,11 @@ const hasError = Astro.url.searchParams.get('error') === 'invalid';
   }
 
   button:hover {
-    background: #333;
+    background: #24644c;
   }
 
   button:focus-visible {
-    outline: 2px solid #111;
+    outline: 2px solid #194d3b;
     outline-offset: 3px;
   }
 

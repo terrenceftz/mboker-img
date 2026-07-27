@@ -51,24 +51,24 @@ export interface SiteConfig {
 }
 
 export const siteConfig = {
-  name: "Tink Photo Gallery",
-  shortName: "Tink.",
+  name: "Mboker Img",
+  shortName: "Mboker Img",
   tagline: "影像故事",
   url: "https://tinks.netlify.app",
   locale: "zh-CN",
   seo: {
-    title: "Tink Photo Gallery",
-    description: "欢迎来到 Tink 的摄影学习日记，记录城市、自然与旅途中的影像故事。",
-    keywords: "Tink,Photo,摄影,摄影学习日记,摄影师个人网站",
+    title: "Mboker Img",
+    description: "欢迎来到 Mboker Img，记录城市、自然与旅途中的影像故事。",
+    keywords: "Mboker Img,Photo,摄影,摄影学习日记,摄影师个人网站",
   },
   author: {
-    name: "Tink",
+    name: "Mboker Img",
     role: "摄影",
     bio: "自由职业，偶尔与工作室或个人合作摄影。热衷于将优秀的审美和设计理念融入生活与工作。",
     email: authorEmail,
     avatar: authorAvatar,
     profile: [
-      { id: "name", label: "我是", value: "Tink" },
+      { id: "name", label: "我是", value: "Mboker Img" },
       { id: "intro", label: "介绍", value: "开始学习用镜头，记录生活和旅途的每一刻。" },
       { id: "github", label: "Github", value: "tink-photography", href: githubUrl, external: true },
       { id: "pexels", label: "Pexels", value: "@Tink S", href: pexelsUrl, external: true },

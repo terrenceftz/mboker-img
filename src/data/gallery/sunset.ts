@@ -186,7 +186,7 @@ export const sunsetGallery: GalleryConfig = {
     },
   ],
   seo: {
-    title: '日落摄影作品集 | Tink Photo',
+    title: '日落摄影作品集 | Mboker Img',
     description: '海边日落摄影作品，记录黄昏时分的美丽瞬间',
     keywords: ['日落', '摄影', '海边', '黄昏', '风景摄影'],
   },

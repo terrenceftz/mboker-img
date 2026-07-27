@@ -132,7 +132,7 @@ export const natureGallery: GalleryConfig = {
     },
   ],
   seo: {
-    title: '自然摄影作品集 | Tink Photo',
+    title: '自然摄影作品集 | Mboker Img',
     description: '自然风光摄影作品，记录山川湖海的壮美景色',
     keywords: ['自然', '摄影', '风景', '山水', '户外'],
   },
