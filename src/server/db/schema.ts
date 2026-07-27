@@ -28,6 +28,33 @@ export type StoredPhotoLayout = {
   padding?: string;
 };
 
+export type SpecialLayoutRatio = '1:1' | '2:3' | '3:2';
+
+export type SpecialLayoutBlock =
+  | { id: string; type: 'image'; photoId: number }
+  | { id: string; type: 'markdown'; markdown: string }
+  | {
+      id: string;
+      type: 'split';
+      direction: 'image-text' | 'text-image';
+      ratio: SpecialLayoutRatio;
+      verticalAlign: 'start' | 'center' | 'end';
+      photoId: number;
+      markdown: string;
+    }
+  | {
+      id: string;
+      type: 'twoImages';
+      ratio: SpecialLayoutRatio;
+      leftPhotoId: number;
+      rightPhotoId: number;
+    };
+
+export type SpecialLayoutDocument = {
+  version: 1;
+  blocks: SpecialLayoutBlock[];
+};
+
 export const categories = sqliteTable('categories', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   title: text('title').notNull(),
@@ -60,6 +87,11 @@ export const albums = sqliteTable('albums', {
   sortOrder: integer('sort_order').notNull().default(0),
   status: text('status', { enum: ['draft', 'published'] }).notNull().default('draft'),
   legacyPath: text('legacy_path'),
+  isSpecial: integer('is_special', { mode: 'boolean' }).notNull().default(false),
+  specialLayoutJson: text('special_layout_json', { mode: 'json' })
+    .$type<SpecialLayoutDocument>()
+    .notNull()
+    .default({ version: 1, blocks: [] }),
   ...timestamps(),
 });
 

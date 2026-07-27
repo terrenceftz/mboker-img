@@ -65,6 +65,15 @@ describe('SQLite database', () => {
     );
   });
 
+  it('defaults new albums to the ordinary empty layout', async () => {
+    const database = await openTestDatabase();
+    const category = await database.seedCategory();
+    const album = await database.seedAlbum(category.id);
+
+    expect(album.isSpecial).toBe(false);
+    expect(album.specialLayoutJson).toEqual({ version: 1, blocks: [] });
+  });
+
   it('rejects duplicate album slugs and albums without a category', async () => {
     const database = await openTestDatabase();
     const category = await database.seedCategory();
