@@ -2,7 +2,42 @@
 import Layout from "../layouts/Layout.astro";
 import IndexCard from "../components/IndexCard.astro";
 import Category from "../components/Category.astro";
-const pageTitle = "DaTong - Ricocc";
+import { getDatabase } from '../server/db/client';
+import { listAlbumsPublished } from '../server/repositories/albums';
+import { listCategoriesPublished } from '../server/repositories/categories';
+import { getHomeData } from '../server/repositories/home';
+import { listPhotos } from '../server/repositories/photos';
+
+const db = getDatabase();
+const home = getHomeData(db);
+const categoryItems = listCategoriesPublished(db).map((category) => {
+  const albums = listAlbumsPublished(db, category.id);
+  const firstAlbum = albums[0];
+  const albumPhotos = firstAlbum ? listPhotos(db, firstAlbum.id) : [];
+  return {
+    title: category.title,
+    titleEn: category.titleEn,
+    href: firstAlbum ? `/collection/${category.slug}/${firstAlbum.slug}` : `/collection/${category.slug}`,
+    coverUrl: category.coverUrl ?? albumPhotos[0]?.thumbnailUrl ?? albumPhotos[0]?.originalUrl ?? null,
+    photoCount: albums.reduce((total, album) => total + listPhotos(db, album.id).length, 0),
+  };
+});
+const featuredAlbums = home.featuredAlbums.filter((album) => album.photos.length > 0);
+const featuredItems = featuredAlbums.length
+  ? Array.from({ length: Math.min(9, featuredAlbums.reduce((total, album) => total + album.photos.length, 0)) }, (_, index) => {
+      const album = featuredAlbums[index % featuredAlbums.length]!;
+      const photoIndex = Math.floor(index / featuredAlbums.length);
+      const photo = album.photos[photoIndex % album.photos.length] ?? album.cover!;
+      return {
+        href: `/collection/${album.category.slug}/${album.slug}`,
+        imageUrl: photo.thumbnailUrl ?? photo.originalUrl,
+        alt: photo.alt || album.title,
+        category: album.category.title,
+        title: album.title,
+        date: album.shotDate,
+      };
+    })
+  : [];
 ---
 
 <Layout
@@ -51,8 +86,8 @@ const pageTitle = "DaTong - Ricocc";
       </div>
     </div>
   </div>
-  <IndexCard />
-  <Category />
+  <IndexCard items={featuredItems} />
+  <Category items={categoryItems} />
 </Layout>
 
 

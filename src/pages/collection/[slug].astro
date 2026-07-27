@@ -1,80 +1,65 @@
 ---
-/**
- * 作品集动态路由页面
- * 根据 slug 动态渲染作品集
- */
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import Gallery from '@/components/gallery/Gallery.astro';
-import GalleryNav from '@/components/gallery/GalleryNav.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 import CollectionComm from './CollectionComm.astro';
-import { allGalleries, getAdjacentGalleries } from '@/data/gallery';
+import { getDatabase } from '../../server/db/client';
+import {
+  findPublishedAlbumByLegacyPath,
+  getPublishedCategoryView,
+} from '../../server/repositories/visitor-gallery';
 
-// 生成静态路径
-export function getStaticPaths() {
-  return allGalleries.map((gallery) => ({
-    params: { slug: gallery.slug },
-    props: { gallery },
-  }));
+const slug = Astro.params.slug ?? '';
+const db = getDatabase();
+const legacyAlbum = findPublishedAlbumByLegacyPath(db, `/collection/${slug}`);
+if (legacyAlbum) return Astro.redirect(`/collection/${legacyAlbum.category.slug}/${legacyAlbum.slug}`, 301);
+
+let view;
+try {
+  view = getPublishedCategoryView(db, slug);
+} catch {
+  return Astro.redirect('/404', 302);
 }
-
-// 获取当前作品集
-const { gallery } = Astro.props;
-
-// 获取相邻作品集
-const { next } = getAdjacentGalleries(gallery.slug);
-
-// SEO 配置
-const title = gallery.seo?.title || `${gallery.title} | Tink Photo`;
-const description = gallery.seo?.description || gallery.description;
-const keywords = gallery.seo?.keywords?.join(', ') || gallery.tags?.join(', ') || '';
+const { category, albums } = view;
 ---
 
 <BaseLayout
-  page={gallery.slug}
-  title={title}
-  description={description}
-  keywords={keywords}
-  loading={gallery.titleEn}
+  page={category.slug}
+  title={`${category.title} | Tink Photo`}
+  description={category.description}
+  keywords={category.titleEn}
+  loading={category.titleEn || category.title}
 >
   <CollectionComm />
   <div id="collection">
-    <div class="position-relative">
-      <div class="collection">
-        <div class="container">
-          <div class="row p-0 main">
-            <div class="position-relative m-auto text-center w-100">
-              <h1 class="collection-title heading-01 collection-title__01" data-splitting>
-                {gallery.titleEn}
-              </h1>
-              <div>
-                <Gallery gallery={gallery} />
-              </div>
+    <div class="collection">
+      <div class="container">
+        <div class="row p-0 category-page">
+          <div class="position-relative m-auto w-100">
+            <h1 class="collection-title heading-01 collection-title__01 text-center" data-splitting>{category.titleEn || category.title}</h1>
+            <div class="category-albums">
+              {albums.map((album) => (
+                <article class="category-album">
+                  <a href={`/collection/${category.slug}/${album.slug}`} class="picture-wrapper">
+                    {album.cover ? <img src={album.cover.thumbnailUrl ?? album.cover.originalUrl} alt={album.title} class="picture__img" loading="lazy" /> : <span class="album-placeholder" />}
+                  </a>
+                  <a href={`/collection/${category.slug}/${album.slug}`} class="category-album__title link-solid" data-splitting>{album.title}</a>
+                  <span>{album.photos.length} photos</span>
+                </article>
+              ))}
             </div>
           </div>
         </div>
       </div>
-      {next && (
-        <GalleryNav
-          title={next.title}
-          href={`/collection/${next.slug}`}
-        />
-      )}
     </div>
   </div>
 </BaseLayout>
 
 <style lang="scss">
-.main {
-  margin: 120px auto 0;
-  @media (min-width: 767px) {
-    margin: 12vw auto 0;
-  }
-}
-
-.collection-title {
-  margin-bottom: 60px;
-  @media (min-width: 767px) {
-    margin-bottom: 8vw;
-  }
-}
+  .category-page { margin: 120px auto; @media (min-width: 767px) { margin: 12vw auto; } }
+  .collection-title { margin-bottom: 60px; @media (min-width: 767px) { margin-bottom: 8vw; } }
+  .category-albums { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+  .category-album { grid-column: span 12; margin-bottom: 60px; @media (min-width: 767px) { grid-column: span 6; margin-bottom: 8vw; } }
+  .picture-wrapper { position: relative; display: block; overflow: hidden; width: 100%; aspect-ratio: 4 / 3; }
+  .picture__img, .album-placeholder { display: block; width: 100%; height: 100%; object-fit: cover; background: var(--color-800); }
+  .category-album__title { display: block; margin-top: 14px; color: var(--color-50); font-size: 1.5rem; font-weight: 600; }
+  .category-album span { color: var(--color-300); font-size: .875rem; }
 </style>

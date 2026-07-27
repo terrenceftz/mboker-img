@@ -1,0 +1,47 @@
+---
+import CollectionComm from '../CollectionComm.astro';
+import DynamicGalleryImage from '../../../components/gallery/DynamicGalleryImage.astro';
+import GalleryNav from '../../../components/gallery/GalleryNav.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getDatabase } from '../../../server/db/client';
+import { getPublishedAlbumView } from '../../../server/repositories/visitor-gallery';
+
+let view;
+try {
+  view = getPublishedAlbumView(getDatabase(), Astro.params.category ?? '', Astro.params.album ?? '');
+} catch {
+  return Astro.redirect('/404', 302);
+}
+const { album, category, next } = view;
+const title = album.seoTitle || `${album.title} | Tink Photo`;
+const description = album.seoDescription || album.description;
+const keywords = album.seoKeywordsJson.join(', ') || album.tagsJson.join(', ');
+---
+
+<BaseLayout page={album.slug} title={title} description={description} keywords={keywords} loading={album.titleEn || album.title}>
+  <CollectionComm />
+  <div id="collection">
+    <div class="position-relative">
+      <div class="collection">
+        <div class="container">
+          <div class="row p-0 main">
+            <div class="position-relative m-auto text-center w-100">
+              <h1 class="collection-title heading-01 collection-title__01" data-splitting>{album.titleEn || album.title}</h1>
+              <div class="collection-gallery" data-gallery={album.id}>
+                <div class="gallery-container p-0">
+                  {album.photos.map((photo, index) => <DynamicGalleryImage photo={photo} index={index} />)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {next && next.id !== album.id && <GalleryNav title={next.title} href={`/collection/${category.slug}/${next.slug}`} />}
+    </div>
+  </div>
+</BaseLayout>
+
+<style lang="scss">
+  .main { margin: 120px auto 0; @media (min-width: 767px) { margin: 12vw auto 0; } }
+  .collection-title { margin-bottom: 60px; @media (min-width: 767px) { margin-bottom: 8vw; } }
+</style>

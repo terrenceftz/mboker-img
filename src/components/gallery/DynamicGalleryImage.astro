@@ -1,0 +1,85 @@
+---
+import type { PhotoVariants, StoredPhotoLayout, StoredResponsiveSize } from '../../server/db/schema';
+
+interface Props {
+  photo: {
+    originalUrl: string;
+    variantsJson: PhotoVariants;
+    alt: string;
+    width: number | null;
+    height: number | null;
+    sourceType: 'upload' | 'external';
+    layoutPreset: 'auto' | 'wide' | 'standard' | 'narrow';
+    align: 'start' | 'center' | 'end';
+    hasBackground: boolean;
+    padding: string;
+    layoutJson: StoredPhotoLayout;
+  };
+  index: number;
+}
+
+const { photo, index } = Astro.props;
+
+function responsiveClasses(prefix: 'col' | 'offset', sizes?: StoredResponsiveSize) {
+  if (!sizes) return '';
+  return Object.entries(sizes)
+    .filter(([, value]) => value)
+    .map(([breakpoint, value]) => breakpoint === 'default' ? `${prefix}-${value}` : `${prefix}-${breakpoint}-${value}`)
+    .join(' ');
+}
+
+const presetColumns: Record<typeof photo.layoutPreset, StoredResponsiveSize> = {
+  auto: { default: '12', sm: '10', md: '8' },
+  wide: { default: '12', sm: '10', md: '8' },
+  standard: { default: '12', sm: '9', md: '6' },
+  narrow: { default: '10', sm: '6', md: '4' },
+};
+const storedLayout = photo.layoutJson ?? {};
+const cols = storedLayout.cols ?? presetColumns[photo.layoutPreset];
+const align = storedLayout.align ?? photo.align;
+const hasBackground = storedLayout.hasBackground ?? photo.hasBackground;
+const padding = storedLayout.padding ?? photo.padding;
+const webp = photo.variantsJson.webp ?? [];
+const avif = photo.variantsJson.avif ?? [];
+const loading = index < 3 ? 'eager' : 'lazy';
+const style = padding ? `padding:${padding}` : undefined;
+---
+
+<div
+  class:list={[
+    'collection-item',
+    'gallery-item',
+    responsiveClasses('col', cols),
+    responsiveClasses('offset', storedLayout.offset),
+    align ? `justify-content-${align}` : '',
+    hasBackground ? 'pg-bg pg-pad' : '',
+    storedLayout.class,
+  ]}
+  style={style}
+  data-gallery-item
+  data-index={index}
+>
+  <div class="collection__figure">
+    {
+      photo.sourceType === 'upload' && (webp.length || avif.length) ? (
+        <picture>
+          {avif.length > 0 && <source type="image/avif" srcset={avif.map((item) => `${item.url} ${item.width}w`).join(', ')} />}
+          {webp.length > 0 && <source type="image/webp" srcset={webp.map((item) => `${item.url} ${item.width}w`).join(', ')} />}
+          <img src={photo.originalUrl} alt={photo.alt} width={photo.width ?? undefined} height={photo.height ?? undefined} class="collection__img" loading={loading} decoding="async" />
+        </picture>
+      ) : (
+        <img src={photo.originalUrl} alt={photo.alt} width={photo.width ?? undefined} height={photo.height ?? undefined} class="collection__img" loading={loading} decoding="async" />
+      )
+    }
+  </div>
+</div>
+
+<style>
+  .collection-item { position: relative; display: flex; flex-direction: row; align-items: center; margin-bottom: 10vh; }
+  .collection__figure, .collection__figure picture { position: relative; display: block; width: 100%; }
+  .collection__img { position: relative; display: block; width: 100%; max-width: 100%; height: auto; }
+  .pg-bg { background: var(--project-color, #f1f2f3); }
+  .pg-pad { padding: 80px 0; text-align: center; display: flex; justify-content: center; }
+  @media (min-width: 767px) { .collection-item { margin-bottom: 12vw; } }
+  @media (max-width: 767px) { .pg-pad { padding: 40px 0; } }
+</style>

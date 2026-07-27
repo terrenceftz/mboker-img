@@ -18,6 +18,17 @@ import Img08 from "../assets/images/home/08moment.jpg";
 import Img09 from "../assets/images/home/09nature.jpg";
 import { categoryById } from "../config/site";
 
+interface FeaturedItem {
+  href: string;
+  imageUrl: string;
+  alt: string;
+  category: string;
+  title: string;
+  date: string;
+}
+
+const { items = [] } = Astro.props as { items?: FeaturedItem[] };
+
 // const { href, image, title, body } = Astro.props;
 const urlSunset = categoryById.sunset.href;
 const urlMoment = categoryById.moment.href;
@@ -27,7 +38,27 @@ const urlAltay = categoryById.altay.href;
 ---
 <section class="container index-gallery">
   <div class="index-grid">
-    <div class="index-grid__inner">
+    {items.length > 0 && (
+      <div class="index-grid__inner">
+        {items.map((item) => (
+          <div class="index-card">
+            <div class="index-card__inner">
+              <a href={item.href}>
+                <picture class="gsap-picture"><img src={item.imageUrl} alt={item.alt} class="index-card__img" loading="lazy" decoding="async" /></picture>
+              </a>
+              <div class="index-card__info">
+                <div class="index-card__content">
+                  <div class="index-card__index lead ls"><a href={item.href} class="link-solid" data-splitting>→ ({item.category})</a></div>
+                  <h3 class="index-card__title display display--2" data-splitting>{item.title}</h3>
+                  <div class="lead ls" data-splitting>/ {item.date}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+    <div class="index-grid__inner" style={items.length ? 'display:none' : undefined} aria-hidden={items.length ? 'true' : undefined}>
       <div class="index-card">
         <div class="index-card__inner">
           <a href={urlAltay}>
