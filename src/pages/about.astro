@@ -1,16 +1,32 @@
 ---
 import ClearLayout from "../layouts/ClearLayout.astro";
-import { Image } from "astro:assets";
 import ImgTink from "../assets/images/about.jpg";
-import { siteConfig, type ProfileItem } from "../config/site";
+import { siteConfig } from "../config/site";
+import { getDatabase } from '../server/db/client';
+import { getAbout } from '../server/repositories/about';
+import { getSettings } from '../server/repositories/settings';
 
-const { author } = siteConfig;
-const profile: readonly ProfileItem[] = author.profile;
+const db = getDatabase();
+const about = getAbout(db);
+const settings = getSettings(db);
+const page = about.page;
+const author = { name: page?.name || siteConfig.author.name, role: page?.role || siteConfig.author.role };
+const profile = page
+  ? [
+      { label: '我是', value: page.name, href: '', external: false },
+      { label: '身份', value: page.role, href: '', external: false },
+      { label: '介绍', value: page.intro, href: '', external: false },
+      ...about.profileItems,
+      { label: '信息', value: page.biography, href: '', external: false },
+      { label: '邮件', value: page.email, href: page.email ? `mailto:${page.email}` : '', external: false },
+    ].filter((item) => item.value)
+  : siteConfig.author.profile;
+const portraitUrl = page?.portraitUrl || ImgTink.src;
 ---
 <ClearLayout
   page="about"
-  title={`关于 ${author.name} - 联系我 | ${siteConfig.seo.title}`}
-  description={`关于摄影师 ${author.name}，以及摄影创作、合作方式与联系方式。`}
+  title={page?.seoTitle || `关于 ${author.name} - 联系我 | ${settings?.defaultSeoTitle || siteConfig.seo.title}`}
+  description={page?.seoDescription || `关于摄影师 ${author.name}，以及摄影创作、合作方式与联系方式。`}
   keywords={siteConfig.seo.keywords}
   loading="About Me"
 >
@@ -24,10 +40,11 @@ const profile: readonly ProfileItem[] = author.profile;
               <div class="project-gallery">
                 <div class="project-gallery__item  col-9 col-md-7 col-lg-5">
                   <div class="project-gallery__figure">
-                    <Image
-                    src={ImgTink}
+                    <img
+                    src={portraitUrl}
                     alt={author.name}
                     class="project-gallery__img"
+                    loading="eager"
                   />
                   </div>
 

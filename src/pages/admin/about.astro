@@ -1,0 +1,92 @@
+---
+import PageHeader from '../../components/admin/PageHeader.astro';
+import RepeaterField from '../../components/admin/RepeaterField.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { siteConfig } from '../../config/site';
+import { getDatabase } from '../../server/db/client';
+import { getAbout } from '../../server/repositories/about';
+
+const saved = Astro.url.searchParams.get('saved') === '1';
+const about = getAbout(getDatabase());
+const page = about.page ?? {
+  name: siteConfig.author.name, role: siteConfig.author.role, intro: '', biography: siteConfig.author.bio,
+  email: siteConfig.author.email, portraitSource: 'upload', portraitUrl: '', seoTitle: '', seoDescription: '',
+};
+const profileItems = about.profileItems.length ? about.profileItems : siteConfig.author.profile;
+const socialLinks = about.socialLinks.length ? about.socialLinks : siteConfig.socials;
+---
+
+<AdminLayout title="关于页">
+  <PageHeader title="关于页" description="编辑个人信息、头像和联系入口。" />
+  {saved && <p class="notice" role="status">关于页已保存。</p>}
+
+  <div class="form-shell">
+    <form class="admin-form" id="about-form">
+      <section class="form-section"><h2>基本信息</h2><div class="form-grid">
+        <div class="form-field"><label for="name">姓名 *</label><input id="name" name="name" value={page.name} required maxlength="100" /></div>
+        <div class="form-field"><label for="role">身份</label><input id="role" name="role" value={page.role} maxlength="120" /></div>
+        <div class="form-field full"><label for="intro">简介</label><textarea id="intro" name="intro" maxlength="2000">{page.intro}</textarea></div>
+        <div class="form-field full"><label for="biography">详细介绍</label><textarea id="biography" name="biography" rows="8" maxlength="10000">{page.biography}</textarea></div>
+        <div class="form-field"><label for="email">邮箱</label><input id="email" name="email" type="email" value={page.email} /></div>
+      </div></section>
+
+      <section class="form-section"><h2>头像</h2><div class="form-grid">
+        <div class="form-field"><label for="portraitSource">图片来源</label><select id="portraitSource" name="portraitSource"><option value="upload" selected={page.portraitSource === 'upload'}>本地上传</option><option value="external" selected={page.portraitSource === 'external'}>外链图片</option></select></div>
+        <div class="form-field"><label for="portraitFile">上传新头像</label><input id="portraitFile" name="portraitFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" /></div>
+        <div class="form-field full"><label for="portraitUrl">头像地址</label><input id="portraitUrl" name="portraitUrl" value={page.portraitUrl} placeholder="https://... 或上传后自动填写" /></div>
+        <div class="portrait-preview full">{page.portraitUrl && <img src={page.portraitUrl} alt="头像预览" data-preview />}</div>
+      </div></section>
+
+      <RepeaterField kind="profile" title="资料项目" rows={profileItems} />
+      <RepeaterField kind="social" title="社交链接" rows={socialLinks} />
+
+      <section class="form-section"><h2>SEO</h2><div class="form-grid">
+        <div class="form-field full"><label for="seoTitle">SEO 标题</label><input id="seoTitle" name="seoTitle" value={page.seoTitle} maxlength="160" /></div>
+        <div class="form-field full"><label for="seoDescription">SEO 描述</label><textarea id="seoDescription" name="seoDescription" maxlength="500">{page.seoDescription}</textarea></div>
+      </div></section>
+
+      <div class="form-actions"><button class="button" type="submit">保存关于页</button><p class="form-message" data-form-message role="alert" hidden></p></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.querySelector<HTMLFormElement>('#about-form');
+    const collectRows = (kind: string) => Array.from(document.querySelectorAll<HTMLElement>(`[data-repeater="${kind}"] [data-row]`)).map((row) => {
+      const get = (key: string) => row.querySelector<HTMLInputElement>(`[data-key="${key}"]`);
+      return kind === 'profile'
+        ? { label: get('label')?.value ?? '', value: get('value')?.value ?? '', href: get('href')?.value ?? '', external: get('external')?.checked ?? false }
+        : { label: get('label')?.value ?? '', handle: get('handle')?.value ?? '', href: get('href')?.value ?? '' };
+    });
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      const message = form.querySelector<HTMLElement>('[data-form-message]');
+      if (submit) submit.disabled = true;
+      if (message) message.hidden = true;
+      try {
+        const data = new FormData(form);
+        const file = data.get('portraitFile');
+        if (file instanceof File && file.size > 0) {
+          const upload = new FormData();
+          upload.set('file', file); upload.set('scopeKind', 'site'); upload.set('siteKey', 'about-portrait');
+          const response = await fetch('/api/admin/media/asset', { method: 'POST', body: upload });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error ?? '头像上传失败。');
+          data.set('portraitUrl', result.originalUrl);
+          data.set('portraitSource', 'upload');
+        }
+        const payload = { ...Object.fromEntries(data.entries()), profileItems: collectRows('profile'), socialLinks: collectRows('social') };
+        delete (payload as Record<string, unknown>).portraitFile;
+        const response = await fetch('/api/admin/about', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error?.message ?? '保存失败，请检查表单。');
+        window.location.assign('/admin/about?saved=1');
+      } catch (error) {
+        if (message) { message.textContent = error instanceof Error ? error.message : '保存失败。'; message.hidden = false; }
+        if (submit) submit.disabled = false;
+      }
+    });
+  </script>
+</AdminLayout>
+
+<style>.portrait-preview img { width: 120px; aspect-ratio: 3 / 4; object-fit: cover; border: 1px solid var(--admin-border); }</style>

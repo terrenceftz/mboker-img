@@ -1,0 +1,51 @@
+---
+interface Row { label?: string; value?: string; href?: string; external?: boolean; handle?: string; }
+interface Props { kind: 'profile' | 'social'; title: string; rows?: Row[]; }
+const { kind, title, rows = [] } = Astro.props;
+---
+
+<section class="form-section repeater" data-repeater={kind}>
+  <div class="repeater-heading"><h2>{title}</h2><button class="button-secondary" type="button" data-add>添加</button></div>
+  <div class="repeater-list" data-list>
+    {rows.map((row) => (
+      <div class="repeater-row" data-row>
+        <input data-key="label" value={row.label ?? ''} placeholder={kind === 'profile' ? '项目名称' : '平台名称'} aria-label="名称" />
+        <input data-key={kind === 'profile' ? 'value' : 'handle'} value={kind === 'profile' ? row.value ?? '' : row.handle ?? ''} placeholder={kind === 'profile' ? '内容' : '账号名称'} aria-label="内容" />
+        <input data-key="href" value={row.href ?? ''} placeholder="https://..." aria-label="链接" />
+        {kind === 'profile' && <label class="checkbox-field"><input data-key="external" type="checkbox" checked={row.external ?? false} />新窗口</label>}
+        <div class="repeater-actions"><button type="button" data-up title="上移">↑</button><button type="button" data-down title="下移">↓</button><button type="button" data-remove title="删除">×</button></div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<script>
+  const makeRow = (kind: string) => {
+    const row = document.createElement('div');
+    row.className = 'repeater-row';
+    row.dataset.row = '';
+    row.innerHTML = `<input data-key="label" placeholder="名称" aria-label="名称"><input data-key="${kind === 'profile' ? 'value' : 'handle'}" placeholder="内容" aria-label="内容"><input data-key="href" placeholder="https://..." aria-label="链接">${kind === 'profile' ? '<label class="checkbox-field"><input data-key="external" type="checkbox">新窗口</label>' : ''}<div class="repeater-actions"><button type="button" data-up title="上移">↑</button><button type="button" data-down title="下移">↓</button><button type="button" data-remove title="删除">×</button></div>`;
+    return row;
+  };
+  document.querySelectorAll<HTMLElement>('[data-repeater]').forEach((repeater) => {
+    const list = repeater.querySelector<HTMLElement>('[data-list]');
+    repeater.querySelector('[data-add]')?.addEventListener('click', () => list?.append(makeRow(repeater.dataset.repeater ?? 'profile')));
+    repeater.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
+      const row = button?.closest<HTMLElement>('[data-row]');
+      if (!button || !row || button.hasAttribute('data-add')) return;
+      if (button.hasAttribute('data-remove')) row.remove();
+      if (button.hasAttribute('data-up') && row.previousElementSibling) list?.insertBefore(row, row.previousElementSibling);
+      if (button.hasAttribute('data-down') && row.nextElementSibling) list?.insertBefore(row.nextElementSibling, row);
+    });
+  });
+</script>
+
+<style>
+  .repeater-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .repeater-list { display: grid; gap: 12px; }
+  .repeater-row { display: grid; grid-template-columns: 1fr 1fr 1.4fr auto auto; gap: 8px; align-items: center; }
+  .repeater-actions { display: flex; gap: 4px; }
+  .repeater-actions button { width: 32px; height: 32px; border: 1px solid var(--admin-border); background: #fff; cursor: pointer; }
+  @media (max-width: 900px) { .repeater-row { grid-template-columns: 1fr; padding-bottom: 16px; border-bottom: 1px solid var(--admin-border); } }
+</style>

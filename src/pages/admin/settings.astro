@@ -1,0 +1,63 @@
+---
+import PageHeader from '../../components/admin/PageHeader.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { siteConfig } from '../../config/site';
+import { getDatabase } from '../../server/db/client';
+import { getSettings } from '../../server/repositories/settings';
+
+const saved = Astro.url.searchParams.get('saved') === '1';
+const current = getSettings(getDatabase());
+const settings = current ?? {
+  siteName: siteConfig.name, shortName: siteConfig.shortName, siteUrl: siteConfig.url, locale: siteConfig.locale,
+  homeTitle: siteConfig.tagline, homeIntro: '', defaultSeoTitle: siteConfig.seo.title,
+  defaultSeoDescription: siteConfig.seo.description, analyticsJson: siteConfig.analytics,
+};
+---
+
+<AdminLayout title="站点设置">
+  <PageHeader title="站点设置" description="编辑站点名称、首页文字、SEO 和统计标识。" />
+  {saved && <p class="notice" role="status">站点设置已保存。</p>}
+  <div class="form-shell"><form class="admin-form" id="settings-form">
+    <section class="form-section"><h2>站点信息</h2><div class="form-grid">
+      <div class="form-field"><label for="siteName">站点名称 *</label><input id="siteName" name="siteName" value={settings.siteName} required /></div>
+      <div class="form-field"><label for="shortName">短名称 *</label><input id="shortName" name="shortName" value={settings.shortName} required /></div>
+      <div class="form-field"><label for="siteUrl">站点网址 *</label><input id="siteUrl" name="siteUrl" type="url" value={settings.siteUrl} required /></div>
+      <div class="form-field"><label for="locale">语言</label><input id="locale" name="locale" value={settings.locale} placeholder="zh-CN" required /></div>
+    </div></section>
+    <section class="form-section"><h2>首页</h2><div class="form-grid">
+      <div class="form-field full"><label for="homeTitle">首页标题</label><input id="homeTitle" name="homeTitle" value={settings.homeTitle} maxlength="160" /></div>
+      <div class="form-field full"><label for="homeIntro">首页介绍</label><textarea id="homeIntro" name="homeIntro" maxlength="2000">{settings.homeIntro}</textarea></div>
+    </div></section>
+    <section class="form-section"><h2>默认 SEO</h2><div class="form-grid">
+      <div class="form-field full"><label for="defaultSeoTitle">默认标题</label><input id="defaultSeoTitle" name="defaultSeoTitle" value={settings.defaultSeoTitle} maxlength="160" /></div>
+      <div class="form-field full"><label for="defaultSeoDescription">默认描述</label><textarea id="defaultSeoDescription" name="defaultSeoDescription" maxlength="500">{settings.defaultSeoDescription}</textarea></div>
+    </div></section>
+    <section class="form-section"><h2>访问统计</h2><div class="form-grid">
+      <div class="form-field"><label for="google">Google Analytics ID</label><input id="google" name="google" value={settings.analyticsJson.google ?? ''} placeholder="G-XXXXXXXX" /></div>
+      <div class="form-field"><label for="baidu">百度统计 ID</label><input id="baidu" name="baidu" value={settings.analyticsJson.baidu ?? ''} /></div>
+    </div></section>
+    <div class="form-actions"><button class="button" type="submit">保存设置</button><p class="form-message" data-form-message role="alert" hidden></p></div>
+  </form></div>
+  <script>
+    const form = document.querySelector<HTMLFormElement>('#settings-form');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      const message = form.querySelector<HTMLElement>('[data-form-message]');
+      if (submit) submit.disabled = true;
+      if (message) message.hidden = true;
+      const data = new FormData(form);
+      const payload = { ...Object.fromEntries(data.entries()), analyticsJson: { google: String(data.get('google') ?? ''), baidu: String(data.get('baidu') ?? '') } };
+      delete (payload as Record<string, unknown>).google; delete (payload as Record<string, unknown>).baidu;
+      try {
+        const response = await fetch('/api/admin/settings', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error?.message ?? '保存失败，请检查表单。');
+        window.location.assign('/admin/settings?saved=1');
+      } catch (error) {
+        if (message) { message.textContent = error instanceof Error ? error.message : '保存失败。'; message.hidden = false; }
+        if (submit) submit.disabled = false;
+      }
+    });
+  </script>
+</AdminLayout>

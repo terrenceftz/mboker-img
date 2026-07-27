@@ -5,15 +5,23 @@ import "../styles/global.scss";
 import "splitting/dist/splitting.css";
 import "splitting/dist/splitting-cells.css";
 import { siteConfig } from "../config/site";
+import { getDatabase } from '../server/db/client';
+import { getSettings } from '../server/repositories/settings';
 
 interface Props { title?: string; description?: string; keywords?: string; }
+const settings = getSettings(getDatabase());
 const {
-  title = siteConfig.seo.title,
-  description = siteConfig.seo.description,
+  title = settings?.defaultSeoTitle || siteConfig.seo.title,
+  description = settings?.defaultSeoDescription || siteConfig.seo.description,
   keywords = siteConfig.seo.keywords,
 } = Astro.props;
-const canonicalUrl = new URL(Astro.url.pathname, siteConfig.url);
-const ogImage = new URL("/og.jpg", siteConfig.url);
+const siteUrl = settings?.siteUrl || siteConfig.url;
+const siteName = settings?.siteName || siteConfig.name;
+const locale = settings?.locale || siteConfig.locale;
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
+const ogImage = new URL("/og.jpg", siteUrl);
+const googleId = settings?.analyticsJson.google?.trim();
+const baiduId = settings?.analyticsJson.baidu?.trim();
 ---
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
@@ -23,11 +31,11 @@ const ogImage = new URL("/og.jpg", siteConfig.url);
 <title>{title}</title>
 <link rel="canonical" href={canonicalUrl} />
 <meta property="og:type" content="website" />
-<meta property="og:site_name" content={siteConfig.name} />
+<meta property="og:site_name" content={siteName} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonicalUrl} />
-<meta property="og:locale" content={siteConfig.locale.replace("-", "_")} />
+<meta property="og:locale" content={locale.replace("-", "_")} />
 <meta property="og:image" content={ogImage} />
 <meta property="og:image:width" content="1280" />
 <meta property="og:image:height" content="720" />
@@ -40,3 +48,6 @@ const ogImage = new URL("/og.jpg", siteConfig.url);
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,600;1,700;1,800&display=swap" rel="stylesheet" />
+{googleId && <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(googleId)}`}></script>}
+{googleId && <script is:inline set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config',${JSON.stringify(googleId)});`}></script>}
+{baiduId && <script is:inline async src={`https://hm.baidu.com/hm.js?${encodeURIComponent(baiduId)}`}></script>}

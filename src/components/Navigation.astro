@@ -1,12 +1,15 @@
 ---
 import ThemeIcon from "./ThemeIcon.astro";
 import { navigationItems, siteConfig } from "../config/site";
+import { getDatabase } from '../server/db/client';
+import { getSettings } from '../server/repositories/settings';
 const categoriesNav = navigationItems.find((item) => item.id === "categories")!;
 const aboutNav = navigationItems.find((item) => item.id === "about")!;
+const shortName = getSettings(getDatabase())?.shortName || siteConfig.shortName;
 ---
 <section class="site-header container">
   <div class="row">
-    <div class="col-2 col-sm-2 col-lg-1 text-left"><div class="title-link"><a href="/" data-bigdot="true" class="logo">{siteConfig.shortName}</a></div></div>
+    <div class="col-2 col-sm-2 col-lg-1 text-left"><div class="title-link"><a href="/" data-bigdot="true" class="logo">{shortName}</a></div></div>
     <div class="nav-links offset-1 col-1 d-lg-block offset-lg-5 offset-xl-6 col-lg-1 text-right"><ThemeIcon /></div>
     <div class="nav-links nav-primary offset-1 offset-lg-0 col-4 col-sm-4 col-lg-3 col-xl-2">
       <button type="button" class="nav-category js-menuOpen link-solid" data-bigdot="true" aria-label={categoriesNav.label} aria-controls="site-menu" aria-expanded="false">
