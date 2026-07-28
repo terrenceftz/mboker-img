@@ -54,6 +54,7 @@ describe('visitor category navigation', () => {
     expect(homepage).toContain('.hero-line.motion-svg__heroline .mboker-signature');
     expect(homepage).toMatch(/\.mboker-signature\s*\{[^}]*animation:\s*none/s);
     expect(homepage).toMatch(/animation:\s*draw-mboker\s+10s[^;]*infinite/s);
+    expect(homepage).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.hero-line\.motion-svg__heroline \.mboker-signature\s*\{[^}]*animation:\s*none/s);
     expect(intros).toContain('document.querySelector(".hero-splitting-title")');
     expect(intros).not.toContain('document.querySelector(".hero-heading")');
   });
