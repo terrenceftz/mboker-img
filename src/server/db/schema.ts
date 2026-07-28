@@ -26,6 +26,9 @@ export type StoredPhotoLayout = {
   class?: string;
   hasBackground?: boolean;
   padding?: string;
+  pairWithNext?: boolean;
+  pairRatio?: '1:1' | '2:3' | '3:2';
+  verticalAlign?: 'start' | 'center' | 'end';
 };
 
 export type SpecialLayoutRatio = '1:1' | '2:3' | '3:2';

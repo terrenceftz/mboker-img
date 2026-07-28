@@ -15,6 +15,9 @@ const photoInput = z.object({
   align: z.enum(['start', 'center', 'end']),
   hasBackground: z.boolean(),
   padding: z.string().trim().max(80),
+  pairWithNext: z.boolean().default(false),
+  pairRatio: z.enum(['1:1', '2:3', '3:2']).default('1:1'),
+  verticalAlign: z.enum(['start', 'center', 'end']).default('start'),
   setCover: z.boolean().optional().default(false),
 });
 

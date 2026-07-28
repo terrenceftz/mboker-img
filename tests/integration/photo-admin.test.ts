@@ -183,6 +183,9 @@ describe('photo admin API', () => {
       align: 'end',
       hasBackground: true,
       padding: '24px',
+      pairWithNext: true,
+      pairRatio: '2:3',
+      verticalAlign: 'center',
       setCover: true,
     }, { params: { id: String(photo.id) } }));
     const result = await responseJson(response);
@@ -191,7 +194,11 @@ describe('photo admin API', () => {
     expect(result.data).toMatchObject({
       alt: '新的说明', layoutPreset: 'wide', align: 'end', hasBackground: true, padding: '24px', isCover: true,
     });
-    expect(result.data.layoutJson).toEqual({ verticalAlign: 'end' });
+    expect(result.data.layoutJson).toEqual({
+      pairWithNext: true,
+      pairRatio: '2:3',
+      verticalAlign: 'center',
+    });
     expect(state.database.db.select().from(albums).get().coverPhotoId).toBe(photo.id);
   });
 

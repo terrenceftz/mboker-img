@@ -13,6 +13,11 @@ interface Photo {
   align: 'start' | 'center' | 'end';
   hasBackground: boolean;
   padding: string;
+  layoutJson: {
+    pairWithNext?: boolean;
+    pairRatio?: '1:1' | '2:3' | '3:2';
+    verticalAlign?: 'start' | 'center' | 'end';
+  };
 }
 interface Props { albumId: number; coverPhotoId: number | null; photos: Photo[]; }
 const { albumId, coverPhotoId, photos } = Astro.props;
@@ -117,7 +122,14 @@ const { albumId, coverPhotoId, photos } = Astro.props;
     const button = (event.target as HTMLElement).closest('[data-edit-photo]');
     const card = button?.closest<HTMLElement>('[data-photo]');
     if (!card?.dataset.photo) return;
-    document.dispatchEvent(new CustomEvent('photo:edit', { detail: JSON.parse(card.dataset.photo) }));
+    const cards = Array.from(grid?.querySelectorAll<HTMLElement>('[data-photo]') ?? []);
+    const index = cards.indexOf(card);
+    const previous = index > 0 && cards[index - 1]?.dataset.photo
+      ? JSON.parse(cards[index - 1]!.dataset.photo!)
+      : undefined;
+    const photo = JSON.parse(card.dataset.photo);
+    const canPairWithNext = index >= 0 && index < cards.length - 1 && !previous?.layoutJson?.pairWithNext;
+    document.dispatchEvent(new CustomEvent('photo:edit', { detail: { ...photo, canPairWithNext } }));
   });
   document.addEventListener('photo:updated', (event) => {
     const updated = (event as CustomEvent).detail;

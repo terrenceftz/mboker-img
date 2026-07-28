@@ -6,7 +6,11 @@ import { assertCompleteOrder, type CmsDatabase, notFound, now, RepositoryError }
 type NewPhoto = typeof photos.$inferInsert;
 type PhotoChanges = Partial<
   Pick<NewPhoto, 'alt' | 'layoutPreset' | 'align' | 'hasBackground' | 'padding' | 'layoutJson'>
->;
+> & {
+  pairWithNext?: boolean;
+  pairRatio?: '1:1' | '2:3' | '3:2';
+  verticalAlign?: 'start' | 'center' | 'end';
+};
 type PhotoMedia = Pick<
   NewPhoto,
   'albumId' | 'originalUrl' | 'variantsJson' | 'thumbnailUrl' | 'width' | 'height' | 'alt' | 'sortOrder' | 'layoutPreset' | 'align' | 'hasBackground' | 'padding' | 'layoutJson'
@@ -39,7 +43,8 @@ export function createExternalPhoto(db: CmsDatabase, values: PhotoMedia) {
 
 export function updatePhoto(db: CmsDatabase, id: number, values: PhotoChanges) {
   const current = getPhotoById(db, id);
-  const layoutJson = { ...(current.layoutJson ?? {}), ...(values.layoutJson ?? {}) };
+  const { pairWithNext, pairRatio, verticalAlign, layoutJson: incomingLayout, ...columnValues } = values;
+  const layoutJson = { ...(current.layoutJson ?? {}), ...(incomingLayout ?? {}) };
   delete layoutJson.align;
   delete layoutJson.hasBackground;
   delete layoutJson.padding;
@@ -48,9 +53,19 @@ export function updatePhoto(db: CmsDatabase, id: number, values: PhotoChanges) {
     delete layoutJson.offset;
     delete layoutJson.class;
   }
+  if (pairWithNext === false) {
+    delete layoutJson.pairWithNext;
+    delete layoutJson.pairRatio;
+  } else if (pairWithNext === true) {
+    layoutJson.pairWithNext = true;
+    layoutJson.pairRatio = pairRatio ?? layoutJson.pairRatio ?? '1:1';
+  } else if (pairRatio && layoutJson.pairWithNext) {
+    layoutJson.pairRatio = pairRatio;
+  }
+  if (verticalAlign) layoutJson.verticalAlign = verticalAlign;
   const photo = db
     .update(photos)
-    .set({ ...values, layoutJson, updatedAt: now() })
+    .set({ ...columnValues, layoutJson, updatedAt: now() })
     .where(eq(photos.id, id))
     .returning()
     .get();

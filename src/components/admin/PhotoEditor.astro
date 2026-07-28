@@ -24,6 +24,9 @@ import { RefreshCw, Save, X } from 'lucide-astro';
       </div>
       <div class="form-field"><label for="photo-align">对齐</label><select id="photo-align" data-editor-align><option value="start">左</option><option value="center">中</option><option value="end">右</option></select></div>
       <div class="form-field"><label for="photo-padding">留白</label><input id="photo-padding" maxlength="80" placeholder="例如 24px" data-editor-padding /></div>
+      <label class="checkbox-field full"><input type="checkbox" data-editor-pair />与下一张同排</label>
+      <div class="form-field" data-editor-pair-options hidden><label for="photo-pair-ratio">宽度比例</label><select id="photo-pair-ratio" data-editor-pair-ratio><option value="1:1">1:1</option><option value="2:3">2:3</option><option value="3:2">3:2</option></select></div>
+      <div class="form-field"><label for="photo-vertical-align">垂直对齐</label><select id="photo-vertical-align" data-editor-vertical-align><option value="start">顶部</option><option value="center">居中</option><option value="end">底部</option></select></div>
       <label class="checkbox-field"><input type="checkbox" data-editor-background />显示背景</label>
       <label class="checkbox-field"><input type="checkbox" data-editor-cover />设为图集封面</label>
       <div class="form-field full">
@@ -52,6 +55,10 @@ import { RefreshCw, Save, X } from 'lucide-astro';
   const align = editor?.querySelector<HTMLSelectElement>('[data-editor-align]');
   const padding = editor?.querySelector<HTMLInputElement>('[data-editor-padding]');
   const background = editor?.querySelector<HTMLInputElement>('[data-editor-background]');
+  const pairWithNext = editor?.querySelector<HTMLInputElement>('[data-editor-pair]');
+  const pairOptions = editor?.querySelector<HTMLElement>('[data-editor-pair-options]');
+  const pairRatio = editor?.querySelector<HTMLSelectElement>('[data-editor-pair-ratio]');
+  const verticalAlign = editor?.querySelector<HTMLSelectElement>('[data-editor-vertical-align]');
   const cover = editor?.querySelector<HTMLInputElement>('[data-editor-cover]');
   const replacementFile = editor?.querySelector<HTMLInputElement>('[data-editor-replacement-file]');
   const replacementUrl = editor?.querySelector<HTMLInputElement>('[data-editor-replacement-url]');
@@ -73,6 +80,7 @@ import { RefreshCw, Save, X } from 'lucide-astro';
     preview.dataset.align = align?.value ?? 'center';
     preview.dataset.background = String(background?.checked ?? false);
     preview.style.padding = padding?.value.trim() || '0px';
+    if (pairOptions) pairOptions.hidden = !(pairWithNext?.checked ?? false);
   };
   document.addEventListener('photo:edit', (event) => {
     const photo = (event as CustomEvent).detail;
@@ -83,6 +91,14 @@ import { RefreshCw, Save, X } from 'lucide-astro';
     if (align) align.value = photo.align ?? 'center';
     if (padding) padding.value = photo.padding ?? '';
     if (background) background.checked = Boolean(photo.hasBackground);
+    const storedLayout = photo.layoutJson ?? {};
+    const canPairWithNext = Boolean(photo.canPairWithNext);
+    if (pairWithNext) {
+      pairWithNext.disabled = !canPairWithNext;
+      pairWithNext.checked = canPairWithNext && Boolean(storedLayout.pairWithNext);
+    }
+    if (pairRatio) pairRatio.value = storedLayout.pairRatio ?? '1:1';
+    if (verticalAlign) verticalAlign.value = storedLayout.verticalAlign ?? 'start';
     if (cover) cover.checked = false;
     if (replacementFile) replacementFile.value = '';
     if (replacementUrl) replacementUrl.value = '';
@@ -119,7 +135,11 @@ import { RefreshCw, Save, X } from 'lucide-astro';
           alt: alt?.value ?? '',
           layoutPreset: editor?.querySelector<HTMLInputElement>('[name="layoutPreset"]:checked')?.value ?? 'auto',
           align: align?.value ?? 'center', hasBackground: background?.checked ?? false,
-          padding: padding?.value ?? '', setCover: cover?.checked ?? false,
+          padding: padding?.value ?? '',
+          pairWithNext: pairWithNext?.checked ?? false,
+          pairRatio: pairRatio?.value ?? '1:1',
+          verticalAlign: verticalAlign?.value ?? 'start',
+          setCover: cover?.checked ?? false,
         }),
       });
       const result = await response.json();
