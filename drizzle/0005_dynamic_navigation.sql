@@ -1,0 +1,1 @@
+ALTER TABLE `site_settings` ADD `navigation_json` text;

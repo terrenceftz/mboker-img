@@ -36,6 +36,13 @@
       "when": 1785144413158,
       "tag": "0004_chief_bug",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1785199974398,
+      "tag": "0005_dynamic_navigation",
+      "breakpoints": true
     }
   ]
 }

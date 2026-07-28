@@ -58,6 +58,11 @@ export type SpecialLayoutDocument = {
   blocks: SpecialLayoutBlock[];
 };
 
+export type NavigationConfig = {
+  version: 1;
+  albumIds: number[];
+};
+
 export const categories = sqliteTable('categories', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   title: text('title').notNull(),
@@ -176,6 +181,7 @@ export const siteSettings = sqliteTable('site_settings', {
   homeIntro: text('home_intro').notNull().default(''),
   homeHeroUrl: text('home_hero_url').notNull().default(''),
   homeSideUrl: text('home_side_url').notNull().default(''),
+  navigationJson: text('navigation_json', { mode: 'json' }).$type<NavigationConfig | null>(),
   defaultSeoTitle: text('default_seo_title').notNull().default(''),
   defaultSeoDescription: text('default_seo_description').notNull().default(''),
   analyticsJson: text('analytics_json', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
