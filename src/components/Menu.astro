@@ -2,22 +2,14 @@
 import ArrowIcon from '../components/ArrowIcon.astro';
 import Noise from "../functions/Noise.astro";
 import { getDatabase } from '../server/db/client';
-import { listAlbumsPublished } from '../server/repositories/albums';
-import { listCategoriesPublished } from '../server/repositories/categories';
-import { listPhotos } from '../server/repositories/photos';
+import { resolveNavigationAlbums } from '../server/repositories/navigation';
+import { getSettings } from '../server/repositories/settings';
 
 const db = getDatabase();
-const menuItems = listCategoriesPublished(db).map((category) => {
-  const album = listAlbumsPublished(db, category.id)[0];
-  const photos = album ? listPhotos(db, album.id) : [];
-  const cover = photos.find((photo) => photo.id === album?.coverPhotoId) ?? photos[0];
-  return {
-    title: category.title,
-    href: album ? `/collection/${category.slug}/${album.slug}` : `/collection/${category.slug}`,
-    coverUrl: category.coverUrl ?? cover?.thumbnailUrl ?? cover?.originalUrl ?? '/menu/other.jpg',
-    special: Boolean(album?.isSpecial),
-  };
-});
+const menuItems = [
+  ...resolveNavigationAlbums(db, getSettings(db)?.navigationJson ?? null),
+  { title: '更多', href: '/collection', coverUrl: '/menu/other.jpg', special: false },
+];
 ---
 <div id="site-menu" class="menu" data-state="closed" role="dialog" aria-modal="true" aria-label="主题目录" aria-hidden="true">
     <Noise />
@@ -147,6 +139,8 @@ const menuItems = listCategoriesPublished(db).map((category) => {
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    width: 100%;
+    min-width: 0;
     height: 100%;
     min-height: 100vh;
 }
@@ -173,12 +167,18 @@ const menuItems = listCategoriesPublished(db).map((category) => {
 }
 .menu-nav{
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
     flex-direction: column;
+    width: min(86%, 760px);
+    max-height: calc(100dvh - 160px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px 20px 12px 2.2em;
 }
 .menu-title{
     position: relative;
+    min-width: 0;
     font-size: 36px;
     display: flex;
     align-items: center;
@@ -193,6 +193,7 @@ const menuItems = listCategoriesPublished(db).map((category) => {
 .menu-item{
     position: relative;
     display: flex;
+    max-width: 100%;
     padding: 0.5em 0;
     &__link{
     position: relative;
@@ -204,6 +205,8 @@ const menuItems = listCategoriesPublished(db).map((category) => {
     margin:1.5vh 0;
     display: inline-block;
     display: flex;
+    max-width: 100%;
+    overflow-wrap: anywhere;
     }
     svg{
         position: absolute;

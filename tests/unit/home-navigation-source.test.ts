@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 describe('visitor category navigation', () => {
-  it('renders the menu from published CMS categories', () => {
+  it('renders the menu from configured published CMS albums', () => {
     const menu = readFileSync('src/components/Menu.astro', 'utf8');
 
-    expect(menu).toContain('listCategoriesPublished');
+    expect(menu).toContain('resolveNavigationAlbums');
     expect(menu).toContain('menuItems.map');
     expect(menu).not.toContain('href="/posts/altay"');
   });
