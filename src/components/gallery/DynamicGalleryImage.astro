@@ -18,9 +18,10 @@ interface Props {
   index: number;
   embedded?: boolean;
   fill?: boolean;
+  paired?: boolean;
 }
 
-const { photo, index, embedded = false, fill = false } = Astro.props;
+const { photo, index, embedded = false, fill = false, paired = false } = Astro.props;
 
 function responsiveClasses(prefix: 'col' | 'offset', sizes?: StoredResponsiveSize) {
   if (!sizes) return '';
@@ -54,13 +55,13 @@ const effectivePreset = fill
 
 <div
   class:list={[
-    embedded ? 'special-media' : 'collection-item',
-    embedded ? `special-media--${effectivePreset}` : 'gallery-item',
-    !embedded && responsiveClasses('col', cols),
-    !embedded && responsiveClasses('offset', storedLayout.offset),
+    paired ? 'paired-media' : embedded ? 'special-media' : 'collection-item',
+    paired ? 'gallery-item' : embedded ? `special-media--${effectivePreset}` : 'gallery-item',
+    !embedded && !paired && responsiveClasses('col', cols),
+    !embedded && !paired && responsiveClasses('offset', storedLayout.offset),
     align ? `justify-content-${align}` : '',
     hasBackground ? 'pg-bg pg-pad' : '',
-    storedLayout.class,
+    !embedded && !paired && storedLayout.class,
   ]}
   style={style}
   data-align={align}
@@ -89,6 +90,7 @@ const effectivePreset = fill
   .collection-item[data-align='start'] { margin-left: 0; margin-right: auto; }
   .collection-item[data-align='center'] { margin-inline: auto; }
   .collection-item[data-align='end'] { margin-left: auto; margin-right: 0; }
+  .paired-media { position: relative; width: 100%; }
   .special-media { position: relative; width: 100%; }
   .special-media--standard { width: 76%; }
   .special-media--narrow { width: 58%; }

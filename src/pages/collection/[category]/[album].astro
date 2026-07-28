@@ -2,9 +2,11 @@
 import CollectionComm from '../CollectionComm.astro';
 import DynamicGalleryImage from '../../../components/gallery/DynamicGalleryImage.astro';
 import GalleryNav from '../../../components/gallery/GalleryNav.astro';
+import PairedGalleryRow from '../../../components/gallery/PairedGalleryRow.astro';
 import SpecialGallery from '../../../components/gallery/SpecialGallery.astro';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { getDatabase } from '../../../server/db/client';
+import { groupGalleryPhotos } from '../../../server/gallery/group-photos';
 import { getPublishedAlbumView } from '../../../server/repositories/visitor-gallery';
 
 let view;
@@ -17,6 +19,8 @@ const { album, category, next } = view;
 const title = album.seoTitle || `${album.title} | Mboker Img`;
 const description = album.seoDescription || album.description;
 const keywords = album.seoKeywordsJson.join(', ') || album.tagsJson.join(', ');
+const groupedPhotos = groupGalleryPhotos(album.photos);
+const photoIndexes = new Map(album.photos.map((photo, index) => [photo.id, index]));
 ---
 
 <BaseLayout page={album.slug} title={title} description={description} keywords={keywords} loading={album.titleEn || album.title}>
@@ -32,7 +36,14 @@ const keywords = album.seoKeywordsJson.join(', ') || album.tagsJson.join(', ');
                 <div class="gallery-container p-0">
                   {album.isSpecial
                     ? <SpecialGallery blocks={album.specialBlocks} />
-                    : album.photos.map((photo, index) => <DynamicGalleryImage photo={photo} index={index} />)}
+                    : groupedPhotos.map((group) => group.type === 'pair'
+                      ? <PairedGalleryRow
+                          first={group.first}
+                          second={group.second}
+                          firstIndex={photoIndexes.get(group.first.id) ?? 0}
+                          secondIndex={photoIndexes.get(group.second.id) ?? 0}
+                        />
+                      : <DynamicGalleryImage photo={group.photo} index={photoIndexes.get(group.photo.id) ?? 0} />)}
                 </div>
               </div>
             </div>

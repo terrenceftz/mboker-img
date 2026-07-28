@@ -1,0 +1,41 @@
+---
+import DynamicGalleryImage from './DynamicGalleryImage.astro';
+import type { listPhotos } from '../../server/repositories/photos';
+
+type GalleryPhoto = ReturnType<typeof listPhotos>[number];
+
+interface Props {
+  first: GalleryPhoto;
+  second: GalleryPhoto;
+  firstIndex: number;
+  secondIndex: number;
+}
+
+const { first, second, firstIndex, secondIndex } = Astro.props;
+const ratio = first.layoutJson?.pairRatio ?? '1:1';
+const firstVerticalAlign = first.layoutJson?.verticalAlign ?? 'start';
+const secondVerticalAlign = second.layoutJson?.verticalAlign ?? 'start';
+---
+
+<section class="paired-row" data-ratio={ratio} data-gallery-pair>
+  <div class="paired-slot" data-vertical-align={firstVerticalAlign}>
+    <DynamicGalleryImage photo={first} index={firstIndex} paired />
+  </div>
+  <div class="paired-slot" data-vertical-align={secondVerticalAlign}>
+    <DynamicGalleryImage photo={second} index={secondIndex} paired />
+  </div>
+</section>
+
+<style>
+  .paired-row { display: grid; width: 100%; gap: clamp(28px, 8vw, 150px); margin-bottom: 12vw; }
+  .paired-row[data-ratio='1:1'] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .paired-row[data-ratio='2:3'] { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .paired-row[data-ratio='3:2'] { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .paired-slot { min-width: 0; }
+  .paired-slot[data-vertical-align='start'] { align-self: start; }
+  .paired-slot[data-vertical-align='center'] { align-self: center; }
+  .paired-slot[data-vertical-align='end'] { align-self: end; }
+  @media (max-width: 767px) {
+    .paired-row { grid-template-columns: 1fr !important; gap: 40px; margin-bottom: 56px; }
+  }
+</style>
