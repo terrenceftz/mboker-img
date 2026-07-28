@@ -7,6 +7,7 @@ import { listAlbumsPublished } from '../server/repositories/albums';
 import { listCategoriesPublished } from '../server/repositories/categories';
 import { getHomeData } from '../server/repositories/home';
 import { listPhotos } from '../server/repositories/photos';
+import { listPublishedPreloaderImageUrls, selectPreloaderImages } from '../server/repositories/preloader';
 import { getSettings } from '../server/repositories/settings';
 
 const db = getDatabase();
@@ -14,6 +15,7 @@ const home = getHomeData(db);
 const settings = getSettings(db);
 const homeHeroUrl = settings?.homeHeroUrl || '/hero01.jpg';
 const homeSideUrl = settings?.homeSideUrl || '/hero02.jpg';
+const preloaderImages = selectPreloaderImages(listPublishedPreloaderImageUrls(db));
 const categoryItems = listCategoriesPublished(db).map((category) => {
   const albums = listAlbumsPublished(db, category.id);
   const firstAlbum = albums[0];
@@ -50,6 +52,7 @@ const featuredItems = featuredAlbums.length
   description={settings?.defaultSeoDescription || "欢迎来到 Mboker Img，记录城市、自然与旅途中的影像故事。"}
   keywords="Mboker Img,Photo,摄影,摄影学习日记,摄影师个人网站"
   loading="Mboker Img"
+  preloaderImages={preloaderImages}
 >
   <div class="container">
     <div class="hero">

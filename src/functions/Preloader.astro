@@ -3,9 +3,11 @@ import Noise from "../functions/Noise.astro";
 interface Props {
   loading?: string;
   showHero?: boolean;
+  images?: string[];
 }
 
-const { loading = "MBOKER IMG", showHero = false } = Astro.props;
+const { loading = "MBOKER IMG", showHero = false, images: incomingImages = [] } = Astro.props;
+const images = incomingImages.length ? incomingImages : ['/hero-preloader.jpg'];
 ---
 
 <div class="preloader">
@@ -13,13 +15,17 @@ const { loading = "MBOKER IMG", showHero = false } = Astro.props;
   <div class="loading-block upperone">
     <Noise />
     {showHero ? (
-      <img
-        src="/hero.gif"
-        class="preloader-hero"
-        alt=""
-        aria-hidden="true"
-        style="opacity: 0; visibility: hidden; transform: translateY(-32px);"
-      />
+      <div class="preloader-montage" aria-hidden="true">
+        {images.map((src) => (
+          <img
+            src={src}
+            class="preloader-montage__image"
+            alt=""
+            loading="eager"
+            decoding="async"
+          />
+        ))}
+      </div>
     ) : (
       <div class="preloader-title preloader-splitting" data-splitting>
         {loading}
@@ -80,78 +86,74 @@ const { loading = "MBOKER IMG", showHero = false } = Astro.props;
       font-size: 20px;
     }
   }
-  .preloader-hero {
-    width: 160px;
-    height: auto;
+  .preloader-montage {
+    position: relative;
+    width: 320px;
+    height: 310px;
+  }
+  .preloader-montage__image {
+    --montage-x: 0px;
+    --montage-y: 0px;
+    --montage-rotate: 0deg;
+    --montage-delay: .16s;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 174px;
+    height: 220px;
+    object-fit: cover;
     opacity: 0;
-    visibility: hidden;
-    transform: translateY(-28px);
-    will-change: transform, opacity;
-    animation: preloader-hero-in 1.5s cubic-bezier(.16, 1, .3, 1) .5s both;
+    filter: blur(12px);
+    box-shadow: 0 16px 42px rgba(14, 16, 15, .14);
+    will-change: transform, opacity, filter;
+    animation: preloader-montage-in .78s cubic-bezier(.16, 1, .3, 1) var(--montage-delay) both;
   }
-  .preloader-hero.is-leaving {
-    animation: preloader-hero-out 1s cubic-bezier(.7, 0, .84, 0) .5s both;
+  .preloader-montage__image:nth-child(1) { --montage-x: -58px; --montage-y: -22px; --montage-rotate: -8deg; --montage-delay: .16s; }
+  .preloader-montage__image:nth-child(2) { --montage-x: 52px; --montage-y: -18px; --montage-rotate: 7deg; --montage-delay: .30s; }
+  .preloader-montage__image:nth-child(3) { --montage-x: -38px; --montage-y: 30px; --montage-rotate: -4deg; --montage-delay: .44s; }
+  .preloader-montage__image:nth-child(4) { --montage-x: 42px; --montage-y: 26px; --montage-rotate: 5deg; --montage-delay: .58s; }
+  .preloader-montage__image:nth-child(5) { --montage-delay: .72s; }
+  .preloader-montage.is-leaving .preloader-montage__image {
+    animation: preloader-montage-out .42s cubic-bezier(.7, 0, .84, 0) both;
   }
-  @keyframes preloader-hero-in {
+  @keyframes preloader-montage-in {
     from {
       opacity: 0;
-      visibility: visible;
-      transform: translateY(-32px);
-      filter: blur(10px);
+      transform: translate(calc(-50% + var(--montage-x)), calc(-50% + var(--montage-y) - 34px)) rotate(calc(var(--montage-rotate) - 4deg)) scale(.92);
+      filter: blur(12px);
     }
     to {
       opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
+      transform: translate(calc(-50% + var(--montage-x)), calc(-50% + var(--montage-y))) rotate(var(--montage-rotate)) scale(1);
       filter: blur(0);
     }
   }
-  @keyframes preloader-hero-out {
+  @keyframes preloader-montage-out {
     from {
       opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
       filter: blur(0);
     }
     to {
       opacity: 0;
-      visibility: hidden;
-      transform: translateY(-16px);
-      filter: blur(48px);
+      filter: blur(24px);
     }
+  }
+  @media screen and (max-width: 600px) {
+    .preloader-montage {
+      width: 250px;
+      height: 240px;
+    }
+    .preloader-montage__image {
+      width: 138px;
+      height: 174px;
+    }
+    .preloader-montage__image:nth-child(1) { --montage-x: -42px; --montage-y: -16px; }
+    .preloader-montage__image:nth-child(2) { --montage-x: 38px; --montage-y: -14px; }
+    .preloader-montage__image:nth-child(3) { --montage-x: -28px; --montage-y: 22px; }
+    .preloader-montage__image:nth-child(4) { --montage-x: 30px; --montage-y: 20px; }
   }
   .preloader-splitting .splitting .char,
   .preloader-splitting.splitting .char {
     padding: 0 3px;
-  }
-  @keyframes preloader-pic {
-    from {
-      transform: translateY(0) rotate(0deg);
-      filter: blur(4px);
-      opacity: 0;
-    }
-    to{
-      transform: translateY(50px) rotate(-10deg);
-      filter: blur(0px);
-      opacity: 1;
-    }
-  }
-
-  .preloader-pic{
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom:0;
-    top:0;
-    margin:0 auto;
-    top:50%;
-    text-align: center;
-    &__img{
-      height: 100%;
-      width:100%;
-      object-fit: cover;
-      width:200px;
-      height:250px;
-    }
   }
 </style>

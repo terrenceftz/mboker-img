@@ -12,15 +12,22 @@ import Preloader from "../functions/Preloader.astro";
 import Cursor from "../functions/Cursor.astro";
 import { siteConfig } from "../config/site";
 
-interface Props { page?: string; title?: string; keywords?: string; description?: string; loading?: string; }
-const { page, title, keywords, description, loading } = Astro.props;
+interface Props {
+  page?: string;
+  title?: string;
+  keywords?: string;
+  description?: string;
+  loading?: string;
+  preloaderImages?: string[];
+}
+const { page, title, keywords, description, loading, preloaderImages = [] } = Astro.props;
 ---
 <!doctype html>
 <html lang={siteConfig.locale} class={page}>
   <head><MainHead title={title} description={description} keywords={keywords} /></head>
   <body>
     <Noise />
-    <Preloader loading={loading} showHero={page === "home"} />
+    <Preloader loading={loading} showHero={page === "home"} images={preloaderImages} />
     <Cursor />
     <div class="wrapper position-relative">
       <Header />
