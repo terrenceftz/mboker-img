@@ -2,6 +2,8 @@
 
 Mboker Img 保留原摄影站前端设计和动画，并增加单管理员内容后台。后台可管理图集分类、图集、图片、特辑排版、文章、关于页和站点设置；图片支持本地上传与 HTTPS 外链。
 
+> **前端来源与致谢**：本项目的前端设计与动画基于 [ricocc/tink-photography](https://github.com/ricocc/tink-photography) 开发。Mboker Img 在其基础上增加了内容管理后台、图集与图片管理、特辑排版、文章发布、关于页和站点设置等功能。
+
 ## 本地运行
 
 需要 Node.js 22.12+ 和 pnpm。

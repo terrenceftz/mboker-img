@@ -1,20 +1,18 @@
-# Tink Photo Gallery
+# Mboker Img
 
 [中文](README.md) | **English**
 
-**Tink's World!**  
-Tink's personal website, built with Astro.
+Mboker Img preserves the photography frontend's design and animations while adding a single-administrator content management system. The CMS manages gallery categories, albums, images, special layouts, posts, the About page, and site settings; images support local uploads and HTTPS URLs.
 
-A collection of Tink's photography — visual stories of cities, nature, and journeys, along with life notes and a personal introduction.
+> **Frontend source and credit:** The frontend design and animations are based on [ricocc/tink-photography](https://github.com/ricocc/tink-photography). Mboker Img extends it with a CMS for galleries, images, special layouts, posts, the About page, and site settings.
 
 ## What's Inside
 
 - **Photo Gallery**: works organized by theme — nature, city, Altay, Jiuzhaigou, sunset, and more
 - **Visual Stories**: travel essays and captured moments
-- **About Tink**: personal introduction
+- **About Page**: editable profile, portrait, biography, and social links
 - **Blog**: occasional thoughts on life
-
-Live site: [tinks.netlify.app](https://tinks.netlify.app/)
+- **CMS**: gallery, image, article, About page, navigation, and site-settings management
 
 ![Tink Photo Gallery light and dark mode](public/screenshot.jpg)
 
