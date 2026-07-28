@@ -27,4 +27,14 @@ describe('configurable theme directory source', () => {
     expect(menu).toMatch(/\.menu-nav\s*\{[^}]*overflow-y:\s*auto/s);
     expect(menu).toContain('overscroll-behavior: contain');
   });
+
+  it('keeps the hover arrow inside the scrollable menu region', () => {
+    const menu = readFileSync('src/components/Menu.astro', 'utf8');
+    const globalStyles = readFileSync('src/styles/global.scss', 'utf8');
+
+    expect(menu).toMatch(/&__link\s*\{[^}]*padding-left:\s*1\.2em/s);
+    expect(menu).toMatch(/\.menu-item\s*\{[\s\S]*?svg\s*\{[^}]*left:\s*0/s);
+    expect(menu).not.toContain('left: -1.2em');
+    expect(globalStyles).not.toContain('left: -1.2em');
+  });
 });

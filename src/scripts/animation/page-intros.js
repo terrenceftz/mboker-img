@@ -24,10 +24,12 @@ const animateDetails = (timeline, groups, position) => {
 };
 
 function initHomeIntro() {
-  const heading = document.querySelector(".hero-heading");
+  const heading = document.querySelector(".hero-splitting-title");
+  const byline = document.querySelector(".hero-byline");
   const text = document.querySelector(".hero-text");
-  if (!heading || !text) return false;
+  if (!heading || !byline || !text) return false;
   splitOnce(heading);
+  splitOnce(byline);
   splitOnce(text);
   const timeline = gsap.timeline();
   timeline
@@ -36,6 +38,9 @@ function initHomeIntro() {
       opacity: 1, x: 0, filter: "blur(0px)", duration: 1.25, stagger: { amount: 1.1 }, ease: "power1.out",
       onComplete: () => document.querySelector(".hero-line")?.classList.add("motion-svg__heroline"),
     }, 0.75)
+    .to(byline.querySelectorAll(".char"), {
+      opacity: 1, x: 0, filter: "blur(0px)", duration: 0.85, stagger: { amount: 0.55 }, ease: "power1.out",
+    }, 1.05)
     .to(text.querySelectorAll(".char"), {
       opacity: 1, x: 0, filter: "blur(0px)", duration: 1, stagger: { amount: 1.2 }, ease: "power1.out",
     }, 1.25)
@@ -127,10 +132,12 @@ export function initPageAnimations() {
 
 function preparePageIntro() {
   if (prefersReducedMotion) return;
-  const heading = document.querySelector(".hero-heading");
+  const heading = document.querySelector(".hero-splitting-title");
+  const byline = document.querySelector(".hero-byline");
   const heroText = document.querySelector(".hero-text");
-  [heading, heroText].forEach(splitOnce);
+  [heading, byline, heroText].forEach(splitOnce);
   if (heading) gsap.set(heading.querySelectorAll(".char"), { opacity: 0, x: -30, filter: "blur(5px)" });
+  if (byline) gsap.set(byline.querySelectorAll(".char"), { opacity: 0, x: -18, filter: "blur(3px)" });
   if (heroText) gsap.set(heroText.querySelectorAll(".char"), { opacity: 0, x: -20, filter: "blur(3px)" });
   if (heading) {
     gsap.set(".site-header", { opacity: 0, y: -20 });

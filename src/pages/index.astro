@@ -59,14 +59,11 @@ const featuredItems = featuredAlbums.length
             <div class="splitting-title hero-splitting-title" data-splitting>
               {settings?.homeTitle || '影像故事'}
             </div>
-           <div class="hero-line">
-            <svg width="608" height="123" viewBox="0 0 608 123" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <text class="mboker-signature" x="8" y="94">Mboker</text>
-            </svg>
-
+           <div class="hero-line" aria-hidden="true">
+             <img src="/mboker.png" alt="" class="mboker-signature" width="1759" height="527" />
            </div>
           </h1>
-          <div class="user" data-splitting>
+          <div class="user hero-byline" data-splitting>
             (Mboker Img)
           </div>
       </div>
@@ -228,50 +225,47 @@ const featuredItems = featuredAlbums.length
     right: -20%;
     top:20%;
     z-index:1;
-    svg{
-      max-width:120%;
-      height: auto;
-    }
+    width: min(76vw, 608px);
     @media (min-width: 601px) {
       right: -45%;
       top:2%;
       z-index:1;
-      svg{
-        max-width:95%;
-        height: auto;
-      }
     }
   }
   .mboker-signature {
-    fill: transparent;
-    stroke: #65dc18;
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 1200;
-    stroke-dashoffset: 1200;
-    font-family: "Segoe Print", "Bradley Hand", cursive;
-    font-size: 92px;
-    font-weight: 600;
+    display: block;
+    width: 100%;
+    height: auto;
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    will-change: clip-path, opacity;
     animation: none;
   }
   .hero-line.motion-svg__heroline .mboker-signature {
-    animation: draw-mboker 2.4s ease-out forwards;
+    animation: draw-mboker 10s ease-in-out infinite;
   }
   @keyframes draw-mboker {
-    70% {
-      fill: transparent;
-      stroke-dashoffset: 0;
+    0%, 8% {
+      opacity: 0;
+      clip-path: inset(0 100% 0 0);
     }
-    100% {
-      fill: #65dc18;
-      stroke-dashoffset: 0;
+    10% {
+      opacity: 1;
+      clip-path: inset(0 100% 0 0);
+    }
+    34%, 58% {
+      opacity: 1;
+      clip-path: inset(0 0 0 0);
+    }
+    64%, 100% {
+      opacity: 0;
+      clip-path: inset(0 0 0 0);
     }
   }
   @media (prefers-reduced-motion: reduce) {
     .mboker-signature {
-      fill: #65dc18;
-      stroke-dashoffset: 0;
+      opacity: 1;
+      clip-path: none;
       animation: none;
     }
   }

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
@@ -27,8 +27,10 @@ describe('visitor category navigation', () => {
 
     expect(homepage).toContain("settings?.homeHeroUrl || '/hero01.jpg'");
     expect(homepage).toContain("settings?.homeSideUrl || '/hero02.jpg'");
+    expect(existsSync('public/mboker.png')).toBe(true);
+    expect(homepage).toContain('src="/mboker.png"');
     expect(homepage).toContain('class="mboker-signature"');
-    expect(homepage).toContain('>Mboker</text>');
+    expect(homepage).not.toContain('<text class="mboker-signature"');
     expect(homepage).not.toContain('M4 74.3544C38.0681');
   });
 
@@ -47,8 +49,21 @@ describe('visitor category navigation', () => {
 
   it('starts the Mboker drawing after the homepage title reveal', () => {
     const homepage = readFileSync('src/pages/index.astro', 'utf8');
+    const intros = readFileSync('src/scripts/animation/page-intros.js', 'utf8');
 
     expect(homepage).toContain('.hero-line.motion-svg__heroline .mboker-signature');
     expect(homepage).toMatch(/\.mboker-signature\s*\{[^}]*animation:\s*none/s);
+    expect(homepage).toMatch(/animation:\s*draw-mboker\s+10s[^;]*infinite/s);
+    expect(intros).toContain('document.querySelector(".hero-splitting-title")');
+    expect(intros).not.toContain('document.querySelector(".hero-heading")');
+  });
+
+  it('reveals the Mboker Img byline with the homepage intro', () => {
+    const homepage = readFileSync('src/pages/index.astro', 'utf8');
+    const intros = readFileSync('src/scripts/animation/page-intros.js', 'utf8');
+
+    expect(homepage).toContain('class="user hero-byline"');
+    expect(intros).toContain('document.querySelector(".hero-byline")');
+    expect(intros).toContain('byline.querySelectorAll(".char")');
   });
 });

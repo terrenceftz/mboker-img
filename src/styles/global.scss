@@ -601,7 +601,7 @@ a.logo,.logo{
 .menu-item{
     &__arrow{
         position: absolute;
-        left: -1.2em;
+        left: 0;
         line-height: 1.2;
         top: 0;
         bottom: 0;
@@ -824,4 +824,3 @@ animation-delay: calc(50ms * var(--char-index));
         opacity: 0
     }
 }
-
