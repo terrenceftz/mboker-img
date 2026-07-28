@@ -38,9 +38,19 @@ export function createExternalPhoto(db: CmsDatabase, values: PhotoMedia) {
 }
 
 export function updatePhoto(db: CmsDatabase, id: number, values: PhotoChanges) {
+  const current = getPhotoById(db, id);
+  const layoutJson = { ...(current.layoutJson ?? {}), ...(values.layoutJson ?? {}) };
+  delete layoutJson.align;
+  delete layoutJson.hasBackground;
+  delete layoutJson.padding;
+  if (values.layoutPreset && values.layoutPreset !== current.layoutPreset) {
+    delete layoutJson.cols;
+    delete layoutJson.offset;
+    delete layoutJson.class;
+  }
   const photo = db
     .update(photos)
-    .set({ ...values, updatedAt: now() })
+    .set({ ...values, layoutJson, updatedAt: now() })
     .where(eq(photos.id, id))
     .returning()
     .get();

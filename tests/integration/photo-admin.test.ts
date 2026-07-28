@@ -166,6 +166,15 @@ describe('photo admin API', () => {
       albumId: album.id,
       originalUrl: 'https://images.example.com/photo.jpg',
       sourceType: 'external',
+      layoutJson: {
+        cols: { md: '4' },
+        offset: { md: '2' },
+        align: 'start',
+        hasBackground: false,
+        padding: '80px',
+        class: 'legacy-layout',
+        verticalAlign: 'end',
+      } as any,
     }).returning().get();
 
     const response = await updatePhoto(context('PATCH', `/api/admin/photos/${photo.id}`, {
@@ -182,6 +191,7 @@ describe('photo admin API', () => {
     expect(result.data).toMatchObject({
       alt: '新的说明', layoutPreset: 'wide', align: 'end', hasBackground: true, padding: '24px', isCover: true,
     });
+    expect(result.data.layoutJson).toEqual({ verticalAlign: 'end' });
     expect(state.database.db.select().from(albums).get().coverPhotoId).toBe(photo.id);
   });
 
