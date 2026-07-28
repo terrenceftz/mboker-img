@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 
 import { albums, categories } from '../db/schema';
-import { getPublishedCategoryBySlug } from './categories';
+import { getPublishedCategoryBySlug, listCategoriesPublished } from './categories';
 import { listAlbumsPublished } from './albums';
 import { listPhotos } from './photos';
 import { type CmsDatabase, notFound } from './shared';
@@ -23,6 +23,19 @@ export function getPublishedCategoryView(db: CmsDatabase, categorySlug: string) 
   const category = getPublishedCategoryBySlug(db, categorySlug);
   const publishedAlbums = listAlbumsPublished(db, category.id).map((album) => withPhotos(db, album));
   return { category, albums: publishedAlbums };
+}
+
+export function getPublishedGalleryIndex(db: CmsDatabase) {
+  return listCategoriesPublished(db).flatMap((category) => {
+    const publishedAlbums = listAlbumsPublished(db, category.id).map((album) => {
+      const albumPhotos = listPhotos(db, album.id);
+      return {
+        ...album,
+        cover: albumPhotos.find((photo) => photo.id === album.coverPhotoId) ?? albumPhotos[0] ?? null,
+      };
+    });
+    return publishedAlbums.length > 0 ? [{ category, albums: publishedAlbums }] : [];
+  });
 }
 
 export function getPublishedAlbumView(db: CmsDatabase, categorySlug: string, albumSlug: string) {

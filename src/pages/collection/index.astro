@@ -1,0 +1,226 @@
+---
+import { ArrowUpRight } from 'lucide-astro';
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getDatabase } from '../../server/db/client';
+import { getPublishedGalleryIndex } from '../../server/repositories/visitor-gallery';
+import { getSettings } from '../../server/repositories/settings';
+
+const db = getDatabase();
+const galleryIndex = getPublishedGalleryIndex(db);
+const settings = getSettings(db);
+const albumCount = galleryIndex.reduce((total, group) => total + group.albums.length, 0);
+const yearFrom = (shotDate: string) => shotDate.match(/(?:19|20)\d{2}/)?.[0] ?? '';
+---
+
+<BaseLayout
+  page="gallery-index"
+  title={`全部图集 | ${settings?.siteName || 'Mboker Img'}`}
+  description="浏览 Mboker Img 的全部摄影分类与图集。"
+  loading="Collections"
+>
+  <div class="gallery-index-page">
+    <header class="gallery-index-hero">
+      <div class="gallery-index-eyebrow">
+        <span>COLLECTIONS</span>
+        <span>{String(albumCount).padStart(2, '0')}</span>
+      </div>
+      <h1>全部图集</h1>
+    </header>
+
+    <div class="gallery-index-sections">
+      {galleryIndex.map((group, groupIndex) => (
+        <section class="gallery-index-section" aria-labelledby={`gallery-category-${group.category.id}`}>
+          <header class="gallery-category-heading">
+            <span class="gallery-category-number">{String(groupIndex + 1).padStart(2, '0')}</span>
+            <div>
+              <h2 id={`gallery-category-${group.category.id}`}>{group.category.title}</h2>
+              {group.category.titleEn && <p>{group.category.titleEn}</p>}
+            </div>
+            <span class="gallery-category-count">{group.albums.length} 图集</span>
+          </header>
+
+          <div class="gallery-index-grid">
+            {group.albums.map((album) => {
+              const href = `/collection/${group.category.slug}/${album.slug}`;
+              const year = yearFrom(album.shotDate);
+              return (
+                <article class="gallery-index-album">
+                  <a class="gallery-album-media" href={href} aria-label={album.title}>
+                    {album.cover ? (
+                      <img
+                        src={album.cover.originalUrl}
+                        alt={album.cover.alt || album.title}
+                        width={album.cover.width ?? undefined}
+                        height={album.cover.height ?? undefined}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span class="gallery-album-placeholder" aria-hidden="true" />
+                    )}
+                  </a>
+                  <div class="gallery-album-meta">
+                    <span>{year || group.category.titleEn || group.category.title}</span>
+                    {album.isSpecial && <span>特辑</span>}
+                  </div>
+                  <a class="gallery-album-title" href={href}>
+                    <span>{album.title}</span>
+                    <ArrowUpRight size={22} strokeWidth={1.5} aria-hidden="true" />
+                  </a>
+                  {album.description && <p class="gallery-album-description">{album.description}</p>}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style lang="scss">
+  .gallery-index-page {
+    width: 100%;
+    padding: 0 var(--pad-inner);
+  }
+  .gallery-index-hero {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 170px 0 120px;
+  }
+  .gallery-index-eyebrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--color-600);
+    color: var(--color-300);
+    padding-bottom: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .gallery-index-hero h1 {
+    max-width: 980px;
+    margin: 36px 0 0;
+    color: var(--color-50);
+    font-size: 72px;
+    font-weight: 500;
+    line-height: 1.08;
+    letter-spacing: 0;
+  }
+  .gallery-index-sections { max-width: 1480px; margin: 0 auto; }
+  .gallery-index-section {
+    border-top: 1px solid var(--color-600);
+    padding: 30px 0 150px;
+  }
+  .gallery-category-heading {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 24px;
+    margin-bottom: 76px;
+  }
+  .gallery-category-number, .gallery-category-count {
+    color: var(--color-300);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .gallery-category-heading h2 {
+    margin: 0;
+    color: var(--color-50);
+    font-size: 34px;
+    font-weight: 550;
+    line-height: 1.1;
+    letter-spacing: 0;
+  }
+  .gallery-category-heading p {
+    margin: 8px 0 0;
+    color: var(--color-300);
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+  .gallery-index-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    column-gap: clamp(28px, 6vw, 110px);
+    row-gap: 110px;
+  }
+  .gallery-index-album { min-width: 0; }
+  .gallery-index-album:nth-child(4n + 2),
+  .gallery-index-album:nth-child(4n + 3) { margin-top: 110px; }
+  .gallery-album-media {
+    display: block;
+    width: 100%;
+    background: var(--color-800);
+  }
+  .gallery-album-media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+  .gallery-album-placeholder {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--color-800);
+  }
+  .gallery-album-meta {
+    display: flex;
+    min-height: 28px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--color-600);
+    color: var(--color-300);
+    padding: 9px 0 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .gallery-album-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    color: var(--color-50);
+    padding-top: 14px;
+    text-decoration: none;
+  }
+  .gallery-album-title span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 28px;
+    font-weight: 550;
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+  .gallery-album-title svg { flex: 0 0 auto; transition: transform .25s ease; }
+  .gallery-album-title:hover svg { transform: translate(3px, -3px); }
+  .gallery-album-description {
+    max-width: 620px;
+    margin: 12px 0 0;
+    color: var(--color-300);
+    font-size: 13px;
+    line-height: 1.65;
+    letter-spacing: 0;
+  }
+  @media (max-width: 767px) {
+    .gallery-index-hero { padding: 120px 0 76px; }
+    .gallery-index-hero h1 { margin-top: 26px; font-size: 46px; }
+    .gallery-index-section { padding: 22px 0 90px; }
+    .gallery-category-heading {
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 12px;
+      margin-bottom: 44px;
+    }
+    .gallery-category-count { grid-column: 2; }
+    .gallery-category-heading h2 { font-size: 28px; }
+    .gallery-index-grid { grid-template-columns: 1fr; row-gap: 68px; }
+    .gallery-index-album:nth-child(4n + 2),
+    .gallery-index-album:nth-child(4n + 3) { margin-top: 0; }
+    .gallery-album-title span { font-size: 23px; }
+  }
+</style>
