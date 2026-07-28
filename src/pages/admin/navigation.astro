@@ -1,0 +1,377 @@
+---
+import { Check, Compass, GripVertical, Image, Save, X } from 'lucide-astro';
+
+import PageHeader from '../../components/admin/PageHeader.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../server/db/client';
+import { listAlbumsAdmin } from '../../server/repositories/albums';
+import { listCategoriesAdmin } from '../../server/repositories/categories';
+import { resolveNavigationAlbums } from '../../server/repositories/navigation';
+import { listPhotos } from '../../server/repositories/photos';
+import { getSettings } from '../../server/repositories/settings';
+
+const db = getDatabase();
+const categories = listCategoriesAdmin(db);
+const albums = listAlbumsAdmin(db).map((album) => {
+  const albumPhotos = listPhotos(db, album.id);
+  const cover = albumPhotos.find((photo) => photo.id === album.coverPhotoId) ?? albumPhotos[0] ?? null;
+  return {
+    ...album,
+    coverUrl: cover?.thumbnailUrl ?? cover?.originalUrl ?? '',
+  };
+});
+const groups = categories.map((category) => ({
+  category,
+  albums: albums.filter((album) => album.categoryId === category.id),
+}));
+const navigationConfig = getSettings(db)?.navigationJson ?? null;
+const selectedIds = navigationConfig?.albumIds ?? resolveNavigationAlbums(db, null).map((album) => album.id);
+const albumById = new Map(albums.map((album) => [album.id, album]));
+const selectedAlbums = selectedIds.flatMap((id) => {
+  const album = albumById.get(id);
+  return album ? [album] : [];
+});
+---
+
+<AdminLayout title="导航设置">
+  <PageHeader title="导航设置" description="管理前台主题目录中显示的图集与顺序。">
+    <button class="button" type="button" data-save-navigation>
+      <Save size={16} aria-hidden="true" />保存导航
+    </button>
+  </PageHeader>
+
+  <div class="navigation-workspace">
+    <section class="navigation-panel navigation-library" aria-labelledby="navigation-library-title">
+      <header class="panel-heading">
+        <div>
+          <span class="panel-kicker">可选图集</span>
+          <h2 id="navigation-library-title">按分类选择</h2>
+        </div>
+        <span class="panel-count">{albums.length}</span>
+      </header>
+
+      <div class="navigation-groups">
+        {
+          groups.map(({ category, albums: categoryAlbums }) => categoryAlbums.length > 0 && (
+            <section class="navigation-group">
+              <div class="group-heading">
+                <div>
+                  <h3>{category.title}</h3>
+                  {category.titleEn && <span>{category.titleEn}</span>}
+                </div>
+                <span class:list={['status', { published: category.status === 'published' }]}>
+                  {category.status === 'published' ? '已发布' : '草稿'}
+                </span>
+              </div>
+              <div class="album-choice-list">
+                {categoryAlbums.map((album) => (
+                  <label class="album-choice">
+                    <input
+                      type="checkbox"
+                      value={album.id}
+                      checked={selectedIds.includes(album.id)}
+                      data-navigation-choice
+                      data-album-title={album.title}
+                      data-category-title={category.title}
+                      data-album-status={album.status}
+                      data-cover-url={album.coverUrl}
+                    />
+                    <span class="choice-check"><Check size={14} aria-hidden="true" /></span>
+                    <span class="choice-cover">
+                      {album.coverUrl ? <img src={album.coverUrl} alt="" loading="lazy" /> : <Image size={16} aria-hidden="true" />}
+                    </span>
+                    <span class="choice-copy">
+                      <strong>{album.title}</strong>
+                      <small>{album.status === 'published' ? '已发布' : '草稿'}</small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </section>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="navigation-panel navigation-selection" aria-labelledby="navigation-selection-title">
+      <header class="panel-heading">
+        <div>
+          <span class="panel-kicker">前台目录</span>
+          <h2 id="navigation-selection-title">已选图集</h2>
+        </div>
+        <span class="panel-count" data-selection-count>{selectedAlbums.length}</span>
+      </header>
+
+      <div class="selected-list" data-navigation-selected>
+        {selectedAlbums.map((album) => (
+          <article class="selected-item" data-selected-item data-id={album.id}>
+            <button class="icon-button drag-handle" type="button" title="拖拽排序">
+              <GripVertical size={16} aria-hidden="true" /><span class="sr-only">拖拽排序</span>
+            </button>
+            <span class="selected-cover">
+              {album.coverUrl ? <img src={album.coverUrl} alt="" /> : <span><Image size={15} aria-hidden="true" /></span>}
+            </span>
+            <span class="selected-copy">
+              <strong>{album.title}</strong>
+              <small>{album.category.title} · {album.status === 'published' ? '已发布' : '草稿'}</small>
+            </span>
+            <button class="icon-button selected-remove" type="button" data-remove-selected title="移除">
+              <X size={16} aria-hidden="true" /><span class="sr-only">移除</span>
+            </button>
+          </article>
+        ))}
+      </div>
+
+      <div class="selection-empty" data-selection-empty hidden={selectedAlbums.length > 0}>
+        <Compass size={24} strokeWidth={1.5} aria-hidden="true" />
+        <strong>仅显示“更多”</strong>
+      </div>
+      <p class="save-status" data-navigation-status role="status" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <template id="navigation-item-template">
+    <article class="selected-item" data-selected-item>
+      <button class="icon-button drag-handle" type="button" title="拖拽排序">
+        <GripVertical size={16} aria-hidden="true" /><span class="sr-only">拖拽排序</span>
+      </button>
+      <span class="selected-cover">
+        <img src="" alt="" />
+        <span class="selected-placeholder"><Image size={15} aria-hidden="true" /></span>
+      </span>
+      <span class="selected-copy"><strong></strong><small></small></span>
+      <button class="icon-button selected-remove" type="button" data-remove-selected title="移除">
+        <X size={16} aria-hidden="true" /><span class="sr-only">移除</span>
+      </button>
+    </article>
+  </template>
+
+  <script>
+    import Sortable from 'sortablejs';
+
+    const choices = Array.from(document.querySelectorAll<HTMLInputElement>('[data-navigation-choice]'));
+    const selectedList = document.querySelector<HTMLElement>('[data-navigation-selected]');
+    const itemTemplate = document.querySelector<HTMLTemplateElement>('#navigation-item-template');
+    const emptyState = document.querySelector<HTMLElement>('[data-selection-empty]');
+    const count = document.querySelector<HTMLElement>('[data-selection-count]');
+    const status = document.querySelector<HTMLElement>('[data-navigation-status]');
+    const saveButton = document.querySelector<HTMLButtonElement>('[data-save-navigation]');
+    const choiceById = new Map(choices.map((choice) => [Number(choice.value), choice]));
+    let selectedIds = Array.from(selectedList?.querySelectorAll<HTMLElement>('[data-selected-item]') ?? [])
+      .map((item) => Number(item.dataset.id));
+
+    const renderSelected = () => {
+      if (!selectedList || !itemTemplate) return;
+      selectedList.replaceChildren();
+
+      selectedIds.forEach((id) => {
+        const choice = choiceById.get(id);
+        if (!choice) return;
+        const fragment = itemTemplate.content.cloneNode(true) as DocumentFragment;
+        const item = fragment.querySelector<HTMLElement>('[data-selected-item]');
+        const image = fragment.querySelector<HTMLImageElement>('img');
+        const placeholder = fragment.querySelector<HTMLElement>('.selected-placeholder');
+        const title = fragment.querySelector<HTMLElement>('strong');
+        const meta = fragment.querySelector<HTMLElement>('small');
+        const coverUrl = choice.dataset.coverUrl ?? '';
+        if (item) item.dataset.id = String(id);
+        if (title) title.textContent = choice.dataset.albumTitle ?? '';
+        if (meta) {
+          const publication = choice.dataset.albumStatus === 'published' ? '已发布' : '草稿';
+          meta.textContent = `${choice.dataset.categoryTitle ?? ''} · ${publication}`;
+        }
+        if (image) {
+          image.src = coverUrl;
+          image.hidden = !coverUrl;
+        }
+        if (placeholder) placeholder.hidden = Boolean(coverUrl);
+        selectedList.append(fragment);
+      });
+
+      choices.forEach((choice) => { choice.checked = selectedIds.includes(Number(choice.value)); });
+      if (emptyState) emptyState.hidden = selectedIds.length > 0;
+      if (count) count.textContent = String(selectedIds.length);
+    };
+
+    choices.forEach((choice) => {
+      choice.addEventListener('change', () => {
+        const id = Number(choice.value);
+        selectedIds = choice.checked
+          ? [...selectedIds.filter((selectedId) => selectedId !== id), id]
+          : selectedIds.filter((selectedId) => selectedId !== id);
+        renderSelected();
+        if (status) status.textContent = '';
+      });
+    });
+
+    selectedList?.addEventListener('click', (event) => {
+      const remove = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-remove-selected]');
+      const item = remove?.closest<HTMLElement>('[data-selected-item]');
+      if (!remove || !item) return;
+      selectedIds = selectedIds.filter((id) => id !== Number(item.dataset.id));
+      renderSelected();
+      if (status) status.textContent = '';
+    });
+
+    if (selectedList) {
+      Sortable.create(selectedList, {
+        animation: 150,
+        handle: '.drag-handle',
+        onEnd: () => {
+          selectedIds = Array.from(selectedList.querySelectorAll<HTMLElement>('[data-selected-item]'))
+            .map((item) => Number(item.dataset.id));
+          if (status) status.textContent = '';
+        },
+      });
+    }
+
+    saveButton?.addEventListener('click', async () => {
+      saveButton.disabled = true;
+      if (status) status.textContent = '正在保存…';
+      try {
+        const response = await fetch('/api/admin/navigation', {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ albumIds: selectedIds }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error?.message ?? '保存失败');
+        selectedIds = result.data.albumIds;
+        renderSelected();
+        if (status) status.textContent = '导航已保存。';
+      } catch (error) {
+        if (status) status.textContent = error instanceof Error ? error.message : '保存失败，请重试。';
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+  </script>
+</AdminLayout>
+
+<style>
+  .navigation-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr);
+    align-items: start;
+    gap: 20px;
+  }
+  .navigation-panel {
+    min-width: 0;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    background: var(--admin-surface);
+  }
+  .navigation-selection { position: sticky; top: 24px; overflow: hidden; }
+  .panel-heading {
+    display: flex;
+    min-height: 72px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--admin-border);
+    padding: 14px 16px;
+  }
+  .panel-heading h2 { margin: 3px 0 0; font-size: 16px; font-weight: 650; }
+  .panel-kicker { color: #788079; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .panel-count {
+    display: grid;
+    min-width: 30px;
+    height: 30px;
+    place-items: center;
+    border-radius: 8px;
+    background: #edf2ee;
+    color: #315441;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .navigation-groups { display: grid; }
+  .navigation-group { padding: 16px; }
+  .navigation-group + .navigation-group { border-top: 1px solid #e7ebe8; }
+  .group-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .group-heading h3 { margin: 0; font-size: 13px; }
+  .group-heading div > span { display: block; color: #929791; margin-top: 3px; font-size: 10px; }
+  .album-choice-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .album-choice {
+    position: relative;
+    display: grid;
+    grid-template-columns: 20px 48px minmax(0, 1fr);
+    min-width: 0;
+    min-height: 64px;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid #dde3df;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    padding: 7px 10px;
+  }
+  .album-choice:hover { border-color: #9cb5a7; background: #f8faf8; }
+  .album-choice:has(input:checked) { border-color: #5f8d73; background: #f0f6f2; }
+  .album-choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .choice-check {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    border: 1px solid #aeb9b2;
+    border-radius: 5px;
+    background: #fff;
+    color: transparent;
+  }
+  .album-choice input:checked + .choice-check { border-color: var(--admin-green-700); background: var(--admin-green-700); color: #fff; }
+  .album-choice input:focus-visible + .choice-check { outline: 2px solid var(--admin-green-700); outline-offset: 2px; }
+  .choice-cover, .selected-cover {
+    display: grid;
+    overflow: hidden;
+    place-items: center;
+    border-radius: 6px;
+    background: #e9edea;
+    color: #9ba49e;
+  }
+  .choice-cover { width: 48px; height: 42px; }
+  .choice-cover img, .selected-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .choice-copy, .selected-copy { min-width: 0; }
+  .choice-copy strong, .choice-copy small, .selected-copy strong, .selected-copy small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .choice-copy strong, .selected-copy strong { font-size: 12px; font-weight: 650; }
+  .choice-copy small, .selected-copy small { color: #7b837d; margin-top: 4px; font-size: 10px; }
+  .selected-list { display: grid; gap: 7px; max-height: calc(100vh - 270px); overflow-y: auto; padding: 12px; }
+  .selected-item {
+    display: grid;
+    grid-template-columns: 34px 48px minmax(0, 1fr) 34px;
+    min-width: 0;
+    min-height: 62px;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #dce2de;
+    border-radius: 8px;
+    background: #fff;
+    padding: 6px;
+  }
+  .selected-item:hover { border-color: #b6c5bc; }
+  .selected-item .icon-button { width: 32px; min-height: 32px; }
+  .selected-cover { width: 48px; height: 46px; }
+  .selected-cover > span { display: grid; width: 100%; height: 100%; place-items: center; }
+  .selected-remove { color: #7d5555; }
+  .selection-empty { display: grid; min-height: 180px; place-items: center; align-content: center; gap: 9px; color: #829087; }
+  .selection-empty[hidden] { display: none; }
+  .selection-empty strong { color: #53645a; font-size: 12px; }
+  .save-status { min-height: 36px; margin: 0; border-top: 1px solid #e7ebe8; color: #315d45; padding: 10px 16px; font-size: 11px; }
+  .save-status:empty { border-top: 0; min-height: 0; padding-block: 0; }
+  @media (max-width: 1080px) {
+    .album-choice-list { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 820px) {
+    .navigation-workspace { grid-template-columns: 1fr; }
+    .navigation-selection { position: static; }
+    .selected-list { max-height: none; }
+  }
+  @media (max-width: 520px) {
+    .album-choice-list { grid-template-columns: 1fr; }
+    .navigation-group { padding: 12px; }
+  }
+</style>
