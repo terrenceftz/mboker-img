@@ -25,4 +25,15 @@ describe('homepage gallery preloader source', () => {
     expect(preloader).not.toContain('src="/hero-preloader.jpg"');
     expect(preloader).not.toContain('/hero.gif');
   });
+
+  it('waits for the final montage frame before revealing the page', () => {
+    const runtime = readFileSync(resolve('src/components/PreloaderRuntime.astro'), 'utf8');
+
+    expect(runtime).toContain('querySelector(".preloader-montage")');
+    expect(runtime).toContain('querySelector(".preloader-montage__image:last-child")');
+    expect(runtime).toContain('animationName === "preloader-montage-in"');
+    expect(runtime).toContain('window.setTimeout(finishMontageIntro, 1700)');
+    expect(runtime).toContain('montage.classList.add("is-leaving")');
+    expect(runtime).not.toContain('querySelector(".preloader-hero")');
+  });
 });

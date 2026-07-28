@@ -132,10 +132,12 @@ const images = incomingImages.length ? incomingImages : ['/hero-preloader.jpg'];
     from {
       opacity: 1;
       filter: blur(0);
+      transform: translate(calc(-50% + var(--montage-x)), calc(-50% + var(--montage-y))) rotate(var(--montage-rotate)) scale(1);
     }
     to {
       opacity: 0;
       filter: blur(24px);
+      transform: translate(calc(-50% + var(--montage-x)), calc(-50% + var(--montage-y) - 18px)) rotate(var(--montage-rotate)) scale(.96);
     }
   }
   @media screen and (max-width: 600px) {
