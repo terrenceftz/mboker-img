@@ -95,6 +95,15 @@ const { items = [] } = Astro.props as { items?: FeaturedItem[] };
     margin: 8px 0 24px;
   }
   @media (min-width: 992px) {
+    .index-card:nth-child(9n + 1) .index-card__inner { max-width: 900px; }
+    .index-card:nth-child(9n + 2) .index-card__inner { max-width: 440px; }
+    .index-card:nth-child(9n + 3) .index-card__inner { max-width: 620px; }
+    .index-card:nth-child(9n + 4) .index-card__inner { max-width: 860px; }
+    .index-card:nth-child(9n + 5) .index-card__inner { max-width: 600px; }
+    .index-card:nth-child(9n + 6) .index-card__inner { max-width: 520px; }
+    .index-card:nth-child(9n + 7) .index-card__inner { max-width: 840px; }
+    .index-card:nth-child(9n + 8) .index-card__inner { max-width: 600px; }
+    .index-card:nth-child(9n + 9) .index-card__inner { max-width: 900px; }
     .index-card__info {
       position: absolute;
     }
