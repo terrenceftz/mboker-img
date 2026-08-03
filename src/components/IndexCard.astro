@@ -104,6 +104,23 @@ const { items = [] } = Astro.props as { items?: FeaturedItem[] };
     .index-card:nth-child(9n + 7) .index-card__inner { max-width: 840px; }
     .index-card:nth-child(9n + 8) .index-card__inner { max-width: 600px; }
     .index-card:nth-child(9n + 9) .index-card__inner { max-width: 900px; }
+    .index-card__inner,
+    .index-card__media,
+    .index-card__media .gsap-picture {
+      display: inline-block;
+      width: auto;
+      max-width: 100%;
+    }
+    .index-card__img { width: auto; }
+    .index-card:nth-child(9n + 1) .index-card__img { max-height: min(760px, 78vh); }
+    .index-card:nth-child(9n + 2) .index-card__img { max-height: min(620px, 78vh); }
+    .index-card:nth-child(9n + 3) .index-card__img { max-height: min(700px, 78vh); }
+    .index-card:nth-child(9n + 4) .index-card__img { max-height: min(760px, 78vh); }
+    .index-card:nth-child(9n + 5) .index-card__img { max-height: min(700px, 78vh); }
+    .index-card:nth-child(9n + 6) .index-card__img { max-height: min(720px, 78vh); }
+    .index-card:nth-child(9n + 7) .index-card__img { max-height: min(760px, 78vh); }
+    .index-card:nth-child(9n + 8) .index-card__img { max-height: min(800px, 78vh); }
+    .index-card:nth-child(9n + 9) .index-card__img { max-height: min(900px, 78vh); }
     .index-card__info {
       position: absolute;
     }
