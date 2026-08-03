@@ -79,6 +79,21 @@ export function updateAlbum(db: CmsDatabase, id: number, values: AlbumChanges) {
   });
 }
 
+export function listHomepageAlbumIds(db: CmsDatabase) {
+  return listAlbumsAdmin(db).filter((album) => album.featured).map((album) => album.id);
+}
+
+export function replaceHomepageAlbums(db: CmsDatabase, ids: number[]) {
+  return db.transaction((tx: CmsDatabase) => {
+    const updatedAt = now();
+    tx.update(albums).set({ featured: false, updatedAt }).run();
+    if (ids.length > 0) {
+      tx.update(albums).set({ featured: true, updatedAt }).where(inArray(albums.id, ids)).run();
+    }
+    return listHomepageAlbumIds(tx);
+  });
+}
+
 export function saveSpecialLayout(
   db: CmsDatabase,
   id: number,

@@ -22,6 +22,24 @@ describe('visitor category navigation', () => {
     expect(cards).not.toMatch(/2023-\d{2}/);
   });
 
+  it('keeps the existing featured gallery between the hero and category navigation', () => {
+    const homepage = readFileSync('src/pages/index.astro', 'utf8');
+
+    expect(homepage.indexOf('<IndexCard items={featuredItems} />')).toBeLessThan(
+      homepage.indexOf('<Category items={categoryItems} />'),
+    );
+    expect(homepage).toContain('const featuredAlbums = home.featuredAlbums.filter');
+    expect(homepage).not.toContain('HomeAlbums');
+  });
+
+  it('keeps replacement hero images inside the original landscape frame', () => {
+    const homepage = readFileSync('src/pages/index.astro', 'utf8');
+
+    expect(homepage).toContain('class="picture__img hero-01__img"');
+    expect(homepage).toMatch(/\.hero-01\s*>\s*\.picture\s*\{[^}]*aspect-ratio:\s*5\s*\/\s*3[^}]*height:\s*auto[^}]*padding-bottom:\s*0/s);
+    expect(homepage).toMatch(/\.hero-01__img\s*\{[^}]*object-fit:\s*cover/s);
+  });
+
   it('renders configurable homepage images and the Mboker handwriting animation', () => {
     const homepage = readFileSync('src/pages/index.astro', 'utf8');
 

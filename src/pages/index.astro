@@ -83,7 +83,7 @@ const featuredItems = featuredAlbums.length
         <div class="col-12 col-sm-10 col-md-10 col-lg-8 p-0">
           <div class="hero-01">
             <picture class="gsap-picture picture as__5-3">
-              <img src={homeHeroUrl} alt="" class="picture__img hero-01"/>
+              <img src={homeHeroUrl} alt="" class="picture__img hero-01__img" fetchpriority="high" decoding="async" />
             </picture>
           </div>
         </div>
@@ -279,6 +279,15 @@ const featuredItems = featuredAlbums.length
     @media (min-width: 601px) {
       margin-top:20px;
     }
+  }
+  .hero-01 > .picture {
+    aspect-ratio: 5 / 3;
+    height: auto;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+  .hero-01__img {
+    object-fit: cover;
   }
 
 </style>

@@ -1,0 +1,230 @@
+---
+import { Check, Image, Save } from 'lucide-astro';
+
+import PageHeader from '../../components/admin/PageHeader.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getDatabase } from '../../server/db/client';
+import { listAlbumsAdmin, listHomepageAlbumIds } from '../../server/repositories/albums';
+import { listCategoriesAdmin } from '../../server/repositories/categories';
+import { listPhotos } from '../../server/repositories/photos';
+
+const db = getDatabase();
+const categories = listCategoriesAdmin(db);
+const albums = listAlbumsAdmin(db).map((album) => {
+  const albumPhotos = listPhotos(db, album.id);
+  const cover = albumPhotos.find((photo) => photo.id === album.coverPhotoId) ?? albumPhotos[0] ?? null;
+  return {
+    ...album,
+    coverUrl: cover?.thumbnailUrl ?? cover?.originalUrl ?? '',
+  };
+});
+const groups = categories.map((category) => ({
+  category,
+  albums: albums.filter((album) => album.categoryId === category.id),
+}));
+const selectedIds = listHomepageAlbumIds(db);
+---
+
+<AdminLayout title="主页图集">
+  <PageHeader title="主页图集" description="选择首页原展示区域中出现的图集。">
+    <button class="button" type="button" data-save-homepage>
+      <Save size={16} aria-hidden="true" />保存选择
+    </button>
+  </PageHeader>
+
+  <div class="homepage-workspace">
+    <section class="homepage-panel" aria-labelledby="homepage-library-title">
+      <header class="panel-heading">
+        <div>
+          <span class="panel-kicker">已创建图集</span>
+          <h2 id="homepage-library-title">按分类选择</h2>
+        </div>
+        <span class="panel-count">{albums.length}</span>
+      </header>
+
+      <div class="homepage-groups">
+        {
+          groups.map(({ category, albums: categoryAlbums }) => categoryAlbums.length > 0 && (
+            <section class="homepage-group">
+              <div class="group-heading">
+                <div>
+                  <h3>{category.title}</h3>
+                  {category.titleEn && <span>{category.titleEn}</span>}
+                </div>
+                <span class:list={['status', { published: category.status === 'published' }]}>
+                  {category.status === 'published' ? '已发布' : '草稿'}
+                </span>
+              </div>
+              <div class="album-choice-list">
+                {categoryAlbums.map((album) => (
+                  <label class="album-choice">
+                    <input
+                      type="checkbox"
+                      value={album.id}
+                      checked={selectedIds.includes(album.id)}
+                      data-homepage-choice
+                    />
+                    <span class="choice-check"><Check size={14} aria-hidden="true" /></span>
+                    <span class="choice-cover">
+                      {album.coverUrl ? <img src={album.coverUrl} alt="" loading="lazy" /> : <Image size={16} aria-hidden="true" />}
+                    </span>
+                    <span class="choice-copy">
+                      <strong>{album.title}</strong>
+                      <small>{album.status === 'published' ? '已发布' : '草稿'}</small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </section>
+          ))
+        }
+      </div>
+    </section>
+
+    <aside class="selection-panel" aria-labelledby="homepage-selection-title">
+      <span class="panel-kicker">主页状态</span>
+      <h2 id="homepage-selection-title"><strong data-selected-count>{selectedIds.length}</strong> 个图集已选择</h2>
+      <p>保存后，只有已勾选且已发布的图集会进入首页原展示区域。显示顺序沿用图集管理中的排序。</p>
+      <p class="save-status" data-homepage-status role="status" aria-live="polite"></p>
+    </aside>
+  </div>
+
+  <script>
+    const choices = Array.from(document.querySelectorAll<HTMLInputElement>('[data-homepage-choice]'));
+    const count = document.querySelector<HTMLElement>('[data-selected-count]');
+    const status = document.querySelector<HTMLElement>('[data-homepage-status]');
+    const saveButton = document.querySelector<HTMLButtonElement>('[data-save-homepage]');
+
+    const selectedAlbumIds = () => choices.filter((choice) => choice.checked).map((choice) => Number(choice.value));
+    const refreshCount = () => {
+      if (count) count.textContent = String(selectedAlbumIds().length);
+      if (status) status.textContent = '';
+    };
+    choices.forEach((choice) => choice.addEventListener('change', refreshCount));
+
+    saveButton?.addEventListener('click', async () => {
+      const selectedIds = selectedAlbumIds();
+      saveButton.disabled = true;
+      if (status) status.textContent = '正在保存...';
+      try {
+        const response = await fetch('/api/admin/homepage-albums', {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ albumIds: selectedIds }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error?.message ?? '保存失败');
+        if (count) count.textContent = String(result.data.albumIds.length);
+        if (status) status.textContent = '主页图集已保存。';
+      } catch (error) {
+        if (status) status.textContent = error instanceof Error ? error.message : '保存失败，请重试。';
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+  </script>
+</AdminLayout>
+
+<style>
+  .homepage-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    align-items: start;
+    gap: 20px;
+  }
+  .homepage-panel,
+  .selection-panel {
+    min-width: 0;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    background: var(--admin-surface);
+  }
+  .panel-heading {
+    display: flex;
+    min-height: 72px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--admin-border);
+    padding: 14px 16px;
+  }
+  .panel-heading h2,
+  .selection-panel h2 { margin: 3px 0 0; font-size: 16px; font-weight: 650; }
+  .panel-kicker { color: #788079; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .panel-count {
+    display: grid;
+    min-width: 30px;
+    height: 30px;
+    place-items: center;
+    border-radius: 8px;
+    background: #edf2ee;
+    color: #315441;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .homepage-groups { display: grid; }
+  .homepage-group { padding: 16px; }
+  .homepage-group + .homepage-group { border-top: 1px solid #e7ebe8; }
+  .group-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .group-heading h3 { margin: 0; font-size: 13px; }
+  .group-heading div > span { display: block; color: #929791; margin-top: 3px; font-size: 10px; }
+  .album-choice-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .album-choice {
+    position: relative;
+    display: grid;
+    grid-template-columns: 20px 48px minmax(0, 1fr);
+    min-width: 0;
+    min-height: 64px;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid #dde3df;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    padding: 7px 10px;
+  }
+  .album-choice:hover { border-color: #9cb5a7; background: #f8faf8; }
+  .album-choice:has(input:checked) { border-color: #5f8d73; background: #f0f6f2; }
+  .album-choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .choice-check {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    border: 1px solid #aeb9b2;
+    border-radius: 5px;
+    background: #fff;
+    color: transparent;
+  }
+  .album-choice input:checked + .choice-check { border-color: var(--admin-green-700); background: var(--admin-green-700); color: #fff; }
+  .album-choice input:focus-visible + .choice-check { outline: 2px solid var(--admin-green-700); outline-offset: 2px; }
+  .choice-cover {
+    display: grid;
+    overflow: hidden;
+    width: 48px;
+    height: 42px;
+    place-items: center;
+    border-radius: 6px;
+    background: #e9edea;
+    color: #9ba49e;
+  }
+  .choice-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .choice-copy { min-width: 0; }
+  .choice-copy strong,
+  .choice-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .choice-copy strong { font-size: 12px; font-weight: 650; }
+  .choice-copy small { color: #7b837d; margin-top: 4px; font-size: 10px; }
+  .selection-panel { position: sticky; top: 24px; padding: 18px; }
+  .selection-panel h2 { margin-top: 7px; font-size: 18px; }
+  .selection-panel h2 strong { color: var(--admin-green-700); font-size: 28px; }
+  .selection-panel > p:not(.save-status) { color: #6f7771; margin: 14px 0 0; font-size: 12px; line-height: 1.65; }
+  .save-status { min-height: 20px; margin: 18px 0 0; color: #315d45; font-size: 11px; }
+  @media (max-width: 900px) {
+    .homepage-workspace { grid-template-columns: 1fr; }
+    .selection-panel { position: static; grid-row: 1; }
+  }
+  @media (max-width: 600px) {
+    .album-choice-list { grid-template-columns: 1fr; }
+    .homepage-group { padding: 12px; }
+  }
+</style>

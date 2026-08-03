@@ -3,6 +3,7 @@ import {
   Compass,
   FileText,
   FolderTree,
+  House,
   Image,
   Images,
   LayoutDashboard,
@@ -18,6 +19,7 @@ interface Props {
 const { currentPath } = Astro.props;
 const items = [
   { href: '/admin', label: '仪表盘', icon: LayoutDashboard, exact: true },
+  { href: '/admin/homepage', label: '主页图集', icon: House },
   { href: '/admin/categories', label: '图集分类', icon: FolderTree },
   { href: '/admin/albums', label: '图集', icon: Images },
   { href: '/admin/navigation', label: '导航设置', icon: Compass },

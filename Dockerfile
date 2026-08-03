@@ -3,6 +3,8 @@ RUN corepack enable && apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
+ARG PUBLIC_SITE_URL
+ENV PUBLIC_SITE_URL=${PUBLIC_SITE_URL}
 COPY . .
 ENV ASTRO_TELEMETRY_DISABLED=1
 RUN pnpm build

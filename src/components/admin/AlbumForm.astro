@@ -92,7 +92,7 @@ const { action, method = 'POST', submitLabel, categories, album } = Astro.props;
           <p class="field-hint">多个标签用逗号分隔。</p>
           <FieldError field="tags" />
         </div>
-        <label class="checkbox-field full"><input type="checkbox" name="featured" checked={album?.featured ?? false} />在首页精选中展示</label>
+        <label class="checkbox-field full"><input type="checkbox" name="featured" checked={album?.featured ?? false} />在主页显示图集</label>
         <label class="checkbox-field full"><input type="checkbox" name="isSpecial" checked={album?.isSpecial ?? false} />设为特辑并启用区块排版</label>
       </div>
     </section>

@@ -1,6 +1,9 @@
 services:
   mboker-img:
-    build: .
+    build:
+      context: .
+      args:
+        PUBLIC_SITE_URL: "${PUBLIC_SITE_URL:-https://photos.example.com}"
     container_name: mboker-img
     restart: unless-stopped
     env_file: .env

@@ -54,7 +54,15 @@ docker compose exec mboker-img pnpm db:migrate
 docker compose exec mboker-img pnpm content:import
 ```
 
-部署前必须在 `.env` 中设置 `ADMIN_USERNAME`、`ADMIN_PASSWORD_HASH` 和实际的 `PUBLIC_SITE_URL`。反向代理应启用 HTTPS，并把请求转发到 `127.0.0.1:4321`。
+部署前必须在 `.env` 中设置 `ADMIN_USERNAME`、`ADMIN_PASSWORD_HASH` 和实际的 `PUBLIC_SITE_URL`。`PUBLIC_SITE_URL` 会在构建时写入 Astro 的可信代理域名，修改后需要重新执行 `docker compose up -d --build`。
+
+反向代理应启用 HTTPS，把请求转发到 `127.0.0.1:4321`，并保留以下标准请求头：
+
+```nginx
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-Proto $scheme;
+```
 
 默认持久化到项目下的 `data` 和 `backups`。如需放到其他磁盘，在 `.env` 中设置宿主机路径，例如：
 
