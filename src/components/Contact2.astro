@@ -1,5 +1,8 @@
 ---
 const year = new Date().getFullYear();
+import { getDatabase } from '../server/db/client';
+import { getAbout } from '../server/repositories/about';
+const email = getAbout(getDatabase()).page?.email || 'ricocc@qq.com';
 ---
 
 <section class="contact">
@@ -16,8 +19,8 @@ const year = new Date().getFullYear();
                         </svg>
                     </div>
                 </span>
-                <a href="mailto:ricocc@qq.com" class="contact-link__title link-underlined link-underlined--strong contact-art__link-2">
-                    hello@ricoui.com
+                <a href={`mailto:${email}`} class="contact-link__title link-underlined link-underlined--strong contact-art__link-2">
+                    {email}
                 </a>
             </div>
 
