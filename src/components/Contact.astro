@@ -2,6 +2,13 @@
 const year = new Date().getFullYear();
 import { Image } from "astro:assets";
 import ImgTink from "../assets/images/tink.jpg";
+import { getDatabase } from '../server/db/client';
+import { getAbout } from '../server/repositories/about';
+const aboutPage = getAbout(getDatabase()).page;
+const dbPortrait = aboutPage?.portraitUrl;
+const portraitUrl = dbPortrait || ImgTink.src;
+const useLocalImage = !dbPortrait;
+const email = aboutPage?.email || 'ricocc@qq.com';
 ---
 
 <section class="contact">
@@ -44,11 +51,10 @@ import ImgTink from "../assets/images/tink.jpg";
 
             </div>
             <div class="contact-img text-center col-10 offset-1  col-sm-8 col-md-6 col-lg-3 offset-md-4 offset-lg-5 offset-xl-5">
-                <Image
-                src={ImgTink}
-                alt="Mboker Img"
-                class="w-100"
-              />
+                {useLocalImage
+                  ? <Image src={ImgTink} alt="Mboker Img" class="w-100" />
+                  : <img src={portraitUrl} alt="Mboker Img" class="w-100" />
+                }
             </div>
 
             <div  class="row contact-link contact-art">
@@ -60,8 +66,8 @@ import ImgTink from "../assets/images/tink.jpg";
                         </svg>
                     </div>
                 </span>
-                <a href="mailto:ricocc@qq.com"  class="contact-link__title link-underlined link-underlined--strong contact-art__link-2">
-                     hello@ricoui.com
+                <a href={`mailto:${email}`}  class="contact-link__title link-underlined link-underlined--strong contact-art__link-2">
+                     {email}
                 </a>
             </div>
 
